@@ -1,0 +1,44 @@
+name: "publish"
+
+on:
+  push:
+    branches:
+      - v3 # branch that is tracked for changes
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: "windows-latest" # only build for windows, no linux & mac needed atm
+            args: ""
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install frontend dependencies
+        run: npm install # repo uses npm for package management - step installs all node modules
+
+      - name: get latest commit message
+        id: commit_message
+        run: echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: "Bestandsabgleich v__VERSION__"
+          releaseBody: "${{ env.COMMIT_MSG }}" # commit message
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
