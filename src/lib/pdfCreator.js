@@ -19,7 +19,7 @@ const addTable = (data) => {
     },
     bodyStyles: {
       // row styles
-      fontSize: 8,
+      fontSize: 6,
       cellWidth: "wrap",
     },
     columnStyles: {
@@ -29,7 +29,7 @@ const addTable = (data) => {
         overflow: "linebreak",
         minCellWidth: 60,
       },
-      Kommentar: { cellWidth: "auto", overflow: "linebreak", minCellWidth: 40 },
+      "To Do": { cellWidth: "auto", overflow: "linebreak", minCellWidth: 40 },
       Anmerkung: { cellWidth: "auto", overflow: "linebreak" },
       "Kennzeichen 3": { cellWidth: "auto" },
       Index: { cellWidth: "auto" },
@@ -51,7 +51,7 @@ const addTable = (data) => {
       { dataKey: "Ablaufdatum", header: "Ablaufdatum" },
       { header: "Bestand ERP", dataKey: "Eigenbestand nach ERP" },
       { header: "Bestand RFID", dataKey: "RFID-Scan" },
-      { dataKey: "Kommentar", header: "Kommentar" },
+      { dataKey: "To Do", header: "To Do" },
       { dataKey: "Anmerkung", header: "Anmerkung" },
     ],
   });
@@ -116,12 +116,13 @@ export const exporToPDF = (data) => {
 
   // adds date
   doc.line(8, 36, 36, 36);
-  doc.text(", den", 38, 35);
-  doc.line(48, 36, 68, 36);
+  doc.text("Kundennummer", 8, 41);
+  doc.line(48, 36, 88, 36);
+  doc.text("Ort", 48, 41);
 
-  doc.line(80, 36, 106, 36);
-  doc.text(", den", 108, 35);
-  doc.line(118, 36, 138, 36);
+  doc.text(", den", 90, 35);
+  doc.line(98, 36, 124, 36);
+  doc.text("Datum", 98, 41);
 
   // adds signature lines
   doc.line(8, 60, 58, 60);

@@ -1,4 +1,4 @@
-# RFID-Applikation – Bestandsabgleich v3.8
+# RFID-Applikation – Bestandsabgleich v4.0
 
 Um eine händische Inventur beim Kunden effizienter zu gestalten, wurde eine RFID-unterstützte Inventur eingeführt. Diese soll den händischen und zeitintensiven Prozess ablösen.
 Dafür wurde eine Software für implantcast entwickelt, welche die erfassten Daten des RFID-Geräts mit unserem Bestand abgleicht.

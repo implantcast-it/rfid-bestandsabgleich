@@ -346,7 +346,7 @@ const compareLotId = (erp, rfid) => {
       "Eigenbestand nach ERP": existsInErp ? "1" : "0",
       "RFID-Scan": existsInRfid ? "1" : "0",
       Ablaufdatum: itemErp?.["Ablaufdatum"] || "-",
-      Kommentar: "",
+      "To Do": "",
       Anmerkung: "",
       id: uuidv4(),
     };
@@ -422,7 +422,7 @@ export const downloadFile = (data) => {
         Ablaufdatum: item["Ablaufdatum"],
         "Eigenbestand nach ERP": item["Eigenbestand nach ERP"],
         "RFID-Scan": item["RFID-Scan"],
-        Kommentar: item["Kommentar"],
+        "To Do": item["To Do"],
         Anmerkung: item["Anmerkung"],
       };
     })

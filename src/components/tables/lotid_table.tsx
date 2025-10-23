@@ -92,7 +92,7 @@ export default function LotIdTable({
         type: "numericColumn",
       },
       {
-        field: "Kommentar",
+        field: "To Do",
         filter: true,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: {
@@ -105,9 +105,19 @@ export default function LotIdTable({
             "NUR liefern auf Konsi",
             "Resteriaustausch",
             "über Gutschrift ins Konsi buchen",
+            "Storno / offener Posten",
           ],
         },
         editable: true,
+        cellClassRules: {
+          "bg-yellow-100": (params: any) => {
+            if (!params.data) return false;
+            const hasDifference =
+              params.data["RFID-Scan"] != params.data["Eigenbestand nach ERP"];
+            const isEmpty = !params.value || params.value.trim() === "";
+            return hasDifference && isEmpty;
+          },
+        },
       },
       {
         field: "Anmerkung",
@@ -116,72 +126,64 @@ export default function LotIdTable({
       },
     ];
     setColumns(columns);
-  }, [data]);
+  }, []);
 
   const getRowId = useCallback((params: any) => params.data.id, []);
 
-  const onCellEditRequest = useCallback((event: any) => {
-    const oldData = event.data;
-    const field = event.colDef.field;
-    const newData = { ...oldData };
-    const uuid = oldData.id;
-    newData[field] = event.newValue;
+  const onCellValueChanged = useCallback(
+    (event: any) => {
+      const updatedRow = event.data;
+      const uuid = updatedRow.id;
 
-    data.map((row: any) => {
-      if (row.id === uuid) {
-        row[field] = event.newValue;
-        event.data.isEdited = true; // set edit-flag
-      }
-    });
+      const updatedData = data.map((row: any) => {
+        if (row.id === uuid) {
+          return { ...updatedRow, isEdited: true };
+        }
+        return row;
+      });
 
-    onChange([...data]);
+      onChange(updatedData);
+    },
+    [data, onChange]
+  );
 
-    const tx = {
-      update: [newData],
-    };
-    event.api.applyTransaction(tx);
-  }, []);
-
-  // -------------------------------
-  // 🔁 Autofill "Kommentar" Button
-  // -------------------------------
-  const handleAutoFillKommentare = () => {
-    const updatedData = [...data];
+  // Autofill "Kommentar" Button
+  const handleAutoFillKommentare = useCallback(() => {
     const grouped: Record<string, any[]> = {};
-    updatedData.forEach((row) => {
+    data.forEach((row: { Artikelnummer: any }) => {
       const key = row.Artikelnummer;
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(row);
     });
 
     let affectedArtikelnummern: string[] = [];
+    const changesToApply = new Map<string, any>(); // <row.id, { änderungen... }>
 
     Object.entries(grouped).forEach(([artikelnummer, group]) => {
-      const remaining = [...group];
+      const missingItems = group.filter(
+        (row) => row["RFID-Scan"] == 0 && row["Eigenbestand nach ERP"] == 1
+      );
+      const scannedItems = group.filter(
+        (row) => row["RFID-Scan"] == 1 && row["Eigenbestand nach ERP"] == 0
+      );
 
-      while (true) {
-        const missingIndex = remaining.findIndex(
-          (row) => row["RFID-Scan"] == 0 && row["Eigenbestand nach ERP"] == 1
-        );
-        const scannedIndex = remaining.findIndex(
-          (row) => row["RFID-Scan"] == 1 && row["Eigenbestand nach ERP"] == 0
-        );
+      const numPairs = Math.min(missingItems.length, scannedItems.length);
 
-        if (missingIndex === -1 || scannedIndex === -1) break;
+      if (numPairs > 0) {
+        affectedArtikelnummern.push(artikelnummer);
 
-        const missing = remaining.splice(missingIndex, 1)[0];
-        const scanned = remaining.splice(
-          scannedIndex > missingIndex ? scannedIndex - 1 : scannedIndex,
-          1
-        )[0];
+        for (let i = 0; i < numPairs; i++) {
+          const missing = missingItems[i];
+          const scanned = scannedItems[i];
 
-        if (missing && scanned) {
-          missing.Kommentar = "interne Berechnung";
-          scanned.Kommentar = "interne Gutschrift mit Rückbuchung auf Konsi";
-          missing.isEdited = true;
-          scanned.isEdited = true;
-
-          affectedArtikelnummern.push(artikelnummer);
+          changesToApply.set(missing.id, {
+            "To Do": "interne Berechnung",
+            isEdited: true,
+          });
+          changesToApply.set(scanned.id, {
+            "To Do": "interne Gutschrift mit Rückbuchung auf Konsi",
+            isEdited: true,
+          });
         }
       }
     });
@@ -190,20 +192,90 @@ export default function LotIdTable({
       showToast(
         `${[...new Set(affectedArtikelnummern)].length} Artikelnummer(n) automatisch kommentiert.`
       );
+
+      onChange((prevData: any[]) => {
+        return prevData.map((row) => {
+          if (changesToApply.has(row.id)) {
+            return { ...row, ...changesToApply.get(row.id) };
+          }
+          return row;
+        });
+      });
     } else {
       showToast("Keine passenden Paare zum Kommentieren gefunden.");
     }
+  }, [data, onChange, showToast]);
 
-    onChange(updatedData);
-  };
+  const handleSetSiebScanToOne = useCallback(() => {
+    const changesToApply = new Map<string, any>();
+    let affectedRowCount = 0;
+
+    data.forEach((row: any) => {
+      if (row["Kennzeichen 3"] === "SIEB" && row["RFID-Scan"] == 0) {
+        changesToApply.set(row.id, {
+          "RFID-Scan": 1,
+          isEdited: true,
+        });
+        affectedRowCount++;
+      }
+    });
+
+    if (affectedRowCount > 0) {
+      onChange((prevData: any[]) => {
+        return prevData.map((row) => {
+          if (changesToApply.has(row.id)) {
+            return { ...row, ...changesToApply.get(row.id) };
+          }
+          return row;
+        });
+      });
+      showToast(`${affectedRowCount} 'SIEB' Zeile(n) auf '1' gesetzt.`);
+    } else {
+      showToast("Keine 'SIEB' Zeilen mit RFID-Scan '0' gefunden.");
+    }
+  }, [data, onChange, showToast]);
+
+  const handleSetOffenePosten = useCallback(() => {
+    const changesToApply = new Map<string, any>();
+    let affectedRowCount = 0;
+
+    data.forEach((row: any) => {
+      if (row["RFID-Scan"] == 0 && row["Eigenbestand nach ERP"] == 0) {
+        changesToApply.set(row.id, {
+          Anmerkung: "offener Posten",
+          isEdited: true,
+        });
+        affectedRowCount++;
+      }
+    });
+
+    if (affectedRowCount > 0) {
+      onChange((prevData: any[]) => {
+        return prevData.map((row) => {
+          if (changesToApply.has(row.id)) {
+            return { ...row, ...changesToApply.get(row.id) };
+          }
+          return row;
+        });
+      });
+      showToast(`${affectedRowCount} Zeile(n) als 'offener Posten' markiert.`);
+    } else {
+      showToast("Keine Zeilen für 'offener Posten' gefunden.");
+    }
+  }, [data, onChange, showToast]);
 
   return (
     <TabsContent value='4' className='h-[calc(100vh-110px)] ag-theme-balham'>
-      <div className='flex justify-end pb-2'>
+      <div className='flex justify-end gap-2 pb-2'>
+        <Button onClick={handleSetOffenePosten}>Offene Posten</Button>
+        <Button onClick={handleSetSiebScanToOne}>
+          'SIEB' Scan auf 1 setzen
+        </Button>
         <Button onClick={handleAutoFillKommentare}>
           Auto-Kommentare ausfüllen
         </Button>
       </div>
+
       <AgGridReact
         rowData={data}
         columnDefs={columns}
@@ -212,9 +284,8 @@ export default function LotIdTable({
         pagination
         animateRows={false}
         autoSizeStrategy={{ type: "fitCellContents" }}
-        readOnlyEdit
         getRowId={getRowId}
-        onCellEditRequest={onCellEditRequest}
+        onCellValueChanged={onCellValueChanged}
       />
     </TabsContent>
   );
