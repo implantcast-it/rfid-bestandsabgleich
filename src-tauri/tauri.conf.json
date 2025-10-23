@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Bestandsabgleich",
-    "version": "0.3.8"
+    "version": "4.0.0"
   },
   "tauri": {
     "allowlist": {
@@ -32,7 +32,7 @@
     },
     "windows": [
       {
-        "title": "implantcast GmbH - Bestandsabgleich v3.8",
+        "title": "implantcast GmbH - Bestandsabgleich v4.0",
         "minWidth": 800,
         "minHeight": 525,
         "width": 800,
