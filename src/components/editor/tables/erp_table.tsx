@@ -1,18 +1,15 @@
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-balham.css";
-
 import { useEffect, useState } from "react";
 
 import { AgGridReact } from "ag-grid-react";
-import { TabsContent } from "../ui/tabs";
 import { utils } from "xlsx";
 
-export default function ErpTable({ data }: { data: any }) {
+export default function ErpTable({ data, theme }: { data: any; theme: any }) {
   const [rows, setRows] = useState<any[]>([]);
   const [columns, setColumns] = useState<any[]>([]);
 
   useEffect(() => {
     const rows = utils.sheet_to_json(data);
+    console.log(rows);
     const columns = [
       {
         field: "Artikelnummer",
@@ -56,16 +53,15 @@ export default function ErpTable({ data }: { data: any }) {
   }, [data]);
 
   return (
-    <TabsContent value='0' className='h-[calc(100vh-65px)] ag-theme-balham'>
-      <AgGridReact
-        rowData={rows}
-        columnDefs={columns}
-        paginationPageSize={50}
-        paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
-        pagination
-        animateRows={false}
-        autoSizeStrategy={{ type: "fitCellContents" }}
-      />
-    </TabsContent>
+    <AgGridReact
+      theme={theme}
+      rowData={rows}
+      columnDefs={columns}
+      paginationPageSize={50}
+      paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
+      pagination
+      animateRows={false}
+      autoSizeStrategy={{ type: "fitCellContents" }}
+    />
   );
 }

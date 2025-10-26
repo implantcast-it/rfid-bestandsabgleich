@@ -1,0 +1,20 @@
+{
+  "identifier": "desktop-capability",
+  "platforms": ["windows"],
+  "windows": ["main"],
+  "permissions": [
+    "updater:default",
+    "core:default",
+    "fs:allow-read-file",
+    "fs:allow-app-read",
+    "fs:allow-write-file",
+    "fs:allow-app-write",
+    {
+      "identifier": "fs:scope",
+      "allow": ["**"]
+    },
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "dialog:default"
+  ]
+}

@@ -1,12 +1,15 @@
 // necessary imports for jsPDF and xlsx
 
-import autoTable from "jspdf-autotable";
+import { WorkSheet, utils } from "xlsx";
+import autoTable, { RowInput } from "jspdf-autotable";
+
 import jsPDF from "jspdf";
-import { utils } from "xlsx";
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeFile } from "@tauri-apps/plugin-fs";
 
 let doc = new jsPDF({ orientation: "landscape", compress: true }); // Creates a new jsPDF instance with landscape orientation and A4 format
 // function to add the table to the PDF
-const addTable = (data) => {
+const addTable = (data: RowInput[]) => {
   // adds the table to the PDF
   autoTable(doc, {
     body: data, // row data
@@ -58,110 +61,131 @@ const addTable = (data) => {
 };
 
 // function to export the PDF
-export const exporToPDF = (data) => {
-  // adds the implantcast logo to the PDF
-  doc.addImage(icLogo, "PNG", 268, 10, 16, 16, "implantcast", "NONE", 0);
+export const exporToPDF = async (data: {
+  debitor: any;
+  masterData: { Sheets: { [x: string]: WorkSheet } };
+}): Promise<{
+  success: boolean;
+  filePath?: string;
+  error?: Error;
+  cancelled?: boolean;
+}> => {
+  try {
+    // --- All your PDF generation logic ---
+    doc.addImage(icLogo, "PNG", 268, 10, 16, 16, "implantcast", "NONE", 0);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Bestandsabgleich ${data.debitor}`, 8, 20);
+    doc.line(8, 25, 200, 25);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text("Datum: " + new Date().toLocaleDateString("de-DE"), 8, 30);
+    doc.text("Uhrzeit: " + new Date().toLocaleTimeString("de-DE"), 8, 35);
+    doc.text("Außendienstmitarbeiter:", 8, 40);
 
-  // sets the title and other information
-  doc.setFontSize(24);
-  doc.setFont("helvetica", "bold");
-  doc.text(`Bestandsabgleich ${data.debitor}`, 8, 20);
-  doc.line(8, 25, 200, 25);
+    const comparisonData = utils.sheet_to_json(
+      data.masterData.Sheets["Bestandsabgleich LotId"]
+    );
 
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.text("Datum: " + new Date().toLocaleDateString(), 8, 30);
-  doc.text("Uhrzeit: " + new Date().toLocaleTimeString(), 8, 35);
-  doc.text("Außendienstmitarbeiter:", 8, 40);
-
-  const comparisonData = utils.sheet_to_json(
-    data.master.Sheets["Bestandsabgleich LotId"]
-  );
-
-  let rfidSum = 0;
-  let erpSum = 0;
-
-  comparisonData.forEach((e) => {
-    const erpValue = Number(e["Eigenbestand nach ERP"]);
-    const rfidValue = Number(e["RFID-Scan"]);
-
-    erpSum += Number.isFinite(erpValue) ? erpValue : 0;
-    rfidSum += Number.isFinite(rfidValue) ? rfidValue : 0;
-  });
-
-  doc.text(`Anzahl Positionen: ${comparisonData.length}`, 150, 30);
-  doc.text(`Gesamtbestand SOLL: ${erpSum}`, 150, 35);
-  doc.text(`Gesamtbestand IST: ${rfidSum}`, 150, 40);
-  doc.text(`Abweichung: ${rfidSum - erpSum}`, 150, 45);
-  doc.text(`Debitorenkonto: ${data.debitor}`, 8, 45);
-
-  // adds table
-  addTable(comparisonData);
-
-  // adds new page for signing
-  doc.addPage();
-
-  // adds implantcast logo to 2nd page
-  doc.addImage(icLogo, "PNG", 268, 10, 16, 16, "implantcast", "NONE", 0);
-
-  // adds signature section
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "normal");
-  doc.text("Bestätigung", 8, 20);
-  doc.line(8, 25, 200, 25);
-
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  doc.setDrawColor("#A0A0A0");
-
-  // adds date
-  doc.line(8, 36, 36, 36);
-  doc.text("Kundennummer", 8, 41);
-  doc.line(48, 36, 88, 36);
-  doc.text("Ort", 48, 41);
-
-  doc.text(", den", 90, 35);
-  doc.line(98, 36, 124, 36);
-  doc.text("Datum", 98, 41);
-
-  // adds signature lines
-  doc.line(8, 60, 58, 60);
-  doc.text("Unterschrift Außendienstmitarbeiter", 8, 65);
-
-  doc.line(80, 60, 130, 60);
-  doc.text("Unterschrift Kunde", 80, 65);
-
-  // adds company information
-  doc.setFont("helvetica", "bold");
-  doc.text("implantcast GmbH", 8, 75);
-  doc.setFont("helvetica", "normal");
-  doc.text("Lüneburger Schanze 26", 8, 80);
-  doc.text("D-21614 Buxtehude", 8, 85);
-
-  const pages = doc.internal.getNumberOfPages() - 1;
-  const pageWidth = doc.internal.pageSize.width; //Optional
-  const pageHeight = doc.internal.pageSize.height; //Optional
-  doc.setFontSize(10); //Optional
-
-  for (let j = 1; j < pages + 1; j++) {
-    let horizontalPos = pageWidth / 2; //Can be fixed number
-    let verticalPos = pageHeight - 8; //Can be fixed number
-    doc.setPage(j);
-    doc.setTextColor(124, 124, 124);
-    doc.text(`${j} / ${pages}`, horizontalPos, verticalPos, {
-      align: "center",
+    let rfidSum = 0;
+    let erpSum = 0;
+    comparisonData.forEach((e) => {
+      const erpValue = Number(e["Eigenbestand nach ERP"]);
+      const rfidValue = Number(e["RFID-Scan"]);
+      erpSum += Number.isFinite(erpValue) ? erpValue : 0;
+      rfidSum += Number.isFinite(rfidValue) ? rfidValue : 0;
     });
 
-    doc.setTextColor(0, 0, 0);
-  }
+    doc.text(`Anzahl Positionen: ${comparisonData.length}`, 150, 30);
+    doc.text(`Gesamtbestand SOLL: ${erpSum}`, 150, 35);
+    doc.text(`Gesamtbestand IST: ${rfidSum}`, 150, 40);
+    doc.text(`Abweichung: ${rfidSum - erpSum}`, 150, 45);
+    doc.text(`Debitorenkonto: ${data.debitor}`, 8, 45);
 
-  // saves the PDF and downloads it
-  doc.save(
-    `[${
+    addTable(comparisonData);
+    doc.addPage();
+    doc.addImage(icLogo, "PNG", 268, 10, 16, 16, "implantcast", "NONE", 0);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "normal");
+    doc.text("Bestätigung", 8, 20);
+    doc.line(8, 25, 200, 25);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setDrawColor("#A0A0A0");
+    doc.line(8, 36, 36, 36);
+    doc.text("Kundennummer", 8, 41);
+    doc.line(48, 36, 88, 36);
+    doc.text("Ort", 48, 41);
+    doc.text(", den", 90, 35);
+    doc.line(98, 36, 124, 36);
+    doc.text("Datum", 98, 41);
+    doc.line(8, 60, 58, 60);
+    doc.text("Unterschrift Außendienstmitarbeiter", 8, 65);
+    doc.line(80, 60, 130, 60);
+    doc.text("Unterschrift Kunde", 80, 65);
+    doc.setFont("helvetica", "bold");
+    doc.text("implantcast GmbH", 8, 75);
+    doc.setFont("helvetica", "normal");
+    doc.text("Lüneburger Schanze 26", 8, 80);
+    doc.text("D-21614 Buxtehude", 8, 85);
+
+    const pages = doc.getNumberOfPages() - 1;
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(10);
+
+    for (let j = 1; j < pages + 1; j++) {
+      let horizontalPos = pageWidth / 2;
+      let verticalPos = pageHeight - 8;
+      doc.setPage(j);
+      doc.setTextColor(124, 124, 124);
+      doc.text(`${j} / ${pages}`, horizontalPos, verticalPos, {
+        align: "center",
+      });
+      doc.setTextColor(0, 0, 0);
+    }
+    // --- End PDF generation logic ---
+
+    // 1. Define the suggested file name
+    const suggestedFilename = `[${
       data.debitor
-    }] Bestandsabgleich - ${new Date().toLocaleDateString()}.pdf`
-  );
-  doc = new jsPDF({ orientation: "landscape", compress: true });
+    }] Bestandsabgleich - ${new Date().toLocaleDateString("de-DE")}.pdf`;
+
+    // 2. Open the native "Save As..." dialog
+    const filePath = await save({
+      title: "Bestandsabgleich speichern",
+      defaultPath: suggestedFilename,
+      filters: [
+        {
+          name: "PDF-Dokument",
+          extensions: ["pdf"],
+        },
+      ],
+    });
+
+    // 3. Check if the user clicked "Cancel" (filePath will be null)
+    if (filePath) {
+      // 4. Get the PDF data from jsPDF as a binary array
+      const pdfData = doc.output("arraybuffer");
+
+      // 5. Use Tauri's API to write the file to the path the user selected
+      await writeFile(filePath, pdfData);
+
+      // 6. Return success object
+      return { success: true, filePath };
+    } else {
+      // 7. Return cancellation object
+      return { success: false, cancelled: true };
+    }
+  } catch (err) {
+    console.error("Error saving PDF:", err);
+    // 8. Return error object
+    return { success: false, error: err as Error, cancelled: false };
+  } finally {
+    // 9. Reset the doc instance for the next export
+    // This is crucial and must be in 'finally' to prevent state corruption
+    doc = new jsPDF({ orientation: "landscape", compress: true });
+  }
 };
 
 // Base64 image for implantcast logo

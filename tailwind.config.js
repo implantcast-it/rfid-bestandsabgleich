@@ -18,6 +18,15 @@ module.exports = {
       },
     },
     extend: {
+      colors: {
+        primary: "#005f6b",
+        "background-light": "#f8fafc",
+        "background-dark": "#083344",
+        "teal-accent": "#0d9488",
+      },
+      borderRadius: {
+        DEFAULT: "0.5rem",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -34,17 +43,5 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    plugin(function ({ addUtilities }) {
-      addUtilities({
-        ".scrollbar-none": {
-          "scrollbar-width": "none",
-          "&::-webkit-scrollbar": {
-            display: "none",
-          },
-        },
-      });
-    }),
-  ],
+  plugins: [],
 };

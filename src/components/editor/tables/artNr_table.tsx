@@ -1,12 +1,8 @@
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-balham.css";
-
 import { useCallback, useEffect, useState } from "react";
 
 import { AgGridReact } from "ag-grid-react";
-import { TabsContent } from "../ui/tabs";
 
-export default function ArtNrTable({ data }: { data: any }) {
+export default function ArtNrTable({ data, theme }: { data: any; theme: any }) {
   const [columns, setColumns] = useState<any[]>([]);
 
   useEffect(() => {
@@ -45,18 +41,17 @@ export default function ArtNrTable({ data }: { data: any }) {
   const getRowId = useCallback((params: any) => params.data.id, []);
 
   return (
-    <TabsContent value='5' className='h-[calc(100vh-65px)] ag-theme-balham'>
-      <AgGridReact
-        rowData={data}
-        columnDefs={columns}
-        paginationPageSize={50}
-        paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
-        pagination
-        animateRows={false}
-        autoSizeStrategy={{ type: "fitCellContents" }}
-        readOnlyEdit
-        getRowId={getRowId}
-      />
-    </TabsContent>
+    <AgGridReact
+      theme={theme}
+      rowData={data}
+      columnDefs={columns}
+      paginationPageSize={50}
+      paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
+      pagination
+      animateRows={false}
+      autoSizeStrategy={{ type: "fitCellContents" }}
+      readOnlyEdit
+      getRowId={getRowId}
+    />
   );
 }
