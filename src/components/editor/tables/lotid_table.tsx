@@ -8,6 +8,7 @@ import {
 import { RowSelectionOptions, SelectionColumnDef } from "ag-grid-community";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { AG_GRID_LOCALE_DE } from "@ag-grid-community/locale";
 import { AgGridReact } from "ag-grid-react";
 import ErrorToast from "@/components/ui/ErrorToast";
 import SuccessToast from "@/components/ui/SuccessToast";
@@ -44,19 +45,13 @@ export default function LotIdTable({
   const [bulkToDo, setBulkTodDo] = useState("");
   const [bulkAnmerkung, setBulkAnmerkung] = useState("");
   const [bulkRfidScan, setBulkRfidScan] = useState("");
-
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(true);
-
-  const [successToastState, setSuccessToastState] = useState({
-    open: false,
-    title: "",
-    description: "",
-  });
-  const [errorToastState, setErrorToastState] = useState({
-    open: false,
-    title: "",
-    description: "",
-  });
+  const [toastInfo, setToastInfo] = useState<{
+    open: boolean;
+    type: "success" | "error";
+    title: string;
+    description: string;
+  } | null>(null);
 
   useEffect(() => {
     const columns = [
@@ -68,106 +63,71 @@ export default function LotIdTable({
       { field: "LotId", pinned: "left", filter: true },
       {
         field: "Artikelnummer",
-
         pinned: "left",
-
         filter: true,
       },
-
       {
         field: "Produktname",
-
         filter: true,
-
         pinned: "left",
-
         wrapText: true,
-
         width: 300,
       },
-
       {
         field: "Kennzeichen 3",
-
         filter: true,
-
         pinned: "left",
       },
-
       {
         field: "Ablaufdatum",
-
         filter: true,
-
         pinned: "left",
-
         cellRenderer: (data: { value: string }) => {
           const date = new Date(data.value).toLocaleDateString();
-
           return date != "Invalid Date" ? date : "-";
         },
-
         cellDataType: "date",
-
         headerTooltip: "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen",
-
         tooltipValueGetter: () =>
           "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen",
-
         cellClassRules: {
           "bg-red-100": (params: { value: string }) =>
             new Date(params.value) < new Date(),
-
           "bg-amber-100": (params: { value: string }) =>
             new Date(params.value) > new Date() &&
             new Date(params.value) <
               new Date(new Date().setMonth(new Date().getMonth() + 3)),
         },
       },
-
       {
         field: "Eigenbestand nach ERP",
-
         filter: true,
-
         cellClassRules: {
           "bg-amber-100": (params: any) =>
             params.value == 0 && params.data["RFID-Scan"] == 1,
-
           "bg-red-100": (params: any) =>
             params.value == 1 && params.data["RFID-Scan"] == 0,
-
           "bg-green-100": (params: any) =>
             params.value == 1 && params.data["RFID-Scan"] == 1,
         },
-
         width: 150,
-
         type: "numericColumn",
       },
-
       {
         field: "RFID-Scan",
-
         filter: true,
-
         editable: true,
-
         cellClassRules: {
           "bg-blue-100": (params: any) => {
             return params.data.isEdited;
           },
-
           "bg-red-100": (params: any) =>
             params.value == 0 && params.data["Eigenbestand nach ERP"] == 1,
-
           "bg-amber-100": (params: any) =>
             params.value == 1 && params.data["Eigenbestand nach ERP"] == 0,
-
           "bg-green-100": (params: any) =>
             params.value == 1 && params.data["Eigenbestand nach ERP"] == 1,
         },
-
         type: "numericColumn",
       },
       {
@@ -220,7 +180,8 @@ export default function LotIdTable({
   const handleApplyBulkTodDo = () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || selectedNodes.length === 0) {
-      setErrorToastState({
+      setToastInfo({
+        type: "error",
         open: true,
         title: "Keine Zeilen ausgewählt",
         description: "Bitte wählen Sie Zeilen aus, die Sie ändern möchten.",
@@ -243,7 +204,8 @@ export default function LotIdTable({
       })
     );
 
-    setSuccessToastState({
+    setToastInfo({
+      type: "success",
       open: true,
       title: "'To Do' aktualisiert",
       description: `${selectedIds.size} Zeile(n) wurden aktualisiert.`,
@@ -257,7 +219,8 @@ export default function LotIdTable({
   const handleApplyBulkAnmerkung = () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || selectedNodes.length === 0) {
-      setErrorToastState({
+      setToastInfo({
+        type: "error",
         open: true,
         title: "Keine Zeilen ausgewählt",
         description: "Bitte wählen Sie Zeilen aus, die Sie ändern möchten.",
@@ -280,7 +243,8 @@ export default function LotIdTable({
       })
     );
 
-    setSuccessToastState({
+    setToastInfo({
+      type: "success",
       open: true,
       title: "'Anmerkung' aktualisiert",
       description: `${selectedIds.size} Zeile(n) wurden aktualisiert.`,
@@ -294,7 +258,8 @@ export default function LotIdTable({
   const handleApplyBulkRfidScan = () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || selectedNodes.length === 0) {
-      setErrorToastState({
+      setToastInfo({
+        type: "error",
         open: true,
         title: "Keine Zeilen ausgewählt",
         description: "Bitte wählen Sie Zeilen aus, die Sie ändern möchten.",
@@ -304,7 +269,8 @@ export default function LotIdTable({
 
     // Check if a value is selected
     if (bulkRfidScan === "") {
-      setErrorToastState({
+      setToastInfo({
+        type: "error",
         open: true,
         title: "Kein Wert ausgewählt",
         description: "Bitte wählen Sie einen 'RFID-Scan' Wert (0 oder 1) aus.",
@@ -328,7 +294,8 @@ export default function LotIdTable({
       })
     );
 
-    setSuccessToastState({
+    setToastInfo({
+      type: "success",
       open: true,
       title: "'RFID-Scan' aktualisiert",
       description: `${selectedIds.size} Zeile(n) wurden auf '${scanValue}' gesetzt.`,
@@ -362,7 +329,7 @@ export default function LotIdTable({
         <Collapsible.Root
           open={isBulkEditOpen}
           onOpenChange={setIsBulkEditOpen}
-          className='flex-shrink-0 mb-4' // Don't grow, add margin
+          className='flex-shrink-0 mb-4'
         >
           <div className='flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 border dark:border-gray-700 rounded-t-lg'>
             <h3 className='font-semibold text-gray-800 dark:text-gray-200 text-lg'>
@@ -482,27 +449,28 @@ export default function LotIdTable({
             onCellValueChanged={onCellValueChanged}
             rowSelection={rowSelection}
             selectionColumnDef={selectionColumnDef}
+            localeText={AG_GRID_LOCALE_DE}
             className='h-full'
           />
         </div>
 
-        {/* Render the Toast and its Viewport */}
-        <SuccessToast
-          open={successToastState.open}
-          onOpenChange={(isOpen: any) =>
-            setSuccessToastState((s) => ({ ...s, open: isOpen }))
-          }
-          title={successToastState.title}
-          description={successToastState.description}
-        />
-        <ErrorToast
-          open={errorToastState.open}
-          onOpenChange={(isOpen: any) =>
-            setErrorToastState((s) => ({ ...s, open: isOpen }))
-          }
-          title={errorToastState.title}
-          description={errorToastState.description}
-        />
+        {/* --- Toast Components & Viewport --- */}
+        {toastInfo?.type === "success" && (
+          <SuccessToast
+            open={toastInfo.open}
+            onOpenChange={(isOpen) => !isOpen && setToastInfo(null)}
+            title={toastInfo.title}
+            description={toastInfo.description}
+          />
+        )}
+        {toastInfo?.type === "error" && (
+          <ErrorToast
+            open={toastInfo.open}
+            onOpenChange={(isOpen) => !isOpen && setToastInfo(null)}
+            title={toastInfo.title}
+            description={toastInfo.description}
+          />
+        )}
         <Toast.Viewport className='right-0 bottom-0 z-[2147483647] fixed flex flex-col gap-[10px] m-0 p-[var(--viewport-padding)] outline-none w-[390px] max-w-[100vw] list-none [--viewport-padding:_25px]' />
       </div>
     </Toast.Provider>

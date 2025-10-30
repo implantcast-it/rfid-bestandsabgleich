@@ -128,7 +128,7 @@ export async function processFiles({
  * It checks if the file contains the required sheets and extracts the debitor.
  */
 export async function loadComparisonFile(path: string): Promise<{
-  master: WorkBook;
+  masterData: WorkBook;
   debitor: string;
 }> {
   try {
@@ -155,7 +155,7 @@ export async function loadComparisonFile(path: string): Promise<{
     }
 
     return {
-      master: workbook,
+      masterData: workbook,
       debitor: debitor || "Unbekannt",
     };
   } catch (error) {

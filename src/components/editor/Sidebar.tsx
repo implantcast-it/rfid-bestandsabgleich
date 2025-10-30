@@ -1,7 +1,7 @@
 import GridOnOutlinedIcon from "@mui/icons-material/GridOnOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import { ReactElement } from "react";
-import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
+import RestartDialog from "../ui/RestartDialog";
 
 // --- Type Definitions ---
 interface NavItem {
@@ -93,13 +93,7 @@ export default function Sidebar({
             <GridOnOutlinedIcon fontSize='small' />
             <span>Excel Herunterladen</span>
           </button>
-          <button
-            className='flex justify-center items-center gap-2 bg-gray-100 hover:bg-gray-200 px-2 rounded-lg h-9 overflow-hidden font-medium text-red-500 dark:text-gray-200 text-sm leading-normal tracking-[0.015em] transition-colors cursor-pointer'
-            onClick={onRestart}
-          >
-            <RestartAltOutlinedIcon fontSize='small' />
-            <span>Neustarten</span>
-          </button>
+          <RestartDialog onRestart={onRestart} />
         </div>
       </div>
     </aside>

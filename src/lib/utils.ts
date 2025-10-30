@@ -1,9 +1,11 @@
 import { Dispatch, SetStateAction } from "react";
 import { WorkBook, write } from "xlsx";
+import { open, save } from "@tauri-apps/plugin-dialog";
 
 import { downloadFile } from "./download";
 import { exporToPDF } from "./pdfCreator";
-import { save } from "@tauri-apps/plugin-dialog";
+import { loadComparisonFile } from "./readFiles";
+import { useLocation } from "wouter";
 import { writeFile } from "@tauri-apps/plugin-fs";
 
 // Async handler for Excel download
@@ -116,6 +118,56 @@ export const handlePdfDownload = async (
       title: "Speichern fehlgeschlagen",
       description:
         (err as Error).message || "Ein unbekannter Fehler ist aufgetreten.",
+    });
+  }
+};
+
+export const handleExistingFileOpen = async (
+  setToastInfo: Dispatch<
+    SetStateAction<{
+      open: boolean;
+      type: "success" | "error";
+      title: string;
+      description: string;
+    } | null>
+  >,
+  setLocation: <S = any>(
+    to: string | URL,
+    options?:
+      | {
+          replace?: boolean | undefined;
+          state?: S | undefined;
+        }
+      | undefined
+  ) => void
+) => {
+  try {
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: "Excel", extensions: ["xlsx", "xls"] }],
+    });
+    if (selected && !Array.isArray(selected)) {
+      loadComparisonFile(selected).then((result) => {
+        setLocation("/editor", { state: result });
+      });
+    }
+    if (selected === null) return; // User cancelled the dialog
+    setToastInfo({
+      open: true,
+      type: "success",
+      title: "Einlesen erfolgreich",
+      description:
+        "Die Datei wurde erfolgreich eingelesen und du wirst gleich weitergeleitet...",
+    });
+  } catch (error) {
+    console.error("Error opening file dialog:", error);
+    setToastInfo({
+      open: true,
+      type: "error",
+      title: "Hochladen fehlgeschlagen",
+      description:
+        (error as Error).message ||
+        "Die Datei konnte nicht hochgeladen werden. Eventuell ist sie beschädigt oder unvollständig.",
     });
   }
 };

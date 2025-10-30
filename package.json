@@ -10,8 +10,10 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@ag-grid-community/locale": "^34.3.1",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-toast": "^1.2.15",
     "@tauri-apps/api": "^2.0.0",

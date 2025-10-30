@@ -45,8 +45,6 @@ export default function ProcessingScreen() {
     erp: "C:\\Users\\E.Reindt\\Downloads\\# 10833 Osnabrück_08.09.2025.xlsx",
     rfid: "C:\\Users\\E.Reindt\\Downloads\\Inventory-10833-Klinik -08-09-2025.txt",
   };
-  console.log("Received file paths:", filePaths);
-  console.log("History state data:", history.state);
   const [progress, setProgress] = useState({
     percent: 0,
     message: "Initialisiere...",

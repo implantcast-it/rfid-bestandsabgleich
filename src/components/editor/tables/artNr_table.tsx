@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { AG_GRID_LOCALE_DE } from "@ag-grid-community/locale";
 import { AgGridReact } from "ag-grid-react";
 
 export default function ArtNrTable({ data, theme }: { data: any; theme: any }) {
@@ -52,6 +53,7 @@ export default function ArtNrTable({ data, theme }: { data: any; theme: any }) {
       autoSizeStrategy={{ type: "fitCellContents" }}
       readOnlyEdit
       getRowId={getRowId}
+      localeText={AG_GRID_LOCALE_DE}
     />
   );
 }

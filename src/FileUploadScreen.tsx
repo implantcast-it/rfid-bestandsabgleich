@@ -68,6 +68,7 @@ export default function FileUploadScreen() {
           ?.closest("[data-dropzone-id]")
           ?.getAttribute("data-dropzone-id");
 
+        console.log(dropzoneId);
         if (dropzoneId) {
           setHoveredDropzone(dropzoneId);
         } else {
@@ -145,8 +146,7 @@ export default function FileUploadScreen() {
     setLocation("/processing", { state: filePaths });
   };
 
-  // const requiredFilesSet = filePaths.master && filePaths.erp && filePaths.rfid;
-  const requiredFilesSet = true;
+  const requiredFilesSet = filePaths.master && filePaths.erp && filePaths.rfid;
 
   return (
     <Toast.Provider swipeDirection='right'>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { AG_GRID_LOCALE_DE } from "@ag-grid-community/locale";
 import { AgGridReact } from "ag-grid-react";
 import { utils } from "xlsx";
 
@@ -38,6 +39,7 @@ export default function BarcodeTable({
       pagination
       animateRows={false}
       autoSizeStrategy={{ type: "fitCellContents" }}
+      localeText={AG_GRID_LOCALE_DE}
     />
   );
 }
