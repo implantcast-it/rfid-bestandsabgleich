@@ -1,15 +1,19 @@
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+
 export default function RestartDialog({
   onRestart,
+  isCollapsed,
 }: {
   onRestart: () => void;
+  isCollapsed?: boolean;
 }) {
   return (
     <AlertDialog.Root>
       <AlertDialog.Trigger asChild>
-        <button className='inline-flex justify-center items-center bg-gray-100 hover:bg-gray-200 px-[15px] rounded outline-none focus-visible:outline-2 focus-visible:outline-gray-800 outline-offset-1 h-[35px] font-medium text-gray-800 leading-none select-none'>
-          Prozess neustarten
+        <button className='inline-flex justify-center items-center bg-gray-100 hover:bg-gray-200 px-[15px] rounded outline-none focus-visible:outline-2 focus-visible:outline-gray-800 outline-offset-1 h-[35px] font-medium text-gray-800 text-nowrap leading-none select-none'>
+          {!isCollapsed ? "Prozess neustarten" : <RestartAltIcon />}
         </button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>

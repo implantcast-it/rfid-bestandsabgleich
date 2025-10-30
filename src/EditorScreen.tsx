@@ -101,6 +101,7 @@ export default function EditorScreen() {
     return null;
   }
 
+  // --- ARTNR STATE ---
   const [artNrData, setArtNrData] = useState<any[]>(
     utils.sheet_to_json(
       comparisonData.masterData.Sheets["Bestandsabgleich Artikelnummer"],
@@ -110,6 +111,7 @@ export default function EditorScreen() {
     )
   );
 
+  // --- LOTID STATE & HISTORY STATE ---
   const [lotIdData, setLotIdData] = useState<any[]>(
     utils.sheet_to_json(
       comparisonData.masterData.Sheets["Bestandsabgleich LotId"],
@@ -152,9 +154,14 @@ export default function EditorScreen() {
 
     // 3. Convert the grouped object back to an array and calculate 'Differenz'
     const newArtNrData = Object.values(groupedData).map((group) => {
-      const differenz = group["Eigenbestand nach ERP"] - group["RFID-Scan"];
+      const g = group as {
+        [key: string]: any;
+        "Eigenbestand nach ERP": number;
+        "RFID-Scan": number;
+      };
+      const differenz = g["Eigenbestand nach ERP"] - g["RFID-Scan"];
       return {
-        ...group,
+        ...g,
         Differenz: differenz,
       };
     });

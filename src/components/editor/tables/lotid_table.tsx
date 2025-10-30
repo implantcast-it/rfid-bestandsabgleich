@@ -5,16 +5,15 @@ import {
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
-import { RowSelectionOptions, SelectionColumnDef } from "ag-grid-community";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AG_GRID_LOCALE_DE } from "@ag-grid-community/locale";
 import { AgGridReact } from "ag-grid-react";
 import ErrorToast from "@/components/ui/ErrorToast";
+import { RowSelectionOptions } from "ag-grid-community";
 import SuccessToast from "@/components/ui/SuccessToast";
 
-// --- EXTRACT 'To Do' OPTIONS ---
-// This makes them reusable for the column definition and the bulk select input
+// --- 'To Do' OPTIONS ---
 const TODO_OPTIONS = [
   "",
   "berechnen + liefern",
@@ -25,6 +24,22 @@ const TODO_OPTIONS = [
   "Resteriaustausch",
   "über Gutschrift ins Konsi buchen",
   "Storno / offener Posten",
+];
+
+// --- 'Anmerkung' OPTIONS ---
+const ANMERKUNG_OPTIONS = [
+  "",
+  "AWS",
+  "bereits unterwegs",
+  "Ersatzartikel",
+  "geht zurück",
+  "in Klärung",
+  "Kaufware",
+  "kein RFID Chip",
+  "Klinik bestellt",
+  "Mitnahme",
+  "nicht scanbar / Lot korrekt",
+  "offener Posten",
 ];
 
 export default function LotIdTable({
@@ -58,30 +73,30 @@ export default function LotIdTable({
       {
         field: "Index",
         pinned: "left",
-        headerName: "Zeile",
+        width: 100,
+        checkboxSelection: true,
       },
-      { field: "LotId", pinned: "left", filter: true },
+      { field: "LotId", pinned: "left", filter: true, headerName: "LotID" },
       {
         field: "Artikelnummer",
+        headerName: "Artikelnr.",
         pinned: "left",
         filter: true,
       },
       {
         field: "Produktname",
-        filter: true,
         pinned: "left",
+        filter: true,
         wrapText: true,
-        width: 300,
       },
       {
         field: "Kennzeichen 3",
+        headerName: "Kz 3",
         filter: true,
         pinned: "left",
       },
       {
         field: "Ablaufdatum",
-        filter: true,
-        pinned: "left",
         cellRenderer: (data: { value: string }) => {
           const date = new Date(data.value).toLocaleDateString();
           return date != "Invalid Date" ? date : "-";
@@ -101,6 +116,7 @@ export default function LotIdTable({
       },
       {
         field: "Eigenbestand nach ERP",
+        headerName: "ERP",
         filter: true,
         cellClassRules: {
           "bg-amber-100": (params: any) =>
@@ -115,12 +131,10 @@ export default function LotIdTable({
       },
       {
         field: "RFID-Scan",
+        headerName: "RFID",
         filter: true,
         editable: true,
         cellClassRules: {
-          "bg-blue-100": (params: any) => {
-            return params.data.isEdited;
-          },
           "bg-red-100": (params: any) =>
             params.value == 0 && params.data["Eigenbestand nach ERP"] == 1,
           "bg-amber-100": (params: any) =>
@@ -134,6 +148,7 @@ export default function LotIdTable({
         field: "To Do",
         filter: true,
         cellEditor: "agSelectCellEditor",
+        singleClickEdit: true,
         cellEditorParams: {
           values: TODO_OPTIONS,
         },
@@ -151,6 +166,11 @@ export default function LotIdTable({
       {
         field: "Anmerkung",
         filter: true,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: {
+          values: ANMERKUNG_OPTIONS,
+        },
+        singleClickEdit: true,
         editable: true,
       },
     ];
@@ -309,15 +329,8 @@ export default function LotIdTable({
     return {
       mode: "multiRow",
       enableClickSelection: true, // CRTL+Click to select
-    };
-  }, []);
-
-  const selectionColumnDef = useMemo<SelectionColumnDef>(() => {
-    return {
-      sortable: true,
-      resizable: true,
-      suppressHeaderMenuButton: false,
-      pinned: "left",
+      headerCheckbox: false,
+      checkboxes: false,
     };
   }, []);
 
@@ -331,12 +344,12 @@ export default function LotIdTable({
           onOpenChange={setIsBulkEditOpen}
           className='flex-shrink-0 mb-4'
         >
-          <div className='flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 p-4 border dark:border-gray-700 rounded-t-lg'>
+          <div className='flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 px-4 py-2 border dark:border-gray-700 rounded-t-lg'>
             <h3 className='font-semibold text-gray-800 dark:text-gray-200 text-lg'>
               Massenbearbeitung (für ausgewählte Zeilen)
             </h3>
             <Collapsible.Trigger asChild>
-              <button className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:hover:bg-zinc-800 disabled:opacity-50 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 w-10 h-10 font-medium hover:text-zinc-900 dark:hover:text-zinc-50 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none'>
+              <button className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:hover:bg-zinc-800 disabled:opacity-50 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 w-9 h-9 font-medium hover:text-zinc-900 dark:hover:text-zinc-50 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none'>
                 {isBulkEditOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 <span className='sr-only'>
                   {isBulkEditOpen ? "Einklappen" : "Ausklappen"}
@@ -356,18 +369,23 @@ export default function LotIdTable({
                   'To Do' setzen:
                 </label>
                 <div className='flex gap-2'>
-                  <select
-                    id='bulk-todo'
-                    value={bulkToDo}
-                    onChange={(e) => setBulkTodDo(e.target.value)}
-                    className='block flex-grow bg-white dark:bg-gray-900 shadow-sm px-3 py-2 border border-gray-300 focus:border-accent-500 dark:border-gray-600 rounded-lg focus:outline-none w-full sm:text-sm focus:ring-accent-500'
-                  >
-                    {TODO_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option || "--- Leeren ---"}
-                      </option>
-                    ))}
-                  </select>
+                  <div className='relative flex-grow'>
+                    <select
+                      id='bulk-todo'
+                      value={bulkToDo}
+                      onChange={(e) => setBulkTodDo(e.target.value)}
+                      className='block bg-white dark:bg-gray-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-gray-600 rounded-lg focus:outline-none w-full sm:text-sm focus:ring-accent-500 appearance-none'
+                    >
+                      {TODO_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option || "--- Leeren ---"}
+                        </option>
+                      ))}
+                    </select>
+                    <div className='right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none'>
+                      <ExpandMoreIcon className='text-gray-400' />
+                    </div>
+                  </div>
                   <button
                     onClick={handleApplyBulkTodDo}
                     className='inline-flex justify-center items-center bg-zinc-900 hover:bg-zinc-900/90 dark:bg-zinc-50 dark:hover:bg-zinc-50/90 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-zinc-50 dark:text-zinc-900 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
@@ -386,13 +404,23 @@ export default function LotIdTable({
                   'Anmerkung' setzen:
                 </label>
                 <div className='flex gap-2'>
-                  <input
-                    type='text'
-                    id='bulk-anmerkung'
-                    value={bulkAnmerkung}
-                    onChange={(e) => setBulkAnmerkung(e.target.value)}
-                    className='block flex-grow bg-white dark:bg-gray-900 shadow-sm px-3 py-2 border border-gray-300 focus:border-accent-500 dark:border-gray-600 rounded-lg focus:outline-none w-full sm:text-sm focus:ring-accent-500'
-                  />
+                  <div className='relative flex-grow'>
+                    <select
+                      id='bulk-anmerkung'
+                      value={bulkAnmerkung}
+                      onChange={(e) => setBulkAnmerkung(e.target.value)}
+                      className='block bg-white dark:bg-gray-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-gray-600 rounded-lg focus:outline-none w-full sm:text-sm focus:ring-accent-500 appearance-none'
+                    >
+                      {ANMERKUNG_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option || "--- Leeren ---"}
+                        </option>
+                      ))}
+                    </select>
+                    <div className='right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none'>
+                      <ExpandMoreIcon className='text-gray-400' />
+                    </div>
+                  </div>
                   <button
                     onClick={handleApplyBulkAnmerkung}
                     className='inline-flex justify-center items-center bg-zinc-900 hover:bg-zinc-900/90 dark:bg-zinc-50 dark:hover:bg-zinc-50/90 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-zinc-50 dark:text-zinc-900 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
@@ -411,16 +439,21 @@ export default function LotIdTable({
                   'RFID-Scan' setzen:
                 </label>
                 <div className='flex gap-2'>
-                  <select
-                    id='bulk-rfid'
-                    value={bulkRfidScan}
-                    onChange={(e) => setBulkRfidScan(e.target.value)}
-                    className='block flex-grow bg-white dark:bg-gray-900 shadow-sm px-3 py-2 border border-gray-300 focus:border-accent-500 dark:border-gray-600 rounded-lg focus:outline-none w-full sm:text-sm focus:ring-accent-500'
-                  >
-                    <option value=''>--- Auswählen ---</option>
-                    <option value='0'>0</option>
-                    <option value='1'>1</option>
-                  </select>
+                  <div className='relative flex-grow'>
+                    <select
+                      id='bulk-rfid'
+                      value={bulkRfidScan}
+                      onChange={(e) => setBulkRfidScan(e.target.value)}
+                      className='block bg-white dark:bg-gray-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-gray-600 rounded-lg focus:outline-none w-full sm:text-sm focus:ring-accent-500 appearance-none'
+                    >
+                      <option value=''>--- Auswählen ---</option>
+                      <option value='0'>0</option>
+                      <option value='1'>1</option>
+                    </select>
+                    <div className='right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none'>
+                      <ExpandMoreIcon className='text-gray-400' />
+                    </div>
+                  </div>
                   <button
                     onClick={handleApplyBulkRfidScan}
                     className='inline-flex justify-center items-center bg-zinc-900 hover:bg-zinc-900/90 dark:bg-zinc-50 dark:hover:bg-zinc-50/90 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-zinc-50 dark:text-zinc-900 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
@@ -448,9 +481,10 @@ export default function LotIdTable({
             getRowId={getRowId}
             onCellValueChanged={onCellValueChanged}
             rowSelection={rowSelection}
-            selectionColumnDef={selectionColumnDef}
             localeText={AG_GRID_LOCALE_DE}
             className='h-full'
+            processUnpinnedColumns={() => []}
+            defaultColDef={{ enableCellChangeFlash: true }}
           />
         </div>
 
