@@ -71,7 +71,6 @@ export default function ProcessingScreen() {
       filePaths,
       onProgress: (update) => setProgress(update),
       onSuccess: (results) => {
-        console.log("Processing complete:", results);
         setIsComplete(true);
         setResults(results);
       },

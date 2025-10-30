@@ -21,7 +21,6 @@ export async function compareFiles(
   try {
     const [erp, debitor] = erpSheet(erpData);
     masterData.Sheets["Ax-Bestand"] = utils.json_to_sheet(erp);
-    console.log(erp);
 
     let barcode: DataRow[] = [];
     if (barcodeData) {
@@ -76,8 +75,6 @@ const erpSheet = (erp: WorkBook): [DataRow[], string] => {
   }
 
   let data: DataRow[] = utils.sheet_to_json(erpList, { header: 0 });
-
-  console.log("ERP Data Rows:", data);
 
   // Rename "Physischer Bestand" to "Eigenbestand nach ERP"
   data = data.map((item) => {

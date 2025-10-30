@@ -51,21 +51,6 @@ interface PageConfigMap {
   [key: string]: PageConfig;
 }
 
-// Mock Data Type (Define more specifically based on actual data if needed)
-interface ComparisonData {
-  [key: string]: any[];
-}
-
-// --- Mock Data ---
-const MOCK_DATA: ComparisonData = {
-  erp: [],
-  barcode: [],
-  rfid: [],
-  scan: [],
-  lotId: [],
-  artikelNr: [],
-};
-
 // --- Navigation Structure ---
 const navSections: NavSection[] = [
   {
@@ -108,7 +93,7 @@ export default function EditorScreen() {
     hasHeaderButtons: false,
   };
 
-  const comparisonData = history.state || MOCK_DATA;
+  const comparisonData = history.state || null;
   const [, setLocation] = useLocation();
 
   if (!comparisonData) {

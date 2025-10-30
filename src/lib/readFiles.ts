@@ -67,8 +67,6 @@ export async function processFiles({
     const { master, erp, rfid, barcode } = filePaths;
     const results: ProcessingResults = {};
 
-    console.log(filePaths);
-
     onProgress({ percent: 0, message: "Starte Verarbeitung..." });
     await wait(200);
 

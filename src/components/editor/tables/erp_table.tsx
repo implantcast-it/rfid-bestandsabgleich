@@ -10,7 +10,6 @@ export default function ErpTable({ data, theme }: { data: any; theme: any }) {
 
   useEffect(() => {
     const rows = utils.sheet_to_json(data);
-    console.log(rows);
     const columns = [
       {
         field: "Artikelnummer",

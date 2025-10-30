@@ -68,7 +68,6 @@ export default function FileUploadScreen() {
           ?.closest("[data-dropzone-id]")
           ?.getAttribute("data-dropzone-id");
 
-        console.log(dropzoneId);
         if (dropzoneId) {
           setHoveredDropzone(dropzoneId);
         } else {
