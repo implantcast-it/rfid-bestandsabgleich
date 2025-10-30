@@ -35,6 +35,10 @@ export default function FileUploadScreen() {
     barcode: undefined,
   });
 
+  if (history.state) {
+    Object.assign(filePaths, history.state);
+  }
+
   const [hoveredDropzone, setHoveredDropzone] = useState<string | null>(null);
   const [isDraggingOverWindow, setIsDraggingOverWindow] = useState(false);
 

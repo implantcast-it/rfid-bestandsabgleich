@@ -68,9 +68,9 @@ const pageConfig: PageConfigMap = {
   barcode: { title: "Barcode Scan", hasHeaderButtons: false },
   rfid: { title: "RFID Scan", hasHeaderButtons: false },
   scan: { title: "Barcode & RFID Vergleich", hasHeaderButtons: false },
-  lotId: { title: "Bestandsabgleich nach LotId", hasHeaderButtons: true },
+  lotId: { title: "Abgleich nach LotId", hasHeaderButtons: true },
   artikelNr: {
-    title: "Bestandsabgleich nach Artikelnummer",
+    title: "Abgleich nach Artikelnummer",
     hasHeaderButtons: false,
   },
 };

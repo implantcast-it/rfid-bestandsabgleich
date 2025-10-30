@@ -3,6 +3,7 @@ import * as Toast from "@radix-ui/react-toast";
 import { handleExcelDownload, handlePdfDownload } from "./lib/utils";
 import { useEffect, useState } from "react";
 
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DownloadIcon from "@mui/icons-material/Download";
 import EditNoteIcon from "@mui/icons-material/EditNote";
@@ -86,7 +87,7 @@ export default function ProcessingScreen() {
   return (
     <Toast.Provider swipeDirection='right'>
       <div className='flex flex-col justify-center items-center bg-background-light dark:bg-background-dark p-4 min-h-screen font-display text-gray-800 dark:text-gray-200'>
-        <div className='bg-white dark:bg-gray-800 shadow-lg p-8 rounded-lg w-full max-w-3xl'>
+        <div className='relative bg-white dark:bg-gray-800 shadow-lg p-8 rounded-lg w-full max-w-3xl'>
           {/* Header */}
           <div className='mb-6 text-center'>
             <h1 className='font-bold text-gray-900 dark:text-white text-2xl'>
@@ -97,7 +98,6 @@ export default function ProcessingScreen() {
                   : "Deine Daten werden verarbeitet..."}
             </h1>
           </div>
-
           {/* --- General Progress Bar --- */}
           <div className='space-y-3 mb-8'>
             <div className='flex justify-between items-center'>
@@ -129,9 +129,7 @@ export default function ProcessingScreen() {
             )}
           </div>
           {/* --- End General Progress Bar --- */}
-
           <hr className='my-8 border-gray-200 dark:border-gray-700' />
-
           {/* --- Section 1: Editor or Error --- */}
           <div className='mb-8'>
             <h2 className='font-semibold text-gray-900 dark:text-white text-lg'>
@@ -163,7 +161,6 @@ export default function ProcessingScreen() {
               </button>
             )}
           </div>
-
           {/* --- Section 2: Downloads --- */}
           <div
             className={`bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg ${buttonsDisabled ? "opacity-50" : ""}`}
@@ -193,6 +190,16 @@ export default function ProcessingScreen() {
                 <span>Excel-Vergleich herunterladen</span>
               </button>
             </div>
+          </div>
+          <div className='-bottom-8 left-1/2 absolute -translate-x-1/2 transform'>
+            <button
+              onClick={() => setLocation("/upload", { state: filePaths })}
+              className='flex justify-center items-center space-x-2 hover:font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-100 dark:text-gray-300 text-sm transition-all'
+              title='Zurück zur Dateiauswahl'
+            >
+              <ArrowBackIcon style={{ fontSize: 18 }} />
+              <span>Zurück</span>
+            </button>
           </div>
         </div>
       </div>
