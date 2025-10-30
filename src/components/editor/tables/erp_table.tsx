@@ -50,7 +50,7 @@ export default function ErpTable({ data, theme }: { data: any; theme: any }) {
 
     setRows(rows);
     setColumns(columns);
-  }, [data]);
+  }, []);
 
   return (
     <AgGridReact

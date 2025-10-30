@@ -37,7 +37,7 @@ export default function ArtNrTable({ data, theme }: { data: any; theme: any }) {
       },
     ];
     setColumns(columns);
-  }, [data]);
+  }, []);
 
   const getRowId = useCallback((params: any) => params.data.id, []);
 

@@ -101,7 +101,7 @@ export default function EditorScreen() {
     return null;
   }
 
-  const [artNrData, _] = useState(
+  const [artNrData, setArtNrData] = useState<any[]>(
     utils.sheet_to_json(
       comparisonData.masterData.Sheets["Bestandsabgleich Artikelnummer"],
       {
@@ -118,6 +118,50 @@ export default function EditorScreen() {
       }
     )
   );
+
+  // --- Listener for changes on the lotId table for changing rfid-scan amounts ---
+  useEffect(() => {
+    if (!lotIdData) return; // Don't run if data isn't loaded
+
+    // 1. Group data by 'Artikelnummer'
+    const groupedData = lotIdData.reduce(
+      (acc, row) => {
+        const artikelNr = row["Artikelnummer"];
+        if (!artikelNr) return acc; // Skip rows without an Artikelnummer
+
+        if (!acc[artikelNr]) {
+          // Initialize the group if it doesn't exist
+          acc[artikelNr] = {
+            Artikelnummer: artikelNr,
+            Produktname: row["Produktname"], // Assume Produktname is the same for all
+            "Eigenbestand nach ERP": 0,
+            "RFID-Scan": 0,
+            id: artikelNr, // Use Artikelnummer as a unique ID for the ArtNrTable
+          };
+        }
+
+        // 2. Sum the values
+        acc[artikelNr]["Eigenbestand nach ERP"] +=
+          Number(row["Eigenbestand nach ERP"]) || 0;
+        acc[artikelNr]["RFID-Scan"] += Number(row["RFID-Scan"]) || 0;
+
+        return acc;
+      },
+      {} as Record<string, any>
+    );
+
+    // 3. Convert the grouped object back to an array and calculate 'Differenz'
+    const newArtNrData = Object.values(groupedData).map((group) => {
+      const differenz = group["Eigenbestand nach ERP"] - group["RFID-Scan"];
+      return {
+        ...group,
+        Differenz: differenz,
+      };
+    });
+
+    // 4. Update the artNrData state
+    setArtNrData(newArtNrData);
+  }, [lotIdData]); // listens for changes on the lotIdData
 
   // --- TOAST STATE ---
   const [toastInfo, setToastInfo] = useState<{

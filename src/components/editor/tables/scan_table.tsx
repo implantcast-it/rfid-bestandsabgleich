@@ -18,7 +18,7 @@ export default function ScanTable({ data, theme }: { data: any; theme: any }) {
 
     setColumns(columns);
     setRows(rows);
-  }, [data]);
+  }, []);
 
   return (
     <AgGridReact

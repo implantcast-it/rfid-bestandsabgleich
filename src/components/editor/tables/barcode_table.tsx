@@ -27,7 +27,7 @@ export default function BarcodeTable({
 
     setColumns(columns);
     setRows(rows);
-  }, [data]);
+  }, []);
 
   return (
     <AgGridReact

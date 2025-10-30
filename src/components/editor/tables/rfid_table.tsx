@@ -20,7 +20,7 @@ export default function RfidTable({ data, theme }: { data: any; theme: any }) {
 
     setColumns(columns);
     setRows(rows);
-  }, [data]);
+  }, []);
 
   return (
     <AgGridReact
