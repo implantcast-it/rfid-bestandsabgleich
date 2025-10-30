@@ -17,6 +17,7 @@ export const downloadFile = (data: WorkBook): WorkBook => {
       "Eigenbestand nach ERP": item["Eigenbestand nach ERP"],
       "RFID-Scan": item["RFID-Scan"],
       Differenz: item["Differenz"],
+      id: item["id"],
     }));
   const artNrSheet = utils.json_to_sheet(artNrData);
 
@@ -34,6 +35,7 @@ export const downloadFile = (data: WorkBook): WorkBook => {
       "RFID-Scan": item["RFID-Scan"],
       "To Do": item["To Do"],
       Anmerkung: item["Anmerkung"],
+      id: item["id"],
     }));
   const lotIdSheet = utils.json_to_sheet(lotIdData);
 

@@ -2,9 +2,11 @@ import * as Toast from "@radix-ui/react-toast";
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ErrorToast from "./components/ui/ErrorToast";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import InsightsIcon from "@mui/icons-material/Insights";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import SuccessToast from "./components/ui/SuccessToast";
 import SyncIcon from "@mui/icons-material/Sync";
@@ -12,6 +14,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { handleExistingFileOpen } from "./lib/utils";
 import { useLocation } from "wouter";
 import { useState } from "react";
+import { useTheme } from "./context/ThemeContext";
 
 /* Start Screen for the Application */
 export default function StartScreen() {
@@ -23,6 +26,7 @@ export default function StartScreen() {
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [, setLocation] = useLocation();
+  const { theme, toggleTheme } = useTheme();
   return (
     <Toast.Provider swipeDirection='right'>
       <div className='flex justify-center items-center bg-background-light dark:bg-background-dark p-12 min-h-screen font-display text-gray-800 dark:text-gray-200'>
@@ -91,7 +95,7 @@ export default function StartScreen() {
             <div className='flex gap-4'>
               <a
                 href='upload'
-                className='flex items-center space-x-2 bg-primary hover:bg-teal-700 px-5 py-3 rounded-lg font-semibold text-white transition-colors cursor-pointer'
+                className='flex items-center space-x-2 bg-primary hover:bg-primary/80 px-5 py-3 rounded-lg font-semibold text-white transition-colors cursor-pointer'
               >
                 <span>Dateien hochladen</span>
                 <ArrowForwardIcon />
@@ -104,7 +108,7 @@ export default function StartScreen() {
                   );
                 }}
                 disabled={loading}
-                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-5 py-3 rounded-lg font-semibold text-gray-800 transition-colors'
+                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-5 py-3 rounded-lg font-semibold text-gray-800 dark:text-gray-300 transition-colors'
               >
                 <span>Abgleich einlesen</span>
                 {loading ? (
@@ -116,6 +120,18 @@ export default function StartScreen() {
             </div>
           </div>
         </div>
+        {/* --- Theme Switcher Button --- */}
+        <button
+          onClick={toggleTheme}
+          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
+          aria-label='Toggle light/dark theme'
+        >
+          {theme === "light" ? (
+            <DarkModeOutlinedIcon fontSize='small' />
+          ) : (
+            <LightModeOutlinedIcon fontSize='small' />
+          )}
+        </button>
       </div>
       {/* --- Toast Components & Viewport --- */}
       {toastInfo?.type === "success" && (

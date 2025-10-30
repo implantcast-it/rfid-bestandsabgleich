@@ -27,7 +27,7 @@ export default function EditorPage({
         onAutoFill={onAutoFill}
       />
       {/* Content Area */}
-      <div className='flex-1 bg-background-light dark:bg-background-dark p-4 overflow-auto'>
+      <div className='flex-1 bg-background-light dark:bg-gray-900 p-4 overflow-auto'>
         {children}
       </div>
     </>

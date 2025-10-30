@@ -145,7 +145,7 @@ export default function ProcessingScreen() {
             {error ? (
               <a
                 href='/'
-                className='flex justify-center items-center space-x-2 bg-primary hover:bg-teal-700 disabled:opacity-50 px-4 py-3 rounded-lg w-full text-white transition-colors disabled:cursor-not-allowed'
+                className='flex justify-center items-center space-x-2 bg-primary hover:bg-primary/80 disabled:opacity-50 px-4 py-3 rounded-lg w-full text-white transition-colors disabled:cursor-not-allowed'
               >
                 <RestartAltOutlinedIcon style={{ fontSize: 20 }} />
                 <span>Abgleich neustarten</span>
@@ -156,7 +156,7 @@ export default function ProcessingScreen() {
                 onClick={() => {
                   results && setLocation("/editor", { state: results });
                 }}
-                className='flex justify-center items-center space-x-2 bg-primary hover:bg-teal-700 disabled:opacity-50 px-4 py-3 rounded-lg w-full text-white transition-colors disabled:cursor-not-allowed'
+                className='flex justify-center items-center space-x-2 bg-primary hover:bg-primary/80 disabled:opacity-50 px-4 py-3 rounded-lg w-full text-white transition-colors disabled:cursor-not-allowed'
               >
                 <EditNoteIcon style={{ fontSize: 20 }} />
                 <span>Editor öffnen</span>
@@ -179,7 +179,7 @@ export default function ProcessingScreen() {
               <button
                 onClick={() => handlePdfDownload(results, setToastInfo)}
                 disabled={buttonsDisabled}
-                className='flex flex-1 justify-center items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-4 py-3 rounded-lg text-gray-900 transition-colors disabled:cursor-not-allowed'
+                className='flex flex-1 justify-center items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-3 rounded-lg text-gray-900 dark:text-gray-300 transition-colors disabled:cursor-not-allowed'
               >
                 <DownloadIcon style={{ fontSize: 20 }} />
                 <span>PDF herunterladen</span>
@@ -187,7 +187,7 @@ export default function ProcessingScreen() {
               <button
                 onClick={() => handleExcelDownload(results, setToastInfo)}
                 disabled={buttonsDisabled}
-                className='flex flex-1 justify-center items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-4 py-3 rounded-lg text-gray-900 transition-colors disabled:cursor-not-allowed'
+                className='flex flex-1 justify-center items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-3 rounded-lg text-gray-900 dark:text-gray-300 transition-colors disabled:cursor-not-allowed'
               >
                 <DownloadIcon style={{ fontSize: 20 }} />
                 <span>Excel-Vergleich herunterladen</span>

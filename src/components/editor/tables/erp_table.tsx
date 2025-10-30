@@ -33,10 +33,10 @@ export default function ErpTable({ data, theme }: { data: any; theme: any }) {
           "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen",
         cellClassRules: {
           // apply bg-red-100 where params.value is smaller than the current date
-          "bg-red-100": (params: { value: string }) =>
+          "bg-red-100 dark:bg-red-400/80": (params: { value: string }) =>
             new Date(params.value) < new Date(),
           // apply bg-amber-100 where params.value is greater than the current date but not more than 3 months
-          "bg-amber-100": (params: { value: string }) =>
+          "bg-amber-100 dark:bg-amber-400/80": (params: { value: string }) =>
             new Date(params.value) > new Date() &&
             new Date(params.value) <
               new Date(new Date().setMonth(new Date().getMonth() + 3)),

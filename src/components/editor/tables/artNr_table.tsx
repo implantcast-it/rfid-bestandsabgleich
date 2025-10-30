@@ -30,9 +30,11 @@ export default function ArtNrTable({ data, theme }: { data: any; theme: any }) {
         field: "Differenz",
         filter: true,
         cellClassRules: {
-          "bg-green-100": (params: any) => params.value == 0,
-          "bg-amber-100": (params: any) => params.value < 0,
-          "bg-red-100": (params: any) => params.value > 0,
+          "bg-green-100 dark:bg-green-400/60": (params: any) =>
+            params.value == 0,
+          "bg-amber-100 dark:bg-amber-400/80": (params: any) =>
+            params.value < 0,
+          "bg-red-100 dark:bg-red-400/80": (params: any) => params.value > 0,
         },
       },
     ];

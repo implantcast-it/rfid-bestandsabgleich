@@ -50,7 +50,7 @@ export default function Sidebar({
       {/* --- SIDEBAR TOGGLE BUTTON --- */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className='top-12 -right-4 z-10 absolute bg-white hover:bg-gray-100 shadow-lg p-1.5 border rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 text-gray-700 transition-colors'
+        className='top-12 -right-4 z-10 absolute bg-white hover:bg-gray-100 dark:bg-[#0d2536] dark:hover:bg-gray-800 p-1.5 border dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-800 text-gray-700 dark:text-gray-300 transition-colors'
         aria-label={isOpen ? "Sidebar schließen" : "Sidebar öffnen"}
       >
         {isOpen ? (
@@ -107,7 +107,7 @@ export default function Sidebar({
                         title={!isOpen ? item.name : undefined}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
                           isActive
-                            ? "bg-primary/20 text-primary dark:text-primary"
+                            ? "bg-primary/20 dark:bg-primary/50 text-primary dark:text-gray-300"
                             : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         } ${
                           !isOpen && "justify-center" // Center icon when collapsed
@@ -134,7 +134,7 @@ export default function Sidebar({
         {/* --- FOOTER BUTTONS --- */}
         <div className={`flex flex-col gap-2 ${isOpen ? "p-2 w-full" : "p-0"}`}>
           <button
-            className='flex justify-center items-center gap-2 bg-primary hover:bg-teal-700 px-2 rounded-lg w-full h-9 overflow-hidden font-medium text-white text-sm text-nowrap leading-normal tracking-[0.015em] transition-colors cursor-pointer'
+            className='flex justify-center items-center gap-2 bg-primary hover:bg-primary/80 px-2 rounded-lg w-full h-9 overflow-hidden font-medium text-white text-sm text-nowrap leading-normal tracking-[0.015em] transition-colors cursor-pointer'
             onClick={onDownloadPdf}
             title={!isOpen ? "PDF Herunterladen" : undefined}
           >
@@ -142,7 +142,7 @@ export default function Sidebar({
             <span className={`${!isOpen && "sr-only"}`}>PDF Herunterladen</span>
           </button>
           <button
-            className='flex justify-center items-center gap-2 bg-primary hover:bg-teal-700 px-2 rounded-lg w-full h-9 overflow-hidden font-medium text-white text-sm text-nowrap leading-normal tracking-[0.015em] transition-colors cursor-pointer'
+            className='flex justify-center items-center gap-2 bg-primary hover:bg-primary/80 px-2 rounded-lg w-full h-9 overflow-hidden font-medium text-white text-sm text-nowrap leading-normal tracking-[0.015em] transition-colors cursor-pointer'
             onClick={onDownloadExcel}
             title={!isOpen ? "Excel Herunterladen" : undefined}
           >

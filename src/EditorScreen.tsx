@@ -26,20 +26,11 @@ import SensorsOutlinedIcon from "@mui/icons-material/SensorsOutlined";
 import SuccessToast from "@/components/ui/SuccessToast"; // Adjust path as needed
 import TagOutlinedIcon from "@mui/icons-material/TagOutlined";
 import { useLocation } from "wouter";
+import { useTheme } from "./context/ThemeContext";
 import { utils } from "xlsx";
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-const theme = themeQuartz.withPart(iconSetMaterial).withParams({
-  accentColor: "#005F6B",
-  browserColorScheme: "light",
-  cellHorizontalPaddingScale: 1,
-  columnBorder: false,
-  headerFontSize: 14,
-  iconSize: 18,
-  rowVerticalPaddingScale: 0.7,
-});
 
 // --- Type Definitions ---
 interface PageConfig {
@@ -119,6 +110,39 @@ export default function EditorScreen() {
         header: 0,
       }
     )
+  );
+
+  console.log("Initial LotId Data:", lotIdData);
+
+  // --- TABLE THEME ---
+  const { theme } = useTheme();
+  const tableTheme = themeQuartz.withPart(iconSetMaterial).withParams(
+    theme == "light"
+      ? {
+          accentColor: "#005F6B",
+          browserColorScheme: theme,
+          cellHorizontalPaddingScale: 1,
+          columnBorder: false,
+          headerFontSize: 14,
+          iconSize: 18,
+          rowVerticalPaddingScale: 0.7,
+        }
+      : {
+          accentColor: "#005F6B",
+          browserColorScheme: theme,
+          cellHorizontalPaddingScale: 1,
+          backgroundColor: "#18212f",
+          columnBorder: false,
+          chromeBackgroundColor: {
+            ref: "foregroundColor",
+            mix: 0.07,
+            onto: "backgroundColor",
+          },
+          foregroundColor: "#FFF",
+          headerFontSize: 14,
+          iconSize: 18,
+          rowVerticalPaddingScale: 0.7,
+        }
   );
 
   // --- Listener for changes on the lotId table for changing rfid-scan amounts ---
@@ -344,34 +368,38 @@ export default function EditorScreen() {
       case "erp":
         return (
           <ErpTable
-            theme={theme}
+            theme={tableTheme}
             data={comparisonData.masterData.Sheets["Ax-Bestand"]}
           />
         );
       case "barcode":
         return (
           <BarcodeTable
-            theme={theme}
+            theme={tableTheme}
             data={comparisonData.masterData.Sheets["Barcode-Scan"]}
           />
         );
       case "rfid":
         return (
           <RfidTable
-            theme={theme}
+            theme={tableTheme}
             data={comparisonData.masterData.Sheets["RFID-Scan"]}
           />
         );
       case "lotId":
         return (
-          <LotIdTable theme={theme} data={lotIdData} onChange={setLotIdData} />
+          <LotIdTable
+            theme={tableTheme}
+            data={lotIdData}
+            onChange={setLotIdData}
+          />
         );
       case "artikelNr":
-        return <ArtNrTable theme={theme} data={artNrData} />;
+        return <ArtNrTable theme={tableTheme} data={artNrData} />;
       case "scan":
         return (
           <ScanTable
-            theme={theme}
+            theme={tableTheme}
             data={comparisonData.masterData.Sheets["Vergleich der Scans"]}
           />
         );

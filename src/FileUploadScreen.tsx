@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 
 import ArrowBackwardsIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ErrorToast from "./components/ui/ErrorToast";
 import FileUploadDropzone from "./components/FileUploadDropzone";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import { listen } from "@tauri-apps/api/event";
 import { useLocation } from "wouter";
+import { useTheme } from "./context/ThemeContext";
 
 interface DragOverEvent {
   payload: {
@@ -36,6 +39,7 @@ export default function FileUploadScreen() {
   const [isDraggingOverWindow, setIsDraggingOverWindow] = useState(false);
 
   const [, setLocation] = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const [toastState, setToastState] = useState({
     open: false,
@@ -207,7 +211,7 @@ export default function FileUploadScreen() {
             <div className='flex justify-between mt-8'>
               <a
                 href='/'
-                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-5 py-2 rounded-lg font-semibold text-gray-800 transition-colors'
+                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-5 py-2 rounded-lg font-semibold text-gray-800 dark:text-gray-300 transition-colors'
               >
                 <ArrowBackwardsIcon />
                 <span>Zurück</span>
@@ -215,7 +219,7 @@ export default function FileUploadScreen() {
               <button
                 onClick={handleUploadAllClick}
                 disabled={!requiredFilesSet}
-                className='flex items-center space-x-2 bg-primary hover:bg-teal-700 disabled:opacity-50 px-5 py-2 rounded-lg font-semibold text-white transition-colors disabled:cursor-not-allowed'
+                className='flex items-center space-x-2 bg-primary hover:bg-primary/80 disabled:opacity-50 px-5 py-2 rounded-lg font-semibold text-white transition-colors disabled:cursor-not-allowed'
               >
                 <span>Daten verarbeiten</span>
                 <ArrowForwardIcon />
@@ -223,6 +227,18 @@ export default function FileUploadScreen() {
             </div>
           </div>
         </div>
+        {/* --- Theme Switcher Button --- */}
+        <button
+          onClick={toggleTheme}
+          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
+          aria-label='Toggle light/dark theme'
+        >
+          {theme === "light" ? (
+            <DarkModeOutlinedIcon fontSize='small' />
+          ) : (
+            <LightModeOutlinedIcon fontSize='small' />
+          )}
+        </button>
       </div>
 
       {/* Render the Toast and its Viewport */}
