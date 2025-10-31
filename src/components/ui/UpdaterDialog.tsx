@@ -53,7 +53,7 @@ export function UpdaterDialog() {
       await updateInfo.downloadAndInstall((event) => {
         switch (event.event) {
           case "Started":
-            contentLength = event.data.contentLength;
+            contentLength = event.data.contentLength || 0;
             setDownloadProgress("Herunterladen... (0%)");
             break;
           case "Progress":
@@ -69,10 +69,12 @@ export function UpdaterDialog() {
 
       console.log("Update installed, relaunching...");
       await relaunch();
-    } catch (e) {
+    } catch (e: unknown) {
       console.error("Update installation failed:", e);
       setIsDownloading(false);
-      setDownloadProgress(`Fehler: ${e.message || "Update fehlgeschlagen"}`);
+      setDownloadProgress(
+        `Fehler: ${e instanceof Error ? e.message : "Update fehlgeschlagen"}`
+      );
     }
   };
 

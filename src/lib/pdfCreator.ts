@@ -83,9 +83,22 @@ export const exporToPDF = async (data: {
     doc.text("Uhrzeit: " + new Date().toLocaleTimeString("de-DE"), 8, 35);
     doc.text("Außendienstmitarbeiter:", 8, 40);
 
+    type ComparisonRow = RowInput & {
+      "Eigenbestand nach ERP": string;
+      "RFID-Scan": string;
+      "To Do": string;
+      "Kennzeichen 3": string;
+      Anmerkung: string;
+      Index: string;
+      LotId: string;
+      Artikelnummer: string;
+      Ablaufdatum: string;
+      Produktname: string;
+    };
+
     const comparisonData = utils.sheet_to_json(
       data.masterData.Sheets["Bestandsabgleich LotId"]
-    );
+    ) as ComparisonRow[];
 
     let rfidSum = 0;
     let erpSum = 0;
@@ -168,8 +181,8 @@ export const exporToPDF = async (data: {
       // 4. Get the PDF data from jsPDF as a binary array
       const pdfData = doc.output("arraybuffer");
 
-      // 5. Use Tauri's API to write the file to the path the user selected
-      await writeFile(filePath, pdfData);
+      // 5. Convert ArrayBuffer to Uint8Array and use Tauri's API to write the file
+      await writeFile(filePath, new Uint8Array(pdfData));
 
       // 6. Return success object
       return { success: true, filePath };

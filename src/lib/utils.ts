@@ -5,7 +5,6 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { downloadFile } from "./download";
 import { exporToPDF } from "./pdfCreator";
 import { loadComparisonFile } from "./readFiles";
-import { useLocation } from "wouter";
 import { writeFile } from "@tauri-apps/plugin-fs";
 
 // Async handler for Excel download
