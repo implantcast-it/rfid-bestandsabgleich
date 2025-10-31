@@ -1,13 +1,10 @@
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-balham.css";
-
 import { useEffect, useState } from "react";
 
+import { AG_GRID_LOCALE_DE } from "@ag-grid-community/locale";
 import { AgGridReact } from "ag-grid-react";
-import { TabsContent } from "../ui/tabs";
 import { utils } from "xlsx";
 
-export default function ErpTable({ data }: { data: any }) {
+export default function ErpTable({ data, theme }: { data: any; theme: any }) {
   const [rows, setRows] = useState<any[]>([]);
   const [columns, setColumns] = useState<any[]>([]);
 
@@ -36,10 +33,10 @@ export default function ErpTable({ data }: { data: any }) {
           "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen",
         cellClassRules: {
           // apply bg-red-100 where params.value is smaller than the current date
-          "bg-red-100": (params: { value: string }) =>
+          "bg-red-100 dark:bg-red-400/80": (params: { value: string }) =>
             new Date(params.value) < new Date(),
           // apply bg-amber-100 where params.value is greater than the current date but not more than 3 months
-          "bg-amber-100": (params: { value: string }) =>
+          "bg-amber-100 dark:bg-amber-400/80": (params: { value: string }) =>
             new Date(params.value) > new Date() &&
             new Date(params.value) <
               new Date(new Date().setMonth(new Date().getMonth() + 3)),
@@ -53,19 +50,19 @@ export default function ErpTable({ data }: { data: any }) {
 
     setRows(rows);
     setColumns(columns);
-  }, [data]);
+  }, []);
 
   return (
-    <TabsContent value='0' className='h-[calc(100vh-65px)] ag-theme-balham'>
-      <AgGridReact
-        rowData={rows}
-        columnDefs={columns}
-        paginationPageSize={50}
-        paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
-        pagination
-        animateRows={false}
-        autoSizeStrategy={{ type: "fitCellContents" }}
-      />
-    </TabsContent>
+    <AgGridReact
+      theme={theme}
+      rowData={rows}
+      columnDefs={columns}
+      paginationPageSize={50}
+      paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
+      pagination
+      animateRows={false}
+      autoSizeStrategy={{ type: "fitCellContents" }}
+      localeText={AG_GRID_LOCALE_DE}
+    />
   );
 }

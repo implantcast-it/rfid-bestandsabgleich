@@ -1,13 +1,10 @@
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-balham.css";
-
 import { useEffect, useState } from "react";
 
+import { AG_GRID_LOCALE_DE } from "@ag-grid-community/locale";
 import { AgGridReact } from "ag-grid-react";
-import { TabsContent } from "../ui/tabs";
 import { utils } from "xlsx";
 
-export default function RfidTable({ data }: { data: any }) {
+export default function RfidTable({ data, theme }: { data: any; theme: any }) {
   const [rows, setRows] = useState<any[]>([]);
   const [columns, setColumns] = useState<any[]>([]);
 
@@ -23,19 +20,19 @@ export default function RfidTable({ data }: { data: any }) {
 
     setColumns(columns);
     setRows(rows);
-  }, [data]);
+  }, []);
 
   return (
-    <TabsContent value='2' className='h-[calc(100vh-65px)] ag-theme-balham'>
-      <AgGridReact
-        rowData={rows}
-        columnDefs={columns}
-        paginationPageSize={50}
-        paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
-        pagination
-        animateRows={false}
-        autoSizeStrategy={{ type: "fitCellContents" }}
-      />
-    </TabsContent>
+    <AgGridReact
+      theme={theme}
+      rowData={rows}
+      columnDefs={columns}
+      paginationPageSize={50}
+      paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
+      pagination
+      animateRows={false}
+      autoSizeStrategy={{ type: "fitCellContents" }}
+      localeText={AG_GRID_LOCALE_DE}
+    />
   );
 }

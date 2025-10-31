@@ -2,19 +2,24 @@ import "./index.css";
 
 import { Route, Switch } from "wouter";
 
-import App from "./App";
-import Editor from "./Editor";
-import Finished from "./Finished";
+import EditorScreen from "./EditorScreen";
+import FileUploadScreen from "./FileUploadScreen";
+import ProcessingScreen from "./ProcessingScreen";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import StartScreen from "./StartScreen";
+import { ThemeProvider } from "./context/ThemeContext";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <Switch>
-      <Route path='/' component={App} />
-      <Route path='/editor' component={Editor} />
-      <Route path='/finished' component={Finished} />
-      <Route>404 Error - Das hat nicht funktioniert</Route>
-    </Switch>
+    <ThemeProvider>
+      <Switch>
+        <Route path='/' component={StartScreen} />
+        <Route path='/upload' component={FileUploadScreen} />
+        <Route path='/processing' component={ProcessingScreen} />
+        <Route path='/editor' component={EditorScreen} />
+        <Route>404 Error - Das hat nicht funktioniert</Route>
+      </Switch>
+    </ThemeProvider>
   </React.StrictMode>
 );
