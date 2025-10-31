@@ -10,6 +10,7 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import SuccessToast from "./components/ui/SuccessToast";
 import SyncIcon from "@mui/icons-material/Sync";
+import { UpdaterDialog } from "./components/ui/UpdaterDialog";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { handleExistingFileOpen } from "./lib/utils";
 import { useLocation } from "wouter";
@@ -133,6 +134,11 @@ export default function StartScreen() {
           )}
         </button>
       </div>
+
+      {/* --- Auto-Updater for the application --- */}
+      <UpdaterDialog />
+      {/* --- END --- */}
+
       {/* --- Toast Components & Viewport --- */}
       {toastInfo?.type === "success" && (
         <SuccessToast

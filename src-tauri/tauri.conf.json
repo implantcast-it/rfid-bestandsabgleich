@@ -25,14 +25,17 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDEyMjRGRTY2Q0U2MUFBMzEKUldReHFtSE9adjRrRXBGWWZvMG9uV2lhb3BxT2ZIWGZzNC9QMlJkR0wyTHArSHZSZ3lxZk5OUzIK",
       "endpoints": [
-        "https://api.github.com/repos/implantcast-it/rfid-bestandsabgleich/releases/latest/download/latest.json"
-      ]
+        "https://github.com/implantcast-it/rfid-bestandsabgleich/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   },
   "app": {
     "windows": [
       {
-        "title": "implantcast GmbH - Bestandsabgleich v4.0",
+        "title": "implantcast GmbH - Bestandsabgleich v4.0.1",
         "minWidth": 1075,
         "minHeight": 700,
         "width": 1075,
