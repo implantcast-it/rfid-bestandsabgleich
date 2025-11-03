@@ -50,7 +50,7 @@ export default function Sidebar({
       {/* --- SIDEBAR TOGGLE BUTTON --- */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className='top-12 -right-4 z-10 absolute bg-white hover:bg-gray-100 dark:bg-[#0d2536] dark:hover:bg-gray-800 p-1.5 border dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-800 text-gray-700 dark:text-gray-300 transition-colors'
+        className='top-12 -right-4 z-10 absolute bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 p-1.5 border dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-800 text-gray-700 dark:text-gray-300 transition-colors'
         aria-label={isOpen ? "Sidebar schließen" : "Sidebar öffnen"}
       >
         {isOpen ? (

@@ -119,7 +119,7 @@ export default function EditorScreen() {
   const tableTheme = themeQuartz.withPart(iconSetMaterial).withParams(
     theme == "light"
       ? {
-          accentColor: "#005F6B",
+          accentColor: "#006860",
           browserColorScheme: theme,
           cellHorizontalPaddingScale: 1,
           columnBorder: false,
@@ -128,7 +128,7 @@ export default function EditorScreen() {
           rowVerticalPaddingScale: 0.7,
         }
       : {
-          accentColor: "#005F6B",
+          accentColor: "#006860",
           browserColorScheme: theme,
           cellHorizontalPaddingScale: 1,
           backgroundColor: "#18212f",
@@ -416,7 +416,7 @@ export default function EditorScreen() {
 
   return (
     <Toast.Provider>
-      <div className='flex bg-background-light dark:bg-background-dark w-full h-screen overflow-hidden font-display text-gray-800 dark:text-gray-200'>
+      <div className='flex bg-background-light dark:bg-slate-800 w-full h-screen overflow-hidden font-display text-gray-800 dark:text-gray-200'>
         {/* ... (Sidebar) ... */}
         <Sidebar
           navSections={navSections}

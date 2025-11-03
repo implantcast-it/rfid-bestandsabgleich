@@ -19,10 +19,7 @@ module.exports = {
     },
     extend: {
       colors: {
-        primary: "#005f6b",
-        "background-light": "#f8fafc",
-        "background-dark": "#083344",
-        "teal-accent": "#0d9488",
+        primary: "#006860",
       },
       borderRadius: {
         DEFAULT: "0.5rem",

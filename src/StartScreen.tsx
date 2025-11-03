@@ -30,9 +30,9 @@ export default function StartScreen() {
   const { theme, toggleTheme } = useTheme();
   return (
     <Toast.Provider swipeDirection='right'>
-      <div className='flex justify-center items-center bg-background-light dark:bg-background-dark p-12 min-h-screen font-display text-gray-800 dark:text-gray-200'>
+      <div className='flex justify-center items-center bg-background-light dark:bg-slate-800 p-12 min-h-screen font-display text-gray-800 dark:text-gray-200'>
         {/* Main Content Card */}
-        <div className='bg-white dark:bg-gray-800 shadow-sm px-20 py-12 rounded-xl'>
+        <div className='bg-white dark:bg-gray-900 shadow-sm px-20 py-12 rounded-xl'>
           <div className='flex flex-col justify-center items-center h-full text-center'>
             {/* Icon from HTML */}
             <div className='mb-6'>
@@ -124,7 +124,7 @@ export default function StartScreen() {
         {/* --- Theme Switcher Button --- */}
         <button
           onClick={toggleTheme}
-          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
+          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
           aria-label='Toggle light/dark theme'
         >
           {theme === "light" ? (
