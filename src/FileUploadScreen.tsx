@@ -6,7 +6,7 @@ import ArrowBackwardsIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ErrorToast from "./components/ui/ErrorToast";
-import FileUploadDropzone from "./components/FileUploadDropzone";
+import FileUploadDropzone from "./components/ui/FileUploadDropzone";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import { listen } from "@tauri-apps/api/event";
 import { useLocation } from "wouter";
@@ -157,7 +157,7 @@ export default function FileUploadScreen() {
 
   return (
     <Toast.Provider swipeDirection='right'>
-      <div className='flex justify-center items-center bg-background-light dark:bg-slate-800 p-12 min-h-screen max-h-screen font-display text-gray-800 dark:text-gray-200'>
+      <div className='flex justify-center items-center bg-slate-100 dark:bg-slate-800 p-12 min-h-screen max-h-screen font-display text-gray-800 dark:text-gray-200'>
         <div className='bg-white dark:bg-gray-900 shadow-sm px-12 py-11 rounded-xl'>
           <div className='flex flex-col h-full'>
             {/* Header */}

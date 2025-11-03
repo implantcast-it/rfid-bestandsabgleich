@@ -86,7 +86,7 @@ export default function ProcessingScreen() {
 
   return (
     <Toast.Provider swipeDirection='right'>
-      <div className='flex flex-col justify-center items-center bg-background-light dark:bg-slate-800 p-4 min-h-screen font-display text-gray-800 dark:text-gray-200'>
+      <div className='flex flex-col justify-center items-center bg-slate-100 dark:bg-slate-800 p-4 min-h-screen font-display text-gray-800 dark:text-gray-200'>
         <div className='relative bg-white dark:bg-gray-900 shadow-lg p-8 rounded-lg w-full max-w-3xl'>
           {/* Header */}
           <div className='mb-6 text-center'>

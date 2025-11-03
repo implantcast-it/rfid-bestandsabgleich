@@ -25,13 +25,13 @@ Alle weiteren Packages dienen der Gestaltung des Frontends. Hier wurde außerdem
 Das Projekt von GitHub herunterladen (dafür wird Git benötigt)
 
 ```shell
-  git clone https://github.com/implantcast-it/rfid-app-v3.git
+  git clone https://github.com/implantcast-it/rfid-bestandsabgleich.git
 ```
 
 In das Projekt-Verzeichnis wechseln
 
 ```shell
-  cd rfid-app-v3-3
+  cd rfid-bestandsabgleich
 ```
 
 #### -> Für den nächsten Schritt wird [NodeJS mit NPM](https://nodejs.org/en) benötigt. Siehe "TIP" unten.

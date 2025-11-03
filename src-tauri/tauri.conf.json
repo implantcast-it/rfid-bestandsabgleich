@@ -19,7 +19,7 @@
   },
   "productName": "Bestandsabgleich",
   "mainBinaryName": "Bestandsabgleich",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "identifier": "de.implantcast.rfid-app",
   "plugins": {
     "updater": {
@@ -35,7 +35,7 @@
   "app": {
     "windows": [
       {
-        "title": "implantcast GmbH - Bestandsabgleich v4.0.1",
+        "title": "implantcast GmbH - Bestandsabgleich v4.1.0",
         "minWidth": 1075,
         "minHeight": 700,
         "width": 1075,

@@ -112,8 +112,6 @@ export default function EditorScreen() {
     )
   );
 
-  console.log("Initial LotId Data:", lotIdData);
-
   // --- TABLE THEME ---
   const { theme } = useTheme();
   const tableTheme = themeQuartz.withPart(iconSetMaterial).withParams(
@@ -416,7 +414,7 @@ export default function EditorScreen() {
 
   return (
     <Toast.Provider>
-      <div className='flex bg-background-light dark:bg-slate-800 w-full h-screen overflow-hidden font-display text-gray-800 dark:text-gray-200'>
+      <div className='flex bg-slate-100 dark:bg-slate-800 w-full h-screen overflow-hidden font-display text-gray-800 dark:text-gray-200'>
         {/* ... (Sidebar) ... */}
         <Sidebar
           navSections={navSections}

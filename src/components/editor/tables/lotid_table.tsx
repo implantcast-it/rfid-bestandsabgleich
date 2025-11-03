@@ -68,8 +68,6 @@ export default function LotIdTable({
     description: string;
   } | null>(null);
 
-  console.log(data);
-
   useEffect(() => {
     const columns = [
       {
