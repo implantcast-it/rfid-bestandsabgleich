@@ -61,6 +61,7 @@ export default function LotIdTable({
   const [bulkAnmerkung, setBulkAnmerkung] = useState("");
   const [bulkRfidScan, setBulkRfidScan] = useState("");
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(true);
+  const [selectedRowCount, setSelectedRowCount] = useState(0);
   const [toastInfo, setToastInfo] = useState<{
     open: boolean;
     type: "success" | "error";
@@ -202,6 +203,14 @@ export default function LotIdTable({
     [data, onChange]
   );
 
+  // --- HANDLER FOR SELECTION CHANGES ---
+  const onSelectionChanged = useCallback(() => {
+    if (gridRef.current?.api) {
+      const selectedNodes = gridRef.current.api.getSelectedNodes();
+      setSelectedRowCount(selectedNodes.length);
+    }
+  }, []);
+
   // --- HANDLER FOR BULK 'To Do' ---
   const handleApplyBulkTodDo = () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
@@ -216,8 +225,6 @@ export default function LotIdTable({
     }
 
     const selectedIds = new Set(selectedNodes.map((node) => node.data.id));
-
-    console.log("Selected IDs for bulk 'To Do':", selectedIds);
 
     onChange((prevData: any[]) =>
       prevData.map((row) => {
@@ -356,14 +363,19 @@ export default function LotIdTable({
             <h3 className='font-semibold text-gray-800 dark:text-gray-200 text-lg'>
               Massenbearbeitung (für ausgewählte Zeilen)
             </h3>
-            <Collapsible.Trigger asChild>
-              <button className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 w-9 h-9 font-medium hover:text-zinc-900 dark:hover:text-zinc-50 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none'>
-                {isBulkEditOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                <span className='sr-only'>
-                  {isBulkEditOpen ? "Einklappen" : "Ausklappen"}
-                </span>
-              </button>
-            </Collapsible.Trigger>
+            <div className='flex items-center gap-4'>
+              <span className='font-medium text-gray-700 dark:text-gray-300 text-sm'>
+                {selectedRowCount} Zeile(n) ausgewählt
+              </span>
+              <Collapsible.Trigger asChild>
+                <button className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 w-9 h-9 font-medium hover:text-zinc-900 dark:hover:text-zinc-50 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none'>
+                  {isBulkEditOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  <span className='sr-only'>
+                    {isBulkEditOpen ? "Einklappen" : "Ausklappen"}
+                  </span>
+                </button>
+              </Collapsible.Trigger>
+            </div>
           </div>
 
           <Collapsible.Content className='CollapsibleContentAnimation'>
@@ -489,6 +501,7 @@ export default function LotIdTable({
             getRowId={getRowId}
             onCellValueChanged={onCellValueChanged}
             rowSelection={rowSelection}
+            onSelectionChanged={onSelectionChanged}
             localeText={AG_GRID_LOCALE_DE}
             className='h-full'
             processUnpinnedColumns={() => []}
