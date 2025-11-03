@@ -24,7 +24,7 @@ export default function SuccessToast({
 }) {
   return (
     <Toast.Root
-      className="items-center gap-x-4 grid grid-cols-[auto_max-content] bg-white dark:bg-gray-800 shadow-lg p-4 rounded-lg data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=closed]:animate-hide data-[state=open]:animate-slideIn data-[swipe=end]:animate-swipeOut [grid-template-areas:_'title_action'_'description_action']"
+      className="items-center gap-x-4 grid grid-cols-[auto_max-content] bg-white dark:bg-gray-900 shadow-lg p-4 rounded-lg data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=closed]:animate-hide data-[state=open]:animate-slideIn data-[swipe=end]:animate-swipeOut [grid-template-areas:_'title_action'_'description_action']"
       open={open}
       onOpenChange={onOpenChange}
       duration={5000}

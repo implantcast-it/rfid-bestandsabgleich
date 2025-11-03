@@ -6,7 +6,7 @@ import ArrowBackwardsIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ErrorToast from "./components/ui/ErrorToast";
-import FileUploadDropzone from "./components/FileUploadDropzone";
+import FileUploadDropzone from "./components/ui/FileUploadDropzone";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import { listen } from "@tauri-apps/api/event";
 import { useLocation } from "wouter";
@@ -157,8 +157,8 @@ export default function FileUploadScreen() {
 
   return (
     <Toast.Provider swipeDirection='right'>
-      <div className='flex justify-center items-center bg-background-light dark:bg-background-dark p-12 min-h-screen max-h-screen font-display text-gray-800 dark:text-gray-200'>
-        <div className='bg-white dark:bg-gray-800 shadow-sm px-12 py-11 rounded-xl'>
+      <div className='flex justify-center items-center bg-slate-100 dark:bg-slate-800 p-12 min-h-screen max-h-screen font-display text-gray-800 dark:text-gray-200'>
+        <div className='bg-white dark:bg-gray-900 shadow-sm px-12 py-11 rounded-xl'>
           <div className='flex flex-col h-full'>
             {/* Header */}
             <div className='mb-6 text-left'>
@@ -234,7 +234,7 @@ export default function FileUploadScreen() {
         {/* --- Theme Switcher Button --- */}
         <button
           onClick={toggleTheme}
-          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
+          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
           aria-label='Toggle light/dark theme'
         >
           {theme === "light" ? (

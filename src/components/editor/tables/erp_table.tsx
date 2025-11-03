@@ -18,28 +18,33 @@ export default function ErpTable({ data, theme }: { data: any; theme: any }) {
       },
       { field: "LotId", pinned: "left", filter: true },
       {
+        field: "Kennzeichen 3",
+        headerName: "Kz 3",
+        filter: true,
+        pinned: "left",
+      },
+      {
         field: "Produktname",
         filter: true,
       },
       {
         field: "Ablaufdatum",
-        filter: true,
         cellRenderer: (data: { value: string }) => {
-          return new Date(data.value).toLocaleDateString();
+          const date = new Date(data.value).toLocaleDateString();
+          return date != "Invalid Date" ? date : "-";
         },
         cellDataType: "date",
         headerTooltip: "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen",
         tooltipValueGetter: () =>
           "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen",
         cellClassRules: {
-          // apply bg-red-100 where params.value is smaller than the current date
-          "bg-red-100 dark:bg-red-400/80": (params: { value: string }) =>
-            new Date(params.value) < new Date(),
-          // apply bg-amber-100 where params.value is greater than the current date but not more than 3 months
-          "bg-amber-100 dark:bg-amber-400/80": (params: { value: string }) =>
-            new Date(params.value) > new Date() &&
-            new Date(params.value) <
-              new Date(new Date().setMonth(new Date().getMonth() + 3)),
+          "bg-red-100 dark:bg-red-400/30 dark:text-red-400 text-red-800":
+            (params: { value: string }) => new Date(params.value) < new Date(),
+          "bg-amber-100 dark:bg-amber-400/30 dark:text-amber-400 text-amber-800":
+            (params: { value: string }) =>
+              new Date(params.value) > new Date() &&
+              new Date(params.value) <
+                new Date(new Date().setMonth(new Date().getMonth() + 3)),
         },
       },
       {

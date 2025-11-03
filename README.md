@@ -1,4 +1,4 @@
-# RFID-Applikation – Bestandsabgleich v4.0
+# RFID-Applikation – Bestandsabgleich v4.1.0
 
 Um eine händische Inventur beim Kunden effizienter zu gestalten, wurde eine RFID-unterstützte Inventur eingeführt. Diese soll den händischen und zeitintensiven Prozess ablösen.
 Dafür wurde eine Software für implantcast entwickelt, welche die erfassten Daten des RFID-Geräts mit unserem Bestand abgleicht.
@@ -17,11 +17,11 @@ Eine ausfühliche technische Dokumentation findet sich hier: [Dokumentation](./d
 
 Das Programm wurde mit folgenden Tools & Frameworks geschrieben:
 
-**Frontend:** React, wouter, TailwindCSS, RadixUI, Lucide, AG-Grid
+**Frontend:** React, wouter, TailwindCSS, RadixUI, MaterialIcons, AG-Grid
 
-**Applikation:** Tauri, Node
+**Applikation:** Tauri v2, Node
 
-**Programmiersprachen:** JavaScript, (Rust möglich, aber nicht verwendet)
+**Programmiersprachen:** TypeScript, (Rust möglich, aber nicht verwendet)
 
 ## Screenshots
 

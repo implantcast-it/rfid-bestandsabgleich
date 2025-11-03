@@ -14,12 +14,13 @@ Die zwei wichtigsten Ordner sind **/src** und **/src-tauri**.
 ### **/src**
 
 Im **/src** Ordner befindet sich der Code für das Programm.  
-Dieser Ordner beinhaltet zwei weitere Ordner namens **/components** und **/lib**. Im Components Ordner befinden sich alle für das Frontend wichtigen reusable components, wie z.B. die einzelnen Tabs für das Hochladen der notwendigen Dateien.  
-Im Lib Ordner befinden sich zwei JavaScript Dateien, die die ganze Logik der Datenauslese, Aufarbeitung und des Vergleiches enthalten. Die Datei _pdfCreator.js_ ist außerdem für das Erstellen der PDF für den Bestätigungsprozess durch den Kunden zuständig.
+Dieser Ordner beinhaltet drei weitere Ordner namens **/components**, **/context** und **/lib**. Im Components Ordner befinden sich alle für das Frontend wichtigen reusable components, wie z.B. die einzelnen Tabs für den Editor oder die Dropzone für das Hochladen der notwendigen Dateien.  
+Der Context Ordner enthält nur den Theme Switcher für das bereitstellen und ändern des Light oder Dark modes.
+Im Lib Ordner befinden sich fünf TypeScript Dateien, die die ganze Logik der Datenauslese, Aufarbeitung und des Vergleiches enthalten. Die Datei _pdfCreator.ts_ ist außerdem für das Erstellen der PDF für den Bestätigungsprozess durch den Kunden zuständig.
 
 Der src Ordner beinhaltet außerdem eine **main.tsx**, in der alle Routes für das Programm festgelegt sind.  
 Soll etwa eine neue Seite dem Programm hinzugefügt werden, muss sie erst hier registriert werden.  
-Die Dateien, die mit einem Großbuchstaben starten (_App.tsx_, _Editor.tsx_, ...), stellen die Seiten des Programms dar.
+Die Dateien, die mit einem Großbuchstaben starten (_StartScreen.tsx_, _EditorScreen.tsx_, ...), stellen die Seiten des Programms dar.
 
 ### **/src-tauri**
 
@@ -28,7 +29,7 @@ Dazu zählt vor allem die Datei _tauri.conf.json_, die wichtige Einstellungen f�
 Hier wird auch die Versionsnummer und der Fensternamen festgelegt!
 Die Dokumentation zu Tauri findet sich unter: https://v2.tauri.app/start/
 
-Die Datei _Cargo.toml_ beinhaltet außerdem Optimierungseinstellungen für den Build-Prozess. Hier können Einstellungen nach Bedarf angepasst werden. Derzeit liegt der Fokus auf Build und Programm speed. Die Anwendungsgröße ist klein genug (~3.2mb).
+Die Datei _Cargo.toml_ beinhaltet außerdem Optimierungseinstellungen für den Build-Prozess. Hier können Einstellungen nach Bedarf angepasst werden. Derzeit liegt der Fokus auf Build und Programm speed. Die Anwendungsgröße ist klein genug (~8mb).
 
 ### Config Files
 
@@ -36,7 +37,6 @@ Im Projektverzeichnis finden sich auch viele .json und .js Dateien, die folgende
 | Datei | Funktion
 | - | -
 |_.gitignore_ | Liste aller Dateien und Verzeichnise, welche nicht auf GitHub gepushed werden sollen
-|_components.json_| ShadCN Component Settings, siehe https://ui.shadcn.com/docs
 | _package.json_ | Beinhaltet alle verfügbaren npm run Befehle und alle installierten NPM Modules
 | _package-lock.json_| Darf nicht bearbeitet werden! Speichert Versionen für das Projekt und dessen Module.
 |_tailwind.conf.js_| Einstellungen für TaildwindCSS, kann angepasst werden.
@@ -45,9 +45,8 @@ Im Projektverzeichnis finden sich auch viele .json und .js Dateien, die folgende
 #
 
 ```
-📦 rfid-app-v3
+📦 rfid-bestandsabgleich
 │   .gitignore
-│   components.json
 │   index.html
 │   package-lock.json
 │   package.json
@@ -57,6 +56,10 @@ Im Projektverzeichnis finden sich auch viele .json und .js Dateien, die folgende
 │   tsconfig.json
 │   tsconfig.node.json
 │   vite.config.ts
+|
+├─ .github
+│   └─ workflows
+│       release.yml
 │
 ├─ .vscode
 │   extensions.json
@@ -71,37 +74,42 @@ Im Projektverzeichnis finden sich auch viele .json und .js Dateien, die folgende
 │   └─ assets
 │       [...]
 │
+├─ public
+│   │   ic-logo_rgb.svg
+│   └─  ic-shamrock_rgb.png
+|
 ├─ src
-│   │   App.tsx
-│   │   Editor.tsx
-│   │   Finished.tsx
+│   │   EditorScreen.tsx
+│   │   FileUploadScreen.tsx
 │   │   index.css
 │   │   main.tsx
+│   │   ProcessingScreen.tsx
+│   │   StartScreen.tsx
 │   │   vite-env.d.ts
 │   │
 │   ├─ components
-│   │   │   barcode_tab.tsx
-│   │   │   download_tab.tsx
-│   │   │   erp_tab.tsx
-│   │   │   instructions_dialog.tsx
-│   │   │   master_tab.tsx
-│   │   │   rfid_tab.tsx
-│   │   │   start_tab.tsx
-│   │   │   upload_stepper.tsx
-│   │   │
-│   │   ├─ tables
-│   │   │   artNr_table.tsx
-│   │   │   barcode_table.tsx
-│   │   │   erp_table.tsx
-│   │   │   lotid_table.tsx
-│   │   │   rfid_table.tsx
-│   │   │   scan_table.tsx
+│   │   ├─ editor
+│   │   │   │   EditorHeader.tsx
+│   │   │   │   EditorPage.tsx
+│   │   │   │   Sidebar.tsx
+│   │   │   │
+│   │   │   └─ tables
+│   │   │       artNr_table.tsx
+│   │   │       barcode_table.tsx
+│   │   │       erp_table.tsx
+│   │   │       lotid_table.tsx
+│   │   │       rfid_table.tsx
+│   │   │       scan_table.tsx
 │   │   │
 │   │   └─ ui
-│   │       button.tsx
-│   │       card.tsx
-│   │       dialog.tsx
-│   │       tabs.tsx
+│   │       ErrorToast.tsx
+│   │       FileUploadDropzone.tsx
+│   │       RestartDialog.tsx
+│   │       SuccessToast.tsx
+│   │       UpdaterDialog.tsx
+│   │
+│   ├─ context
+│   │   ThemeContext.tsx
 │   │
 │   └─ lib
 │       compare.js
@@ -114,6 +122,9 @@ Im Projektverzeichnis finden sich auch viele .json und .js Dateien, die folgende
     │   Cargo.lock
     │   Cargo.toml
     │   tauri.conf.json
+    │
+    ├─ capabilities
+    │   desktop.json
     │
     ├─ icons
     │   [...]
@@ -191,7 +202,7 @@ export default FromPage() {
 
 <br/>
 
-> [!IMPORTANT] > **Die Reihenfolge der registrierten Routes spielt eine Rolle!**  
+> [!IMPORTANT] **Die Reihenfolge der registrierten Routes spielt eine Rolle!**  
 > Routes sind nach absteigender Priorität sortiert, um Fallbacks zu sichern.  
 > Die in der _main.tsx_ definierte letze Route ohne path und Component stellt den default fallback dar.
 >

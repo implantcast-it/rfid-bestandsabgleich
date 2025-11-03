@@ -68,8 +68,6 @@ export default function LotIdTable({
     description: string;
   } | null>(null);
 
-  console.log(data);
-
   useEffect(() => {
     const columns = [
       {
@@ -108,12 +106,13 @@ export default function LotIdTable({
         tooltipValueGetter: () =>
           "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen",
         cellClassRules: {
-          "bg-red-100 dark:bg-red-400/80": (params: { value: string }) =>
-            new Date(params.value) < new Date(),
-          "bg-amber-100 dark:bg-amber-400/80": (params: { value: string }) =>
-            new Date(params.value) > new Date() &&
-            new Date(params.value) <
-              new Date(new Date().setMonth(new Date().getMonth() + 3)),
+          "bg-red-100 dark:bg-red-400/30 dark:text-red-400 text-red-800":
+            (params: { value: string }) => new Date(params.value) < new Date(),
+          "bg-amber-100 dark:bg-amber-400/30 dark:text-amber-400 text-amber-800":
+            (params: { value: string }) =>
+              new Date(params.value) > new Date() &&
+              new Date(params.value) <
+                new Date(new Date().setMonth(new Date().getMonth() + 3)),
         },
       },
       {
@@ -121,14 +120,14 @@ export default function LotIdTable({
         headerName: "ERP",
         filter: true,
         cellClassRules: {
-          "bg-amber-100 dark:bg-amber-400/80": (params: any) =>
-            params.value == 0 && params.data["RFID-Scan"] == 1,
-          "bg-red-100 dark:bg-red-400/80": (params: any) =>
-            params.value == 1 && params.data["RFID-Scan"] == 0,
-          "bg-green-100 dark:bg-green-400/60": (params: any) =>
-            params.value == 1 && params.data["RFID-Scan"] == 1,
+          "bg-amber-100 dark:bg-amber-400/30 dark:text-amber-400 text-amber-800":
+            (params: any) => params.value == 0 && params.data["RFID-Scan"] == 1,
+          "bg-red-100 dark:bg-red-400/30 dark:text-red-400 text-red-800": (
+            params: any
+          ) => params.value == 1 && params.data["RFID-Scan"] == 0,
+          "bg-green-100 dark:bg-green-400/30 dark:text-green-400 text-green-800":
+            (params: any) => params.value == 1 && params.data["RFID-Scan"] == 1,
         },
-        width: 150,
         type: "numericColumn",
       },
       {
@@ -137,12 +136,15 @@ export default function LotIdTable({
         filter: true,
         editable: true,
         cellClassRules: {
-          "bg-red-100 dark:bg-red-400/80": (params: any) =>
-            params.value == 0 && params.data["Eigenbestand nach ERP"] == 1,
-          "bg-amber-100 dark:bg-amber-400/80": (params: any) =>
-            params.value == 1 && params.data["Eigenbestand nach ERP"] == 0,
-          "bg-green-100 dark:bg-green-400/60": (params: any) =>
-            params.value == 1 && params.data["Eigenbestand nach ERP"] == 1,
+          "bg-red-100 dark:bg-red-400/30 dark:text-red-400 text-red-800": (
+            params: any
+          ) => params.value == 0 && params.data["Eigenbestand nach ERP"] == 1,
+          "bg-amber-100 dark:bg-amber-400/30 dark:text-amber-400 text-amber-800":
+            (params: any) =>
+              params.value == 1 && params.data["Eigenbestand nach ERP"] == 0,
+          "bg-green-100 dark:bg-green-400/30 dark:text-green-400 text-green-800":
+            (params: any) =>
+              params.value == 1 && params.data["Eigenbestand nach ERP"] == 1,
         },
         type: "numericColumn",
       },
@@ -156,13 +158,15 @@ export default function LotIdTable({
         },
         editable: true,
         cellClassRules: {
-          "bg-yellow-100 dark:bg-yellow-400/80": (params: any) => {
-            if (!params.data) return false;
-            const hasDifference =
-              params.data["RFID-Scan"] != params.data["Eigenbestand nach ERP"];
-            const isEmpty = !params.value || params.value.trim() === "";
-            return hasDifference && isEmpty;
-          },
+          "bg-violet-100 dark:bg-violet-400/20 dark:text-violet-400 text-violet-800":
+            (params: any) => {
+              if (!params.data) return false;
+              const hasDifference =
+                params.data["RFID-Scan"] !=
+                params.data["Eigenbestand nach ERP"];
+              const isEmpty = !params.value || params.value.trim() === "";
+              return hasDifference && isEmpty;
+            },
         },
       },
       {
@@ -348,7 +352,7 @@ export default function LotIdTable({
           onOpenChange={setIsBulkEditOpen}
           className='flex-shrink-0 mb-4'
         >
-          <div className='flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 px-4 py-2 border dark:border-gray-700 rounded-t-lg'>
+          <div className='flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 px-4 py-2 border dark:border-gray-700 rounded-t-lg'>
             <h3 className='font-semibold text-gray-800 dark:text-gray-200 text-lg'>
               Massenbearbeitung (für ausgewählte Zeilen)
             </h3>
@@ -363,7 +367,7 @@ export default function LotIdTable({
           </div>
 
           <Collapsible.Content className='CollapsibleContentAnimation'>
-            <div className='flex flex-wrap items-end gap-4 bg-gray-50 dark:bg-gray-800/50 p-4 border-x dark:border-gray-700 border-b rounded-b-lg'>
+            <div className='flex flex-wrap items-end gap-4 bg-gray-50 dark:bg-gray-900/50 p-4 border-x dark:border-gray-700 border-b rounded-b-lg'>
               {/* To Do Bulk Edit */}
               <div className='flex-1 min-w-[250px]'>
                 <label

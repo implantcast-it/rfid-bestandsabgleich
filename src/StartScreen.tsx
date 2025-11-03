@@ -1,5 +1,7 @@
 import * as Toast from "@radix-ui/react-toast";
 
+import { useEffect, useState } from "react";
+
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
@@ -12,9 +14,9 @@ import SuccessToast from "./components/ui/SuccessToast";
 import SyncIcon from "@mui/icons-material/Sync";
 import { UpdaterDialog } from "./components/ui/UpdaterDialog";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { getVersion } from "@tauri-apps/api/app";
 import { handleExistingFileOpen } from "./lib/utils";
 import { useLocation } from "wouter";
-import { useState } from "react";
 import { useTheme } from "./context/ThemeContext";
 
 /* Start Screen for the Application */
@@ -26,21 +28,36 @@ export default function StartScreen() {
     description: string;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [appVersion, setAppVersion] = useState("");
+
   const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const version = await getVersion();
+        setAppVersion(version);
+      } catch (error) {
+        console.error("Failed to get app version:", error);
+      }
+    };
+
+    fetchVersion();
+  }, []); // run only once on component mount
+
   return (
     <Toast.Provider swipeDirection='right'>
-      <div className='flex justify-center items-center bg-background-light dark:bg-background-dark p-12 min-h-screen font-display text-gray-800 dark:text-gray-200'>
+      <div className='relative flex justify-center items-center bg-slate-100 dark:bg-slate-800 p-12 min-h-screen font-display text-gray-800 dark:text-gray-200'>
         {/* Main Content Card */}
-        <div className='bg-white dark:bg-gray-800 shadow-sm px-20 py-12 rounded-xl'>
+        <div className='bg-white dark:bg-gray-900 shadow-sm px-20 py-12 rounded-xl'>
           <div className='flex flex-col justify-center items-center h-full text-center'>
             {/* Icon from HTML */}
-            <div className='mb-6'>
+            <div className='mb-2'>
               <span className='text-primary text-6xl material-icons'>
                 <InsightsIcon fontSize='inherit' />
               </span>
             </div>
-
             {/* Title */}
             <h1 className='mb-4 font-bold text-gray-900 dark:text-white text-3xl'>
               Willkommen beim RFID-Bestandsabgleich
@@ -124,7 +141,7 @@ export default function StartScreen() {
         {/* --- Theme Switcher Button --- */}
         <button
           onClick={toggleTheme}
-          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
+          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
           aria-label='Toggle light/dark theme'
         >
           {theme === "light" ? (
@@ -133,6 +150,9 @@ export default function StartScreen() {
             <LightModeOutlinedIcon fontSize='small' />
           )}
         </button>
+        <div className='top-2 left-2 absolute bg-gray-200 dark:bg-slate-900 mb-2 px-2 py-px rounded-full font-medium text-gray-600 dark:text-gray-500 text-sm'>
+          <p>v{appVersion}</p>
+        </div>
       </div>
 
       {/* --- Auto-Updater for the application --- */}
