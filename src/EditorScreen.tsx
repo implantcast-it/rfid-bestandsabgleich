@@ -295,6 +295,7 @@ export default function EditorScreen() {
     }
   }, [lotIdData, setLotIdData]); // Depend on lotIdData and setLotIdData
 
+  // Auto-Siebe + Instruments and Offene Posten Button
   const handleAutoSiebeAndOffenePosten = useCallback(() => {
     const changesToApply = new Map<string, any>();
     let siebRowCount = 0;
@@ -302,7 +303,10 @@ export default function EditorScreen() {
 
     lotIdData.forEach((row: any) => {
       // Logic for "Auto-Siebe"
-      if (row["Kennzeichen 3"] === "SIEB" && row["RFID-Scan"] == 0) {
+      if (
+        row["Kennzeichen 3"] === "SIEB" ||
+        (row["Kennzeichen 3"] === "INST" && row["RFID-Scan"] == 0)
+      ) {
         // Get existing changes in case the row also matches the other condition
         const existingChanges = changesToApply.get(row.id) || {};
         changesToApply.set(row.id, {
@@ -339,7 +343,7 @@ export default function EditorScreen() {
 
       const descriptions = [];
       if (siebRowCount > 0) {
-        descriptions.push(`${siebRowCount} 'SIEB' Zeile(n)`);
+        descriptions.push(`${siebRowCount} 'SIEB/INST' Zeile(n)`);
       }
       if (offenePostenRowCount > 0) {
         descriptions.push(`${offenePostenRowCount} 'Offene Posten'`);
@@ -356,7 +360,8 @@ export default function EditorScreen() {
         open: true,
         type: "error",
         title: "Keine Aktionen ausgeführt",
-        description: "Keine Zeilen für 'SIEB' oder 'Offene Posten' gefunden.",
+        description:
+          "Keine Zeilen für 'SIEB', 'INST' oder 'Offene Posten' gefunden.",
       });
     }
   }, [lotIdData, setLotIdData]); // Depend on lotIdData and setLotIdData
