@@ -33,7 +33,7 @@ export default function EditorHeader({
               className='flex justify-center items-center gap-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 rounded-lg h-9 overflow-hidden font-medium text-gray-800 dark:text-gray-200 text-sm leading-normal tracking-[0.015em] transition-colors cursor-pointer'
             >
               <PlusOneOutlinedIcon />
-              <span className='truncate'>Auto-Siebe & Offene Posten</span>
+              <span className='truncate'>Auto SIEB/INST & Offene Posten</span>
             </button>
             <button
               onClick={onAutoFill}
