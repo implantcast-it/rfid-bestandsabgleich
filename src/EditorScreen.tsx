@@ -98,8 +98,8 @@ export default function EditorScreen() {
       comparisonData.masterData.Sheets["Bestandsabgleich Artikelnummer"],
       {
         header: 0,
-      }
-    )
+      },
+    ),
   );
 
   // --- LOTID STATE & HISTORY STATE ---
@@ -108,9 +108,19 @@ export default function EditorScreen() {
       comparisonData.masterData.Sheets["Bestandsabgleich LotId"],
       {
         header: 0,
-      }
-    )
+      },
+    ),
   );
+
+  const completedStichproben =
+    activeTab === "lotId"
+      ? (Array.isArray(lotIdData) ? lotIdData : []).filter((row: any) => {
+          const value = String(row["Stichprobe"] ?? "")
+            .trim()
+            .toUpperCase();
+          return value === "X";
+        }).length
+      : undefined;
 
   // --- TABLE THEME ---
   const { theme } = useTheme();
@@ -140,7 +150,7 @@ export default function EditorScreen() {
           headerFontSize: 14,
           iconSize: 18,
           rowVerticalPaddingScale: 0.7,
-        }
+        },
   );
 
   // --- Listener for changes on the lotId table for changing rfid-scan amounts ---
@@ -171,7 +181,7 @@ export default function EditorScreen() {
 
         return acc;
       },
-      {} as Record<string, any>
+      {} as Record<string, any>,
     );
 
     // 3. Convert the grouped object back to an array and calculate 'Differenz'
@@ -231,10 +241,10 @@ export default function EditorScreen() {
 
     Object.entries(grouped).forEach(([artikelnummer, group]) => {
       const missingItems = group.filter(
-        (row) => row["RFID-Scan"] == 0 && row["Eigenbestand nach ERP"] == 1
+        (row) => row["RFID-Scan"] == 0 && row["Eigenbestand nach ERP"] == 1,
       );
       const scannedItems = group.filter(
-        (row) => row["RFID-Scan"] == 1 && row["Eigenbestand nach ERP"] == 0
+        (row) => row["RFID-Scan"] == 1 && row["Eigenbestand nach ERP"] == 0,
       );
 
       const numPairs = Math.min(missingItems.length, scannedItems.length);
@@ -435,6 +445,7 @@ export default function EditorScreen() {
           <EditorPage
             title={currentPageConfig.title}
             hasHeaderButtons={currentPageConfig.hasHeaderButtons}
+            completedStichproben={completedStichproben}
             onAutoCheck={handleAutoSiebeAndOffenePosten}
             onAutoFill={handleAutoFillKommentare}
           >

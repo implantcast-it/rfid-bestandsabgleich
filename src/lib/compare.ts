@@ -15,7 +15,7 @@ export type DataRow = Record<string, any>; // Defines a generic row object after
  * and returns the data in the format of an Excel dataset (workbook).
  */
 export async function compareFiles(
-  data: ProcessingResults
+  data: ProcessingResults,
 ): Promise<{ masterData: WorkBook | any; debitor: string }> {
   const { masterData, erpData, rfidData, barcodeData } = data;
   try {
@@ -30,22 +30,22 @@ export async function compareFiles(
 
     const rfidDataUnformatted = rfidSheet(rfidData);
     const rfid = removeDuplicatesByLotId(
-      formatScanData(masterData, rfidDataUnformatted)
+      formatScanData(masterData, rfidDataUnformatted),
     );
     masterData.Sheets["RFID-Scan"] = utils.json_to_sheet(rfid);
 
     if (barcode.length > 0) {
       masterData.Sheets["Vergleich der Scans"] = utils.json_to_sheet(
-        compScans(barcode, rfid)
+        compScans(barcode, rfid),
       );
     }
 
     masterData.Sheets["Bestandsabgleich Artikelnummer"] = utils.json_to_sheet(
-      compareArtNr(erp, rfid)
+      compareArtNr(erp, rfid),
     );
 
     masterData.Sheets["Bestandsabgleich LotId"] = utils.json_to_sheet(
-      compareLotId(erp, rfid)
+      compareLotId(erp, rfid),
     );
 
     return { masterData, debitor };
@@ -112,7 +112,7 @@ const bSheet = (barcode: WorkBook): DataRow[] => {
         const date = new Date(
           2000 + parseInt(obj.substring(18, 20)), // Year
           parseInt(obj.substring(20, 22)) - 1, // Month
-          parseInt(obj.substring(22, 24)) // Day
+          parseInt(obj.substring(22, 24)), // Day
         ).toLocaleDateString();
         item.push({ w: date, t: "s", v: date }); // MHD
         item.push({
@@ -332,6 +332,7 @@ const compareLotId = (erp: DataRow[], rfid: DataRow[]): DataRow[] => {
       Ablaufdatum: itemErp?.["Ablaufdatum"] || "-",
       "To Do": "",
       Anmerkung: "",
+      Stichprobe: "",
       id: uuidv4(),
     };
     lotComparison.push(finalItem);

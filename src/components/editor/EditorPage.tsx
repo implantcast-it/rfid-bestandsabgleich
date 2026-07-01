@@ -5,6 +5,7 @@ import { ReactNode } from "react";
 interface EditorPageProps {
   title: string;
   hasHeaderButtons: boolean;
+  completedStichproben?: number;
   onAutoCheck?: () => void;
   onAutoFill?: () => void;
   children: ReactNode; // Accept children to render the actual page content
@@ -14,6 +15,7 @@ interface EditorPageProps {
 export default function EditorPage({
   title,
   hasHeaderButtons,
+  completedStichproben,
   onAutoCheck,
   onAutoFill,
   children, // Accept children to render the actual page content
@@ -23,6 +25,7 @@ export default function EditorPage({
       <EditorHeader
         title={title}
         showButtons={hasHeaderButtons}
+        completedStichproben={completedStichproben}
         onAutoCheck={onAutoCheck}
         onAutoFill={onAutoFill}
       />
