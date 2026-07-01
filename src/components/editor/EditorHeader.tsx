@@ -8,6 +8,7 @@ import { useTheme } from "@/context/ThemeContext";
 interface EditorHeaderProps {
   title: string;
   showButtons?: boolean;
+  completedStichproben?: number;
   onAutoCheck?: () => void;
   onAutoFill?: () => void;
 }
@@ -16,15 +17,31 @@ interface EditorHeaderProps {
 export default function EditorHeader({
   title,
   showButtons,
+  completedStichproben,
   onAutoCheck,
   onAutoFill,
 }: EditorHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   return (
     <header className='flex flex-shrink-0 justify-between items-center gap-4 bg-white dark:bg-gray-900/50 p-4 border-gray-200 dark:border-gray-800 border-b'>
-      <p className='font-semibold text-gray-900 dark:text-white text-2xl leading-tight tracking-[-0.015em]'>
-        {title}
-      </p>
+      <div className='flex flex-wrap items-center gap-3'>
+        <p className='font-semibold text-gray-900 dark:text-white text-2xl leading-tight tracking-[-0.015em]'>
+          {title}
+        </p>
+        {typeof completedStichproben === "number" && (
+          <div
+            className={`flex items-center rounded-full border px-3 py-1 text-sm font-medium ${
+              completedStichproben >= 10
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-900/30 dark:text-emerald-300"
+                : completedStichproben === 0
+                  ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800/70 dark:bg-red-900/30 dark:text-red-300"
+                  : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/70 dark:bg-amber-900/30 dark:text-amber-300"
+            }`}
+          >
+            <span>{completedStichproben} / 10 Stichproben</span>
+          </div>
+        )}
+      </div>
       <div className='flex flex-shrink-0 items-center gap-3'>
         {showButtons && (
           <div className='flex flex-shrink-0 items-center gap-3'>

@@ -15,14 +15,14 @@ const addTable = (data: RowInput[]) => {
     body: data, // row data
     headStyles: {
       // column styles
-      fontSize: 8,
+      fontSize: 7,
       fontStyle: "bold",
       cellWidth: "wrap",
       fillColor: "#006860",
     },
     bodyStyles: {
       // row styles
-      fontSize: 6,
+      fontSize: 5,
       cellWidth: "wrap",
     },
     columnStyles: {
@@ -47,15 +47,16 @@ const addTable = (data: RowInput[]) => {
     columns: [
       // column definitions
       { dataKey: "Index", header: "Index" },
+      { dataKey: "Kennzeichen 3", header: "Kennz." },
+      { dataKey: "Artikelnummer", header: "REF" },
+      { dataKey: "Produktname", header: "Produkt" },
       { dataKey: "LotId", header: "LotId" },
-      { dataKey: "Artikelnummer", header: "Artikelnummer" },
-      { dataKey: "Produktname", header: "Produktname" },
-      { dataKey: "Kennzeichen 3", header: "Kennzeichen 3" },
-      { dataKey: "Ablaufdatum", header: "Ablaufdatum" },
-      { header: "Bestand ERP", dataKey: "Eigenbestand nach ERP" },
-      { header: "Bestand RFID", dataKey: "RFID-Scan" },
+      { dataKey: "Ablaufdatum", header: "Verfall" },
+      { dataKey: "Eigenbestand nach ERP", header: "Bestand\nERP" },
+      { dataKey: "RFID-Scan", header: "Bestand\nRFID" },
       { dataKey: "To Do", header: "To Do" },
       { dataKey: "Anmerkung", header: "Anmerkung" },
+      { dataKey: "Stichprobe", header: "Stich-\nprobe" },
     ],
   });
 };
@@ -94,10 +95,11 @@ export const exporToPDF = async (data: {
       Artikelnummer: string;
       Ablaufdatum: string;
       Produktname: string;
+      Stichprobe: string;
     };
 
     const comparisonData = utils.sheet_to_json(
-      data.masterData.Sheets["Bestandsabgleich LotId"]
+      data.masterData.Sheets["Bestandsabgleich LotId"],
     ) as ComparisonRow[];
 
     let rfidSum = 0;
@@ -120,7 +122,7 @@ export const exporToPDF = async (data: {
     doc.addImage(icLogo, "PNG", 268, 10, 16, 16, "implantcast", "NONE", 0);
     doc.setFontSize(18);
     doc.setFont("helvetica", "normal");
-    doc.text("Bestätigung", 8, 20);
+    doc.text(`Bestätigung der Inventur`, 8, 20);
     doc.line(8, 25, 200, 25);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");

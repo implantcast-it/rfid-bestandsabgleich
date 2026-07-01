@@ -40,6 +40,7 @@ export const downloadFile = (data: WorkBook): WorkBook => {
         "RFID-Scan": item["RFID-Scan"],
         "To Do": item["To Do"],
         Anmerkung: item["Anmerkung"],
+        Stichprobe: item["Stichprobe"],
         id: item["id"],
       };
     });

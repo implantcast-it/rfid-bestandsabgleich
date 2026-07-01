@@ -1,6 +1,6 @@
 [package]
 name = "rfid-bestandsabgleich"
-version = "4.1.2"
+version = "4.1.3"
 description = "Bestandabgleich-Software der Firma implantcast GmbH für die Inventur bei Bestandskunden."
 authors = ["implantcast GmbH"]
 edition = "2021"

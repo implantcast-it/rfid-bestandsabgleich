@@ -42,6 +42,9 @@ const ANMERKUNG_OPTIONS = [
   "offener Posten",
 ];
 
+// --- 'Stichprobe' OPTIONS ---
+const STICHPROBE_OPTIONS = ["", "X"];
+
 export default function LotIdTable({
   data,
   theme,
@@ -124,7 +127,7 @@ export default function LotIdTable({
           "bg-amber-100 dark:bg-amber-400/30 dark:text-amber-400 text-amber-800":
             (params: any) => params.value == 0 && params.data["RFID-Scan"] == 1,
           "bg-red-100 dark:bg-red-400/30 dark:text-red-400 text-red-800": (
-            params: any
+            params: any,
           ) => params.value == 1 && params.data["RFID-Scan"] == 0,
           "bg-green-100 dark:bg-green-400/30 dark:text-green-400 text-green-800":
             (params: any) => params.value == 1 && params.data["RFID-Scan"] == 1,
@@ -138,7 +141,7 @@ export default function LotIdTable({
         editable: true,
         cellClassRules: {
           "bg-red-100 dark:bg-red-400/30 dark:text-red-400 text-red-800": (
-            params: any
+            params: any,
           ) => params.value == 0 && params.data["Eigenbestand nach ERP"] == 1,
           "bg-amber-100 dark:bg-amber-400/30 dark:text-amber-400 text-amber-800":
             (params: any) =>
@@ -180,6 +183,20 @@ export default function LotIdTable({
         singleClickEdit: true,
         editable: true,
       },
+      {
+        field: "Stichprobe",
+        filter: true,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: {
+          values: STICHPROBE_OPTIONS,
+        },
+        singleClickEdit: true,
+        editable: true,
+        width: 140,
+        minWidth: 140,
+        maxWidth: 140,
+        suppressSizeToFit: true,
+      },
     ];
     setColumns(columns);
   }, []);
@@ -200,7 +217,7 @@ export default function LotIdTable({
 
       onChange(updatedData);
     },
-    [data, onChange]
+    [data, onChange],
   );
 
   // --- HANDLER FOR SELECTION CHANGES ---
@@ -236,7 +253,7 @@ export default function LotIdTable({
           };
         }
         return row;
-      })
+      }),
     );
 
     setToastInfo({
@@ -275,7 +292,7 @@ export default function LotIdTable({
           };
         }
         return row;
-      })
+      }),
     );
 
     setToastInfo({
@@ -314,26 +331,25 @@ export default function LotIdTable({
     }
 
     const selectedIds = new Set(selectedNodes.map((node) => node.data.id));
-    const scanValue = parseInt(bulkRfidScan, 10); // Convert "0" or "1" to number
 
-    onChange((prevData: any[]) =>
-      prevData.map((row) => {
+    onChange((prevData: any[]) => {
+      return prevData.map((row) => {
         if (selectedIds.has(row.id)) {
           return {
             ...row,
-            "RFID-Scan": scanValue, // Apply the new numeric value
+            "RFID-Scan": bulkRfidScan, // Apply the new numeric value
             isEdited: true,
           };
         }
         return row;
-      })
-    );
+      });
+    });
 
     setToastInfo({
       type: "success",
       open: true,
       title: "'RFID-Scan' aktualisiert",
-      description: `${selectedIds.size} Zeile(n) wurden auf '${scanValue}' gesetzt.`,
+      description: `${selectedIds.size} Zeile(n) wurden auf '${bulkRfidScan}' gesetzt.`,
     });
 
     setBulkRfidScan(""); // Reset input
