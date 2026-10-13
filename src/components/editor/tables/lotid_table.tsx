@@ -375,16 +375,16 @@ export default function LotIdTable({
           onOpenChange={setIsBulkEditOpen}
           className='flex-shrink-0 mb-4'
         >
-          <div className='flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 px-4 py-2 border dark:border-gray-700 rounded-t-lg'>
-            <h3 className='font-semibold text-gray-800 dark:text-gray-200 text-lg'>
+          <div className='flex justify-between items-center bg-gray-50 dark:bg-neutral-900/70 px-4 py-2 border dark:border-neutral-700 rounded-t-lg'>
+            <h3 className='font-semibold text-gray-800 dark:text-neutral-200 text-lg'>
               Massenbearbeitung (für ausgewählte Zeilen)
             </h3>
             <div className='flex items-center gap-4'>
-              <span className='font-medium text-gray-700 dark:text-gray-300 text-sm'>
+              <span className='font-medium text-gray-700 dark:text-neutral-300 text-sm'>
                 {selectedRowCount} Zeile(n) ausgewählt
               </span>
               <Collapsible.Trigger asChild>
-                <button className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 w-9 h-9 font-medium hover:text-zinc-900 dark:hover:text-zinc-50 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none'>
+                <button className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-neutral-600 dark:hover:bg-neutral-500 disabled:opacity-50 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 w-9 h-9 font-medium hover:text-zinc-900 dark:hover:text-zinc-50 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none'>
                   {isBulkEditOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   <span className='sr-only'>
                     {isBulkEditOpen ? "Einklappen" : "Ausklappen"}
@@ -395,7 +395,7 @@ export default function LotIdTable({
           </div>
 
           <Collapsible.Content className='CollapsibleContentAnimation'>
-            <div className='flex flex-wrap items-end gap-4 bg-gray-50 dark:bg-gray-900/50 p-4 border-x dark:border-gray-700 border-b rounded-b-lg'>
+            <div className='flex flex-wrap items-end gap-4 bg-gray-50 dark:bg-neutral-900/70 p-4 border-x dark:border-neutral-700 border-b rounded-b-lg'>
               {/* To Do Bulk Edit */}
               <div className='flex-1 min-w-[250px]'>
                 <label
@@ -410,7 +410,7 @@ export default function LotIdTable({
                       id='bulk-todo'
                       value={bulkToDo}
                       onChange={(e) => setBulkTodDo(e.target.value)}
-                      className='block bg-white dark:bg-gray-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-gray-700 rounded-lg focus:outline-none w-full sm:text-sm appearance-none'
+                      className='block bg-white dark:bg-neutral-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-neutral-700 rounded-lg focus:outline-none w-full sm:text-sm appearance-none'
                     >
                       {TODO_OPTIONS.map((option) => (
                         <option key={option} value={option}>
@@ -424,7 +424,7 @@ export default function LotIdTable({
                   </div>
                   <button
                     onClick={handleApplyBulkTodDo}
-                    className='inline-flex justify-center items-center bg-zinc-900 hover:bg-zinc-900/90 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-zinc-50 dark:text-gray-300 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
+                    className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-gray-800 dark:text-neutral-200 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
                   >
                     Anwenden
                   </button>
@@ -445,7 +445,7 @@ export default function LotIdTable({
                       id='bulk-anmerkung'
                       value={bulkAnmerkung}
                       onChange={(e) => setBulkAnmerkung(e.target.value)}
-                      className='block bg-white dark:bg-gray-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-gray-700 rounded-lg focus:outline-none w-full sm:text-sm appearance-none'
+                      className='block bg-white dark:bg-neutral-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-neutral-700 rounded-lg focus:outline-none w-full sm:text-sm appearance-none'
                     >
                       {ANMERKUNG_OPTIONS.map((option) => (
                         <option key={option} value={option}>
@@ -459,7 +459,7 @@ export default function LotIdTable({
                   </div>
                   <button
                     onClick={handleApplyBulkAnmerkung}
-                    className='inline-flex justify-center items-center bg-zinc-900 hover:bg-zinc-900/90 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-zinc-50 dark:text-gray-300 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
+                    className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-gray-800 dark:text-neutral-200 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
                   >
                     Anwenden
                   </button>
@@ -480,7 +480,7 @@ export default function LotIdTable({
                       id='bulk-rfid'
                       value={bulkRfidScan}
                       onChange={(e) => setBulkRfidScan(e.target.value)}
-                      className='block bg-white dark:bg-gray-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-gray-700 rounded-lg focus:outline-none w-full sm:text-sm appearance-none'
+                      className='block bg-white dark:bg-neutral-900 shadow-sm py-2 pr-8 pl-3 border border-gray-300 focus:border-accent-500 dark:border-neutral-700 rounded-lg focus:outline-none w-full sm:text-sm appearance-none'
                     >
                       <option value=''>--- Auswählen ---</option>
                       <option value='0'>0</option>
@@ -492,7 +492,7 @@ export default function LotIdTable({
                   </div>
                   <button
                     onClick={handleApplyBulkRfidScan}
-                    className='inline-flex justify-center items-center bg-zinc-900 hover:bg-zinc-900/90 dark:bg-gray-600 dark:hover:bg-gray-500 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-zinc-50 dark:text-gray-300 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
+                    className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 disabled:opacity-50 px-4 py-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-500 ring-offset-white focus-visible:ring-offset-2 dark:ring-offset-zinc-950 h-10 font-medium text-gray-800 dark:text-neutral-200 text-sm whitespace-nowrap transition-colors disabled:pointer-events-none shrink-0'
                   >
                     Anwenden
                   </button>

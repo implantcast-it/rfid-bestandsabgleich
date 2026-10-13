@@ -57,8 +57,8 @@ export default function FileUploadDropzone({
     fileName || isHovered
       ? "border-primary" // File selected OR being hovered
       : isWindowDragging
-        ? "border-gray-400 dark:border-gray-500 animate-pulse" // Another dropzone is hovered
-        : "border-gray-200 dark:border-gray-600 hover:border-primary"; // Default
+        ? "border-gray-400 dark:border-neutral-500 animate-pulse" // Another dropzone is hovered
+        : "border-gray-200 dark:border-neutral-600 hover:border-primary"; // Default
 
   // --- DRAG HANDLERS ---
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
@@ -79,12 +79,12 @@ export default function FileUploadDropzone({
             {title}
           </h2>
           {fileType && (
-            <span className='bg-gray-100 dark:bg-gray-700 ml-2 px-2 py-0.5 rounded-full font-medium text-gray-600 dark:text-gray-300 text-xs'>
+            <span className='bg-gray-100 dark:bg-neutral-700 ml-2 px-2 py-0.5 rounded-full font-medium text-gray-600 dark:text-neutral-300 text-xs'>
               {fileType}
             </span>
           )}
         </div>
-        <p className='mb-3 text-gray-500 dark:text-gray-400 text-sm'>
+        <p className='mb-3 text-gray-500 dark:text-neutral-400 text-sm'>
           {description}
         </p>
       </div>
@@ -128,10 +128,10 @@ export default function FileUploadDropzone({
                   ? "text-primary"
                   : isWindowDragging
                     ? "text-gray-500"
-                    : "text-gray-400 dark:text-gray-500 group-hover:text-primary"
+                    : "text-gray-400 dark:text-neutral-500 group-hover:text-primary"
               }`}
             />
-            <p className='text-gray-500 dark:text-gray-400 text-sm'>
+            <p className='text-gray-500 dark:text-neutral-400 text-sm'>
               Datei hierher ziehen oder{" "}
               <span
                 className={`font-semibold text-primary hover:underline ${

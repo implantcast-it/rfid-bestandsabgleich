@@ -6,7 +6,7 @@ import {
   iconSetMaterial,
   themeQuartz,
 } from "ag-grid-community";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import Sidebar, { NavSection } from "./components/editor/Sidebar";
 import { handleExcelDownload, handlePdfDownload } from "./lib/utils";
 
@@ -48,6 +48,7 @@ const navSections: NavSection[] = [
     title: "Bestände",
     items: [
       { id: "erp", name: "ERP", icon: <DnsOutlinedIcon /> },
+      { id: "offenePosten", name: "Offene Posten", icon: <RuleOutlinedIcon /> },
       { id: "barcode", name: "Barcode", icon: <QrCodeOutlinedIcon /> },
       { id: "rfid", name: "RFID", icon: <SensorsOutlinedIcon /> },
     ],
@@ -65,6 +66,7 @@ const navSections: NavSection[] = [
 // --- Page Configurations ---
 const pageConfig: PageConfigMap = {
   erp: { title: "ERP Bestände", hasHeaderButtons: false },
+  offenePosten: { title: "Offene Posten", hasHeaderButtons: false },
   barcode: { title: "Barcode Scan", hasHeaderButtons: false },
   rfid: { title: "RFID Scan", hasHeaderButtons: false },
   scan: { title: "Barcode & RFID Vergleich", hasHeaderButtons: false },
@@ -122,6 +124,11 @@ export default function EditorScreen() {
         }).length
       : undefined;
 
+  const requiredStichproben =
+    activeTab === "lotId" && Array.isArray(lotIdData)
+      ? Math.ceil(lotIdData.length * 0.01)
+      : undefined;
+
   // --- TABLE THEME ---
   const { theme } = useTheme();
   const tableTheme = themeQuartz.withPart(iconSetMaterial).withParams(
@@ -139,17 +146,24 @@ export default function EditorScreen() {
           accentColor: "#006860",
           browserColorScheme: theme,
           cellHorizontalPaddingScale: 1,
-          backgroundColor: "#18212f",
+          backgroundColor: "#0A0A0A",
           columnBorder: false,
           chromeBackgroundColor: {
             ref: "foregroundColor",
             mix: 0.07,
             onto: "backgroundColor",
           },
-          foregroundColor: "#FFF",
+          foregroundColor: "#E5E5E5",
+          headerBackgroundColor: "#171717",
           headerFontSize: 14,
           iconSize: 18,
           rowVerticalPaddingScale: 0.7,
+          selectionBackgroundColor: "#525252",
+          selectionForegroundColor: "#FFFFFF",
+          borderColor: "#404040",
+          oddRowBackgroundColor: "#111111",
+          evenRowBackgroundColor: "#0A0A0A",
+          cellFontFamily: "inherit",
         },
   );
 
@@ -305,19 +319,16 @@ export default function EditorScreen() {
     }
   }, [lotIdData, setLotIdData]); // Depend on lotIdData and setLotIdData
 
-  // Auto-Siebe + Instruments and Offene Posten Button
-  const handleAutoSiebeAndOffenePosten = useCallback(() => {
+  // Auto-Siebe Button only. "Offene Posten" is now a read-only ERP view.
+  const handleAutoSiebe = useCallback(() => {
     const changesToApply = new Map<string, any>();
     let siebRowCount = 0;
-    let offenePostenRowCount = 0;
 
     lotIdData.forEach((row: any) => {
-      // Logic for "Auto-Siebe"
       if (
         row["Kennzeichen 3"] === "SIEB" ||
         (row["Kennzeichen 3"] === "INST" && row["RFID-Scan"] == 0)
       ) {
-        // Get existing changes in case the row also matches the other condition
         const existingChanges = changesToApply.get(row.id) || {};
         changesToApply.set(row.id, {
           ...existingChanges,
@@ -326,22 +337,9 @@ export default function EditorScreen() {
         });
         siebRowCount++;
       }
-
-      // Logic for "Offene Posten"
-      if (row["RFID-Scan"] == 0 && row["Eigenbestand nach ERP"] == 0) {
-        const existingChanges = changesToApply.get(row.id) || {};
-        changesToApply.set(row.id, {
-          ...existingChanges,
-          Anmerkung: "offener Posten",
-          isEdited: true,
-        });
-        // Only increment if we didn't already count it as a "Sieb"
-        // to avoid double-counting rows, though 'offenePostenRowCount'
-        offenePostenRowCount++;
-      }
     });
 
-    if (siebRowCount > 0 || offenePostenRowCount > 0) {
+    if (siebRowCount > 0) {
       setLotIdData((prevData: any[]) => {
         return prevData.map((row) => {
           if (changesToApply.has(row.id)) {
@@ -351,30 +349,40 @@ export default function EditorScreen() {
         });
       });
 
-      const descriptions = [];
-      if (siebRowCount > 0) {
-        descriptions.push(`${siebRowCount} 'SIEB/INST' Zeile(n)`);
-      }
-      if (offenePostenRowCount > 0) {
-        descriptions.push(`${offenePostenRowCount} 'Offene Posten'`);
-      }
-
       setToastInfo({
         open: true,
         type: "success",
         title: "Aktionen ausgeführt",
-        description: `${descriptions.join(" und ")} aktualisiert.`,
+        description: `${siebRowCount} 'SIEB/INST' Zeile(n) aktualisiert.`,
       });
     } else {
       setToastInfo({
         open: true,
         type: "error",
         title: "Keine Aktionen ausgeführt",
-        description:
-          "Keine Zeilen für 'SIEB', 'INST' oder 'Offene Posten' gefunden.",
+        description: "Keine Zeilen für 'SIEB' oder 'INST' gefunden.",
       });
     }
-  }, [lotIdData, setLotIdData]); // Depend on lotIdData and setLotIdData
+  }, [lotIdData, setLotIdData]);
+
+  const openPostenData = useMemo(() => {
+    const erpRows = utils.sheet_to_json(
+      comparisonData.masterData.Sheets["Ax-Bestand"],
+      { header: 0 },
+    ) as any[];
+
+    return erpRows.filter((row) => {
+      const raw = row["Insgesamt bestellt"];
+      const textValue = String(raw ?? "").trim();
+      const numericValue = Number(raw);
+
+      return (
+        textValue.toLowerCase().includes("offene posten") ||
+        textValue.toLowerCase().includes("offen") ||
+        (!Number.isNaN(numericValue) && numericValue > 0)
+      );
+    });
+  }, [comparisonData]);
 
   const renderPageContent = (): ReactNode => {
     switch (activeTab) {
@@ -383,6 +391,13 @@ export default function EditorScreen() {
           <ErpTable
             theme={tableTheme}
             data={comparisonData.masterData.Sheets["Ax-Bestand"]}
+          />
+        );
+      case "offenePosten":
+        return (
+          <ErpTable
+            theme={tableTheme}
+            data={utils.json_to_sheet(openPostenData)}
           />
         );
       case "barcode":
@@ -429,7 +444,7 @@ export default function EditorScreen() {
 
   return (
     <Toast.Provider>
-      <div className='flex bg-slate-100 dark:bg-slate-800 w-full h-screen overflow-hidden font-display text-gray-800 dark:text-gray-200'>
+      <div className='flex bg-slate-100 dark:bg-neutral-900 w-full h-screen overflow-hidden font-display text-gray-800 dark:text-neutral-200'>
         {/* ... (Sidebar) ... */}
         <Sidebar
           navSections={navSections}
@@ -446,7 +461,8 @@ export default function EditorScreen() {
             title={currentPageConfig.title}
             hasHeaderButtons={currentPageConfig.hasHeaderButtons}
             completedStichproben={completedStichproben}
-            onAutoCheck={handleAutoSiebeAndOffenePosten}
+            requiredStichproben={requiredStichproben}
+            onAutoCheck={handleAutoSiebe}
             onAutoFill={handleAutoFillKommentare}
           >
             {renderPageContent()}

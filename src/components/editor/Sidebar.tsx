@@ -43,14 +43,14 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 border-r h-full relative transition-all duration-300 ease-in-out ${
+      className={`flex flex-col bg-white dark:bg-neutral-900/70 border-gray-200 dark:border-neutral-800 border-r h-full relative transition-all duration-300 ease-in-out ${
         isOpen ? "w-60" : "w-20"
       }`}
     >
       {/* --- SIDEBAR TOGGLE BUTTON --- */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className='top-12 -right-4 z-10 absolute bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 p-1.5 border dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-800 text-gray-700 dark:text-gray-300 transition-colors'
+        className='top-12 -right-4 z-10 absolute bg-white hover:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 p-1.5 border dark:border-neutral-700 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-800 text-gray-700 dark:text-neutral-300 transition-colors'
         aria-label={isOpen ? "Sidebar schließen" : "Sidebar öffnen"}
       >
         {isOpen ? (
@@ -88,7 +88,7 @@ export default function Sidebar({
               <div key={section.title}>
                 {/* Hide section title when collapsed */}
                 {isOpen && (
-                  <h2 className='mb-2 px-3 font-semibold text-gray-400 dark:text-gray-500 text-xs uppercase tracking-wider'>
+                  <h2 className='mb-2 px-3 font-semibold text-gray-400 dark:text-neutral-500 text-xs uppercase tracking-wider'>
                     {section.title}
                   </h2>
                 )}
@@ -107,8 +107,8 @@ export default function Sidebar({
                         title={!isOpen ? item.name : undefined}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
                           isActive
-                            ? "bg-primary/20 dark:bg-primary/50 text-primary dark:text-gray-300"
-                            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            ? "bg-primary/20 dark:bg-primary/50 text-primary dark:text-neutral-300"
+                            : "text-gray-600 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
                         } ${
                           !isOpen && "justify-center" // Center icon when collapsed
                         }`}

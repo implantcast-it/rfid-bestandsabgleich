@@ -82,16 +82,16 @@ export function UpdaterDialog() {
     <Dialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className='z-40 fixed inset-0 bg-black/60 dark:bg-black/80 data-[state=open]:animate-overlayShow' />
-        <Dialog.Content className='top-1/2 left-1/2 z-50 fixed bg-gray-50 dark:bg-gray-900 shadow-[var(--shadow-6)] p-[25px] rounded-md focus:outline-none w-[90vw] max-w-[500px] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-contentShow'>
+        <Dialog.Content className='top-1/2 left-1/2 z-50 fixed bg-gray-50 dark:bg-neutral-900 shadow-[var(--shadow-6)] p-[25px] rounded-md focus:outline-none w-[90vw] max-w-[500px] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-contentShow'>
           <div className='flex items-center gap-2'>
-            <UpdateIcon className='text-primary dark:text-gray-200' />
-            <Dialog.Title className='m-0 font-bold text-primary dark:text-gray-200 text-lg'>
+            <UpdateIcon className='text-primary dark:text-neutral-200' />
+            <Dialog.Title className='m-0 font-bold text-primary dark:text-neutral-200 text-lg'>
               Update verfügbar
             </Dialog.Title>
           </div>
 
           {updateInfo && (
-            <Dialog.Description className='mt-3 mb-5 dark:text-gray-400 text-sm leading-normal'>
+            <Dialog.Description className='mt-3 mb-5 dark:text-neutral-400 text-sm leading-normal'>
               Eine neue Version (
               <strong className='font-medium text-primary dark:text-gray-200'>
                 {updateInfo.version}
@@ -116,7 +116,7 @@ export function UpdaterDialog() {
           <div className='flex justify-end gap-3 mt-6'>
             <Dialog.Close asChild>
               <button
-                className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-[15px] rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-gray-800 outline-offset-1 h-[35px] font-medium dark:text-gray-300 leading-none select-none'
+                className='inline-flex justify-center items-center bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 px-[15px] rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-gray-800 outline-offset-1 h-[35px] font-medium dark:text-neutral-300 leading-none select-none'
                 disabled={isDownloading}
               >
                 Später

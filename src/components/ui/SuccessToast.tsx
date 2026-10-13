@@ -24,7 +24,7 @@ export default function SuccessToast({
 }) {
   return (
     <Toast.Root
-      className="items-center gap-x-4 grid grid-cols-[auto_max-content] bg-white dark:bg-gray-900 shadow-lg p-4 rounded-lg data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=closed]:animate-hide data-[state=open]:animate-slideIn data-[swipe=end]:animate-swipeOut [grid-template-areas:_'title_action'_'description_action']"
+      className="items-center gap-x-4 grid grid-cols-[auto_max-content] bg-white dark:bg-neutral-900 shadow-lg p-4 rounded-lg data-[swipe=cancel]:transition-[transform_200ms_ease-out] data-[swipe=cancel]:translate-x-0 data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[state=closed]:animate-hide data-[state=open]:animate-slideIn data-[swipe=end]:animate-swipeOut [grid-template-areas:_'title_action'_'description_action']"
       open={open}
       onOpenChange={onOpenChange}
       duration={5000}
@@ -36,14 +36,14 @@ export default function SuccessToast({
             {title}
           </Toast.Title>
           <Toast.Description asChild>
-            <p className='m-0 text-gray-600 dark:text-gray-300 text-sm [grid-area:_description]'>
+            <p className='m-0 text-gray-600 dark:text-neutral-300 text-sm [grid-area:_description]'>
               {description}
             </p>
           </Toast.Description>
         </div>
       </div>
       <Toast.Close
-        className='self-start hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded-full text-gray-500 transition-colors [grid-area:_action]'
+        className='self-start hover:bg-gray-100 dark:hover:bg-neutral-700 p-1 rounded-full text-gray-500 transition-colors [grid-area:_action]'
         aria-label='Schließen'
       >
         <CloseIcon style={{ fontSize: 20 }} />

@@ -157,8 +157,8 @@ export default function FileUploadScreen() {
 
   return (
     <Toast.Provider swipeDirection='right'>
-      <div className='flex justify-center items-center bg-slate-100 dark:bg-slate-800 p-12 min-h-screen max-h-screen font-display text-gray-800 dark:text-gray-200'>
-        <div className='bg-white dark:bg-gray-900 shadow-sm px-12 py-11 rounded-xl'>
+      <div className='flex justify-center items-center bg-slate-100 dark:bg-neutral-900 p-12 min-h-screen max-h-screen font-display text-gray-800 dark:text-neutral-200'>
+        <div className='bg-white dark:bg-neutral-950 shadow-sm px-12 py-11 rounded-xl'>
           <div className='flex flex-col h-full'>
             {/* Header */}
             <div className='mb-6 text-left'>
@@ -215,7 +215,7 @@ export default function FileUploadScreen() {
             <div className='flex justify-between mt-8'>
               <a
                 href='/'
-                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-5 py-2 rounded-lg font-semibold text-gray-800 dark:text-gray-300 transition-colors'
+                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 px-5 py-2 rounded-lg font-semibold text-gray-800 dark:text-neutral-300 transition-colors'
               >
                 <ArrowBackwardsIcon />
                 <span>Zurück</span>
@@ -234,7 +234,7 @@ export default function FileUploadScreen() {
         {/* --- Theme Switcher Button --- */}
         <button
           onClick={toggleTheme}
-          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
+          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-700 shadow-md border-2 border-gray-200 dark:border-neutral-700 rounded-full w-10 h-10 text-gray-800 dark:text-neutral-200 transition-colors cursor-pointer'
           aria-label='Toggle light/dark theme'
         >
           {theme === "light" ? (

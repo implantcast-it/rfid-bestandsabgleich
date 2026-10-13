@@ -48,9 +48,9 @@ export default function StartScreen() {
 
   return (
     <Toast.Provider swipeDirection='right'>
-      <div className='relative flex justify-center items-center bg-slate-100 dark:bg-slate-800 p-12 min-h-screen font-display text-gray-800 dark:text-gray-200'>
+      <div className='relative flex justify-center items-center bg-slate-100 dark:bg-neutral-900 p-12 min-h-screen font-display text-gray-800 dark:text-neutral-200'>
         {/* Main Content Card */}
-        <div className='bg-white dark:bg-gray-900 shadow-sm px-20 py-12 rounded-xl'>
+        <div className='bg-white dark:bg-neutral-950 shadow-sm px-20 py-12 rounded-xl'>
           <div className='flex flex-col justify-center items-center h-full text-center'>
             {/* Icon from HTML */}
             <div className='mb-2'>
@@ -64,7 +64,7 @@ export default function StartScreen() {
             </h1>
 
             {/* Description */}
-            <p className='mb-8 max-w-2xl text-gray-500 dark:text-gray-400 text-lg'>
+            <p className='mb-8 max-w-2xl text-gray-500 dark:text-neutral-400 text-lg'>
               Optimierte Kundeninventur mit der Hilfe von RFID. Lade deinen
               RFID-Scan mit den ERP-Daten hoch, um sofortige Einblicke in deinen
               Bestand zu erhalten.
@@ -74,7 +74,7 @@ export default function StartScreen() {
             <div className='mb-10 w-full max-w-3xl'>
               <div className='relative flex justify-between items-start'>
                 {/* Connecting Lines */}
-                <div className='top-6 right-0 left-0 z-0 absolute bg-gray-200 dark:bg-gray-700 h-1'>
+                <div className='top-6 right-0 left-0 z-0 absolute bg-gray-200 dark:bg-neutral-700 h-1'>
                   <div className='top-0 left-0 z-0 absolute bg-primary w-1/3 h-1'></div>
                 </div>
                 {/* Step 1: Active */}
@@ -89,20 +89,20 @@ export default function StartScreen() {
 
                 {/* Step 2: Inactive */}
                 <div className='z-10 flex flex-col items-center w-1/3'>
-                  <div className='flex justify-center items-center bg-gray-200 dark:bg-gray-700 mb-2 rounded-full w-12 h-12 text-gray-500 dark:text-gray-300'>
+                  <div className='flex justify-center items-center bg-gray-200 dark:bg-neutral-700 mb-2 rounded-full w-12 h-12 text-gray-500 dark:text-neutral-300'>
                     <SyncIcon />
                   </div>
-                  <p className='font-semibold text-gray-600 dark:text-gray-300 text-sm'>
+                  <p className='font-semibold text-gray-600 dark:text-neutral-300 text-sm'>
                     2. Daten verarbeiten
                   </p>
                 </div>
 
                 {/* Step 3: Inactive */}
                 <div className='z-10 flex flex-col items-center w-1/3'>
-                  <div className='flex justify-center items-center bg-gray-200 dark:bg-gray-700 mb-2 rounded-full w-12 h-12 text-gray-500 dark:text-gray-300'>
+                  <div className='flex justify-center items-center bg-gray-200 dark:bg-neutral-700 mb-2 rounded-full w-12 h-12 text-gray-500 dark:text-neutral-300'>
                     <BarChartIcon />
                   </div>
-                  <p className='font-semibold text-gray-600 dark:text-gray-300 text-sm'>
+                  <p className='font-semibold text-gray-600 dark:text-neutral-300 text-sm'>
                     3. Einblicke erhalten
                   </p>
                 </div>
@@ -126,7 +126,7 @@ export default function StartScreen() {
                   );
                 }}
                 disabled={loading}
-                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-5 py-3 rounded-lg font-semibold text-gray-800 dark:text-gray-300 transition-colors'
+                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 px-5 py-3 rounded-lg font-semibold text-gray-800 dark:text-neutral-300 transition-colors'
               >
                 <span>Abgleich einlesen</span>
                 {loading ? (
@@ -141,7 +141,7 @@ export default function StartScreen() {
         {/* --- Theme Switcher Button --- */}
         <button
           onClick={toggleTheme}
-          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-700 shadow-md border-2 border-gray-200 dark:border-gray-700 rounded-full w-10 h-10 text-gray-800 dark:text-gray-200 transition-colors cursor-pointer'
+          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-700 shadow-md border-2 border-gray-200 dark:border-neutral-700 rounded-full w-10 h-10 text-gray-800 dark:text-neutral-200 transition-colors cursor-pointer'
           aria-label='Toggle light/dark theme'
         >
           {theme === "light" ? (
@@ -150,7 +150,7 @@ export default function StartScreen() {
             <LightModeOutlinedIcon fontSize='small' />
           )}
         </button>
-        <div className='top-2 left-2 absolute bg-gray-200 dark:bg-slate-900 mb-2 px-2 py-px rounded-full font-medium text-gray-600 dark:text-gray-500 text-sm'>
+        <div className='top-2 left-2 absolute bg-gray-200 dark:bg-neutral-950 mb-2 px-2 py-px rounded-full font-medium text-gray-600 dark:text-neutral-500 text-sm'>
           <p>v{appVersion}</p>
         </div>
       </div>
