@@ -24,3 +24,10 @@ target
 *.sln
 *.sw?
 .tauri
+
+# Local / confidential reference catalogs (never commit real customer data)
+**/catalogs.sqlite
+**/catalogs.sqlite-*
+fixtures/private/
+**/*.confidential.xlsx
+test-rfid/
