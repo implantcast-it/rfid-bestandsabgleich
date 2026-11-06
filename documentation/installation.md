@@ -13,8 +13,8 @@ Im Projekt-Ordner befindet sich eine package.json, welche unter dem Reiter „de
 
 | Package                   | Funktion                                                                                             |
 | ------------------------- | ---------------------------------------------------------------------------------------------------- |
-| ag-grid-react             | AG Grid sorgt für die Darstellung der Tabellen im Editor.                                            |
-| jspdf und jspdf-autotable | Diese zwei Packages ermöglichen das Erstellen der PDF für den Kunden zum Unterzeichnen.              |
+| @tanstack/react-table     | TanStack Table sorgt für die Darstellung der Tabellen im Editor.                                     |
+| (PDF)                     | PDF-Export läuft in Rust (Typst); Frontend ruft `export_abgleich_pdf` auf.                            |
 | wouter                    | Wouter sorgt für das Routing (also das Navigieren) in der Applikation.                               |
 | xlsx                      | XLSX ist das wichtigste Package und sorgt für das Auslesen der Dateien und Anfertigen des Abgleichs. |
 

@@ -5,13 +5,20 @@ Dafür wurde eine Software für implantcast entwickelt, welche die erfassten Dat
 
 Damit dieser Abgleich stattfinden kann, müssen vom durchführenden Mitarbeiter folgende Dateien vorbereitet / angefordert werden:
 
-- Ein kundenspezifisches Master-Template, welches eine GTIN-Liste der Artikel von implantcast enthält (Excel)
+- Ein Master-Excel (gleich für alle Kunden): GTIN-Zuordnung für RFID-Scans — in der Neuauflage einmalig in die App übernommen; Ergebnis-Excel erzeugt das Programm selbst
 - Ein tagesaktueller Abzug aus unserem ERP-System aller Produkte die laut unserer Daten beim Kunden liegen sollten (Excel)
 - Das Programm für den Bestandsabgleich
 
 ## Dokumentation
 
-Eine ausfühliche technische Dokumentation findet sich hier: [Dokumentation](./documentation/README.md)
+Ausführliche Dokumentation: [documentation/README.md](./documentation/README.md)
+
+Für einen geplanten Rewrite (UI, Implementierung, Tests, Performance) zuerst lesen:
+
+- [Product Intent](./documentation/product-intent.md)
+- [User Flows](./documentation/user-flows.md)
+- [Data Model & Business Rules](./documentation/data-model-and-rules.md)
+- [Feature Parity](./documentation/feature-parity.md)
 
 ## Tech Stack
 
@@ -25,6 +32,6 @@ Das Programm wurde mit folgenden Tools & Frameworks geschrieben:
 
 ## Screenshots
 
-|            Start Screen             |            Upload Screen             |             Editor View              |
-| :---------------------------------: | :----------------------------------: | :----------------------------------: |
-| ![](documentation/assets/start.png) | ![](documentation/assets/upload.png) | ![](documentation/assets/editor.png) |
+|            Start Screen             |             Editor View              |
+| :---------------------------------: | :----------------------------------: |
+| ![](documentation/assets/start.png) | ![](documentation/assets/editor.png) |
