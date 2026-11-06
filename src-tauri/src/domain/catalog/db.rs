@@ -185,7 +185,7 @@ impl CatalogDb {
     /// Case-insensitive substring search on id or name (for typeahead).
     pub fn search_debitors(&self, query: &str, limit: usize) -> DomainResult<Vec<DebitorEntry>> {
         let q = query.trim();
-        let limit = limit.max(1).min(100) as i64;
+        let limit = limit.clamp(1, 100) as i64;
         let mut stmt = if q.is_empty() {
             self.conn
                 .prepare(
