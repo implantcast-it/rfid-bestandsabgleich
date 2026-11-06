@@ -1,183 +1,379 @@
-import * as Toast from "@radix-ui/react-toast";
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { useLocation } from "wouter"
+import { getVersion } from "@tauri-apps/api/app"
+import { toast } from "sonner"
+import { UpdaterDialog } from "./components/ui/UpdaterDialog"
+import { Toaster } from "./components/ui/sonner"
+import HomeTopbar from "./components/home/HomeTopbar"
+import UploadPanel from "./components/home/UploadPanel"
+import InsightCards from "./components/home/InsightCards"
+import InventurenFileGrid, {
+  type InventurFile,
+} from "./components/home/InventurenFileGrid"
+import {
+  catalogGateMessage,
+  formatDebitorSummary,
+  getCatalogReady,
+  searchDebitors,
+  type CatalogReady,
+  type DebitorEntry,
+} from "./lib/catalog"
+import {
+  loadAbgleichFromDialog,
+  runInventur,
+  type EditorSnapshot,
+  type InventurSessionState,
+} from "./lib/inventur"
+import type { ProcessPhase } from "./components/home/ProcessPanel"
+import {
+  createInventurProject,
+  deleteInventurProject,
+  listInventurProjects,
+  loadInventurDraft,
+  projectMetaToInventurFile,
+  updateInventurTitle,
+  type ProjectMeta,
+} from "./lib/projects"
 
-import { useEffect, useState } from "react";
+const inventurjahrDefault = () => String(new Date().getFullYear())
 
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import BarChartIcon from "@mui/icons-material/BarChart";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import ErrorToast from "./components/ui/ErrorToast";
-import FileUploadIcon from "@mui/icons-material/FileUpload";
-import InsightsIcon from "@mui/icons-material/Insights";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import SuccessToast from "./components/ui/SuccessToast";
-import SyncIcon from "@mui/icons-material/Sync";
-import { UpdaterDialog } from "./components/ui/UpdaterDialog";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import { getVersion } from "@tauri-apps/api/app";
-import { handleExistingFileOpen } from "./lib/utils";
-import { useLocation } from "wouter";
-import { useTheme } from "./context/ThemeContext";
+const formatDebitorLabel = (
+  snapshot: EditorSnapshot | null,
+  entry: DebitorEntry | null
+) => {
+  if (entry) return formatDebitorSummary(entry)
+  if (!snapshot) return "—"
+  if (snapshot.kundenname && snapshot.kundenname !== snapshot.debitor) {
+    return `${snapshot.debitor} · ${snapshot.kundenname}`
+  }
+  return snapshot.debitor || "—"
+}
+
+const openEditorSession = (
+  setLocation: (to: string, options?: { state?: InventurSessionState }) => void,
+  meta: ProjectMeta,
+  snapshot: EditorSnapshot,
+  inventurjahr: string
+) => {
+  const state: InventurSessionState = {
+    projectId: meta.id,
+    snapshot,
+    projectTitle: meta.title,
+    inventurjahr,
+  }
+  setLocation("/editor", { state })
+}
 
 /* Start Screen for the Application */
-export default function StartScreen() {
-  const [toastInfo, setToastInfo] = useState<{
-    open: boolean;
-    type: "success" | "error";
-    title: string;
-    description: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [appVersion, setAppVersion] = useState("");
+const StartScreen = () => {
+  const [appVersion, setAppVersion] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [, setLocation] = useLocation()
 
-  const [, setLocation] = useLocation();
-  const { theme, toggleTheme } = useTheme();
+  const [catalogReady, setCatalogReady] = useState<CatalogReady | null>(null)
+  const [erpPath, setErpPath] = useState<string | null>(null)
+  const [rfidPath, setRfidPath] = useState<string | null>(null)
+  const [inventurjahr] = useState(inventurjahrDefault)
+
+  const [processPhase, setProcessPhase] = useState<ProcessPhase | null>(null)
+  const [processTitle, setProcessTitle] = useState("Abgleich läuft")
+  const [processStatus, setProcessStatus] = useState("")
+  const [processPercent, setProcessPercent] = useState(0)
+  const [progressLabel, setProgressLabel] = useState("Vorbereitung")
+  const [snapshot, setSnapshot] = useState<EditorSnapshot | null>(null)
+  const [pendingProjectId, setPendingProjectId] = useState<string | null>(null)
+  const [debitorEntry, setDebitorEntry] = useState<DebitorEntry | null>(null)
+  const [loadingAbgleich, setLoadingAbgleich] = useState(false)
+  const [projects, setProjects] = useState<ProjectMeta[]>([])
+
+  const inventurFiles: InventurFile[] = useMemo(
+    () => projects.map(projectMetaToInventurFile),
+    [projects]
+  )
+
+  const insightCounts = useMemo(() => {
+    const year = inventurjahr
+    const yearProjects = projects.filter((p) =>
+      p.inventur_date.startsWith(year)
+    )
+    const offene = yearProjects.filter((p) => p.status === "open").length
+    // Remaining samples vs ceil(1% ERP qty) quota across all inventuren
+    const stichproben = yearProjects.reduce((sum, project) => {
+      const done = Number(project.stichproben_done)
+      const required = Number(project.stichproben_required)
+      const completed = Number.isFinite(done) ? done : 0
+      const target = Number.isFinite(required) ? required : 0
+      return sum + Math.max(0, target - completed)
+    }, 0)
+    return {
+      vergleiche: yearProjects.length,
+      offene,
+      stichproben,
+    }
+  }, [projects, inventurjahr])
+
+  const refreshCatalogReady = useCallback(async () => {
+    try {
+      const ready = await getCatalogReady()
+      setCatalogReady(ready)
+    } catch (error) {
+      console.error("Katalog-Status konnte nicht geladen werden:", error)
+      setCatalogReady(null)
+    }
+  }, [])
+
+  const refreshProjects = useCallback(async () => {
+    try {
+      const items = await listInventurProjects()
+      setProjects(items)
+    } catch (error) {
+      console.error("Inventuren konnten nicht geladen werden:", error)
+      setProjects([])
+    }
+  }, [])
+
+  const resolveDebitorEntry = useCallback(async (debitorId: string) => {
+    const id = debitorId.trim()
+    if (!id) {
+      setDebitorEntry(null)
+      return null
+    }
+    try {
+      const hits = await searchDebitors(id, 20)
+      const exact =
+        hits.find((row) => row.debitorenkonto.trim() === id) ?? null
+      setDebitorEntry(exact)
+      return exact
+    } catch (error) {
+      console.error("Debitor-Details nicht geladen:", error)
+      setDebitorEntry(null)
+      return null
+    }
+  }, [])
+
+  const createProjectFromSnapshot = useCallback(
+    async (result: EditorSnapshot, entry: DebitorEntry | null) => {
+      const title =
+        entry?.kundenname ||
+        (result.kundenname && result.kundenname !== result.debitor
+          ? result.kundenname
+          : result.debitor) ||
+        "Inventur"
+      return createInventurProject(result, {
+        title,
+        plz: entry?.plz ?? "",
+        ort: entry?.ort ?? "",
+        inventur_date: new Date().toISOString().slice(0, 10),
+      })
+    },
+    []
+  )
 
   useEffect(() => {
     const fetchVersion = async () => {
       try {
-        const version = await getVersion();
-        setAppVersion(version);
+        const version = await getVersion()
+        setAppVersion(version)
       } catch (error) {
-        console.error("Failed to get app version:", error);
+        console.error("Failed to get app version:", error)
       }
-    };
+    }
 
-    fetchVersion();
-  }, []); // run only once on component mount
+    void fetchVersion()
+    void refreshCatalogReady()
+    void refreshProjects()
+  }, [refreshCatalogReady, refreshProjects])
+
+  const handleStartCompare = async () => {
+    if (!erpPath || !rfidPath) return
+
+    const gate = catalogGateMessage(catalogReady)
+    if (gate) {
+      toast.error("Katalog nicht bereit", { description: gate })
+      return
+    }
+
+    setSnapshot(null)
+    setPendingProjectId(null)
+    setDebitorEntry(null)
+    setProcessPhase("processing")
+    setProcessTitle("Abgleich läuft")
+    setProcessStatus("Dateien werden gelesen und mit dem Katalog abgeglichen…")
+    setProgressLabel("Vergleich")
+    setProcessPercent(35)
+
+    try {
+      setProcessPercent(70)
+      const result = await runInventur(erpPath, rfidPath)
+      const entry = await resolveDebitorEntry(result.debitor)
+      const meta = await createProjectFromSnapshot(result, entry)
+      setSnapshot(result)
+      setPendingProjectId(meta.id)
+      await refreshProjects()
+      setProcessPercent(100)
+      setProgressLabel("Fertig")
+      setProcessTitle("Abgleich abgeschlossen")
+      setProcessStatus(
+        `${result.lot_id_rows.length} LotId-Zeilen · ${result.art_nr_rows.length} Artikel`
+      )
+      setProcessPhase("success")
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error)
+      setProcessTitle("Abgleich fehlgeschlagen")
+      setProcessStatus(message)
+      setProgressLabel("Fehler")
+      setProcessPercent(100)
+      setProcessPhase("error")
+      toast.error("Abgleich fehlgeschlagen", { description: message })
+    }
+  }
+
+  const handleRetry = () => {
+    setProcessPhase(null)
+    setProcessPercent(0)
+    setProcessStatus("")
+    setSnapshot(null)
+    setPendingProjectId(null)
+    setDebitorEntry(null)
+  }
+
+  const handleOpenEditor = () => {
+    if (!snapshot || !pendingProjectId) return
+    const title =
+      debitorEntry?.kundenname ||
+      snapshot.kundenname ||
+      snapshot.debitor ||
+      "Inventur"
+    const state: InventurSessionState = {
+      projectId: pendingProjectId,
+      snapshot,
+      projectTitle: title,
+      inventurjahr,
+    }
+    setLocation("/editor", { state })
+  }
+
+  const handleOpenExisting = async () => {
+    setLoadingAbgleich(true)
+    try {
+      const result = await loadAbgleichFromDialog()
+      if (!result) return
+      const entry = await resolveDebitorEntry(result.debitor)
+      const meta = await createProjectFromSnapshot(result, entry)
+      await refreshProjects()
+      toast.success("Einlesen erfolgreich", {
+        description: "Abgleich geladen — Editor wird geöffnet.",
+      })
+      openEditorSession(setLocation, meta, result, inventurjahr)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error)
+      toast.error("Einlesen fehlgeschlagen", { description: message })
+    } finally {
+      setLoadingAbgleich(false)
+    }
+  }
+
+  const handleOpenInventur = async (id: string) => {
+    try {
+      const loaded = await loadInventurDraft(id)
+      openEditorSession(
+        setLocation,
+        loaded.meta,
+        loaded.snapshot,
+        inventurjahr
+      )
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error)
+      toast.error("Inventur konnte nicht geöffnet werden", {
+        description: message,
+      })
+    }
+  }
+
+  const handleRenameInventur = async (id: string, title: string) => {
+    try {
+      await updateInventurTitle(id, title)
+      await refreshProjects()
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error)
+      toast.error("Umbenennen fehlgeschlagen", { description: message })
+    }
+  }
+
+  const handleDeleteInventur = async (id: string) => {
+    try {
+      await deleteInventurProject(id)
+      await refreshProjects()
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error)
+      toast.error("Löschen fehlgeschlagen", { description: message })
+    }
+  }
 
   return (
-    <Toast.Provider swipeDirection='right'>
-      <div className='relative flex justify-center items-center bg-slate-100 dark:bg-neutral-900 p-12 min-h-screen font-display text-gray-800 dark:text-neutral-200'>
-        {/* Main Content Card */}
-        <div className='bg-white dark:bg-neutral-950 shadow-sm px-20 py-12 rounded-xl'>
-          <div className='flex flex-col justify-center items-center h-full text-center'>
-            {/* Icon from HTML */}
-            <div className='mb-2'>
-              <span className='text-primary text-6xl material-icons'>
-                <InsightsIcon fontSize='inherit' />
-              </span>
-            </div>
-            {/* Title */}
-            <h1 className='mb-4 font-bold text-gray-900 dark:text-white text-3xl'>
-              Willkommen beim RFID-Bestandsabgleich
-            </h1>
+    <div className="text-foreground relative flex h-svh min-w-0 flex-col overflow-hidden">
+      <HomeTopbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onCatalogChanged={() => void refreshCatalogReady()}
+      />
 
-            {/* Description */}
-            <p className='mb-8 max-w-2xl text-gray-500 dark:text-neutral-400 text-lg'>
-              Optimierte Kundeninventur mit der Hilfe von RFID. Lade deinen
-              RFID-Scan mit den ERP-Daten hoch, um sofortige Einblicke in deinen
-              Bestand zu erhalten.
-            </p>
-
-            {/* Steps */}
-            <div className='mb-10 w-full max-w-3xl'>
-              <div className='relative flex justify-between items-start'>
-                {/* Connecting Lines */}
-                <div className='top-6 right-0 left-0 z-0 absolute bg-gray-200 dark:bg-neutral-700 h-1'>
-                  <div className='top-0 left-0 z-0 absolute bg-primary w-1/3 h-1'></div>
-                </div>
-                {/* Step 1: Active */}
-                <div className='z-10 flex flex-col items-center w-1/3'>
-                  <div className='flex justify-center items-center bg-primary mb-2 rounded-full w-12 h-12 text-white'>
-                    <FileUploadIcon />
-                  </div>
-                  <p className='font-semibold text-gray-700 dark:text-white text-sm'>
-                    1. Dateien hochladen
-                  </p>
-                </div>
-
-                {/* Step 2: Inactive */}
-                <div className='z-10 flex flex-col items-center w-1/3'>
-                  <div className='flex justify-center items-center bg-gray-200 dark:bg-neutral-700 mb-2 rounded-full w-12 h-12 text-gray-500 dark:text-neutral-300'>
-                    <SyncIcon />
-                  </div>
-                  <p className='font-semibold text-gray-600 dark:text-neutral-300 text-sm'>
-                    2. Daten verarbeiten
-                  </p>
-                </div>
-
-                {/* Step 3: Inactive */}
-                <div className='z-10 flex flex-col items-center w-1/3'>
-                  <div className='flex justify-center items-center bg-gray-200 dark:bg-neutral-700 mb-2 rounded-full w-12 h-12 text-gray-500 dark:text-neutral-300'>
-                    <BarChartIcon />
-                  </div>
-                  <p className='font-semibold text-gray-600 dark:text-neutral-300 text-sm'>
-                    3. Einblicke erhalten
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className='flex gap-4'>
-              <a
-                href='upload'
-                className='flex items-center space-x-2 bg-primary hover:bg-primary/80 px-5 py-3 rounded-lg font-semibold text-white transition-colors cursor-pointer'
-              >
-                <span>Dateien hochladen</span>
-                <ArrowForwardIcon />
-              </a>
-              <button
-                onClick={() => {
-                  setLoading(true);
-                  handleExistingFileOpen(setToastInfo, setLocation).finally(
-                    () => setLoading(false)
-                  );
-                }}
-                disabled={loading}
-                className='flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 dark:bg-neutral-700 dark:hover:bg-neutral-600 px-5 py-3 rounded-lg font-semibold text-gray-800 dark:text-neutral-300 transition-colors'
-              >
-                <span>Abgleich einlesen</span>
-                {loading ? (
-                  <RotateRightIcon className='animate-spin ease-out' />
-                ) : (
-                  <UploadFileIcon />
-                )}
-              </button>
-            </div>
+      <div className="scrollbar-none relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <main className="mx-auto grid w-full min-w-0 max-w-[1075px] gap-3 px-5 pt-3.5 pb-4">
+          <UploadPanel
+            inventurjahr={inventurjahr}
+            catalogReady={catalogReady}
+            erpPath={erpPath}
+            rfidPath={rfidPath}
+            onErpSelect={setErpPath}
+            onRfidSelect={setRfidPath}
+            processPhase={processPhase}
+            processTitle={processTitle}
+            processStatus={processStatus}
+            processPercent={processPercent}
+            progressLabel={progressLabel}
+            debitorLabel={formatDebitorLabel(snapshot, debitorEntry)}
+            loadingAbgleich={loadingAbgleich}
+            onStartCompare={() => void handleStartCompare()}
+            onOpenExisting={() => void handleOpenExisting()}
+            onRetry={handleRetry}
+            onOpenEditor={handleOpenEditor}
+          />
+          <div
+            className={
+              processPhase === "processing"
+                ? "pointer-events-none min-w-0 space-y-3 opacity-55 transition-opacity"
+                : "min-w-0 space-y-3"
+            }
+          >
+            <InsightCards
+              version={appVersion}
+              inventurjahr={inventurjahr}
+              vergleiche={insightCounts.vergleiche}
+              offene={insightCounts.offene}
+              stichproben={insightCounts.stichproben}
+            />
+            <InventurenFileGrid
+              files={inventurFiles}
+              inventurjahr={inventurjahr}
+              searchQuery={searchQuery}
+              onOpenFile={(id) => void handleOpenInventur(id)}
+              onRenameFile={(id, title) => void handleRenameInventur(id, title)}
+              onDeleteFile={(id) => void handleDeleteInventur(id)}
+            />
           </div>
-        </div>
-        {/* --- Theme Switcher Button --- */}
-        <button
-          onClick={toggleTheme}
-          className='right-6 bottom-6 z-50 fixed flex justify-center items-center bg-white hover:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-700 shadow-md border-2 border-gray-200 dark:border-neutral-700 rounded-full w-10 h-10 text-gray-800 dark:text-neutral-200 transition-colors cursor-pointer'
-          aria-label='Toggle light/dark theme'
-        >
-          {theme === "light" ? (
-            <DarkModeOutlinedIcon fontSize='small' />
-          ) : (
-            <LightModeOutlinedIcon fontSize='small' />
-          )}
-        </button>
-        <div className='top-2 left-2 absolute bg-gray-200 dark:bg-neutral-950 mb-2 px-2 py-px rounded-full font-medium text-gray-600 dark:text-neutral-500 text-sm'>
-          <p>v{appVersion}</p>
-        </div>
+        </main>
       </div>
 
-      {/* --- Auto-Updater for the application --- */}
       <UpdaterDialog />
-      {/* --- END --- */}
-
-      {/* --- Toast Components & Viewport --- */}
-      {toastInfo?.type === "success" && (
-        <SuccessToast
-          open={toastInfo.open}
-          onOpenChange={(isOpen) => !isOpen && setToastInfo(null)}
-          title={toastInfo.title}
-          description={toastInfo.description}
-        />
-      )}
-      {toastInfo?.type === "error" && (
-        <ErrorToast
-          open={toastInfo.open}
-          onOpenChange={(isOpen) => !isOpen && setToastInfo(null)}
-          title={toastInfo.title}
-          description={toastInfo.description}
-        />
-      )}
-      <Toast.Viewport className='right-0 bottom-0 z-50 fixed flex flex-col gap-3 m-0 p-6 w-96 max-w-[100vw] list-none' />
-      {/* --- End --- */}
-    </Toast.Provider>
-  );
+      <Toaster position="bottom-right" />
+    </div>
+  )
 }
+
+export default StartScreen
