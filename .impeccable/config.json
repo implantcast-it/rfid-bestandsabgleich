@@ -1,0 +1,55 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "documentation/ux-mockups/start-screen/home-inspired.html"
+        ],
+        "createdAt": "2026-11-03T15:45:18.331Z",
+        "reason": "Desktop product UI mock matching reference density"
+      },
+      {
+        "rule": "rounded-full-pills",
+        "value": "*",
+        "files": [
+          "documentation/ux-mockups/start-screen/home-inspired.html"
+        ],
+        "createdAt": "2026-11-03T15:45:18.405Z",
+        "reason": "Reference dribbble uses pill badges/search; matching composition intentionally"
+      },
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "files": [
+          "documentation/ux-mockups/start-screen/home-inspired.html"
+        ],
+        "createdAt": "2026-11-03T15:46:20.749Z",
+        "reason": "Matching NeuroNest/Dribbble reference sans; temporary mock only"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "editor-lotid",
+        "createdAt": "2026-11-05T09:10:31.616Z",
+        "reason": "Dense AG Grid editor mock at 1075x700 intentionally uses compact secondary sizes for table chrome; primary hierarchy is brand/page title 16px vs body 13px vs meta 10px (~1.25+ steps)."
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "documentation/ux-mockups/editor-lotid.html"
+        ],
+        "createdAt": "2026-11-05T09:10:41.475Z",
+        "reason": "Dense LotId editor mock at fixed 1075x700; table chrome needs compact meta type while brand/title stay 16px and body 13px — intentional fixture density, not flat marketing hierarchy."
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-05T09:55:27.413Z"
+      }
+    ]
+  }
+}
