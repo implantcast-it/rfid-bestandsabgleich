@@ -1,4 +1,5 @@
 import {
+  memo,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -10,26 +11,27 @@ import {
 } from "react"
 import {
   flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type Column,
-  type ColumnDef,
+  useTable,
   type ColumnFiltersState,
+  type ColumnPinningPosition,
   type ColumnPinningState,
   type ColumnSizingState,
-  type FilterFn,
   type OnChangeFn,
   type PaginationState,
-  type Row,
+  type RowData,
   type RowSelectionState,
   type SortingState,
 } from "@tanstack/react-table"
 import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { cn } from "@/lib/utils"
+import {
+  dataTableFeatures,
+  type DataTableColumn,
+  type DataTableColumnDef,
+  type DataTableFilterFn,
+  type DataTableRow,
+} from "@/lib/data-table-features"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { FieldSelect } from "@/components/ui/field-select"
@@ -50,55 +52,60 @@ type ColumnMeta = {
   flex?: boolean
 }
 
-type DataTableProps<TData> = {
-  columns: ColumnDef<TData, unknown>[]
+type DataTableProps<TData extends RowData> = {
+  columns: DataTableColumnDef<TData>[]
   data: TData[]
   globalFilter?: string
   onGlobalFilterChange?: (value: string) => void
   /** Limits topbar search to identity fields (LotId / ArtNr / …). */
-  globalFilterFn?: FilterFn<TData>
+  globalFilterFn?: DataTableFilterFn<TData>
+  /** Restricts the global search to these column ids; omit to search every column. */
+  globalFilterColumnIds?: readonly string[]
   enableRowSelection?: boolean
   rowSelection?: RowSelectionState
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
   getRowId?: (row: TData, index: number) => string
-  initialColumnPinning?: ColumnPinningState
+  initialColumnPinning?: Partial<ColumnPinningState>
   className?: string
 }
 
-const getColumnMeta = <TData,>(column: Column<TData, unknown>): ColumnMeta => {
+const getColumnMeta = <TData extends RowData>(
+  column: DataTableColumn<TData>
+): ColumnMeta => {
   const meta = column.columnDef.meta
   if (typeof meta !== "object" || meta == null) return {}
   return meta as ColumnMeta
 }
 
-const hasExplicitSize = <TData,>(column: Column<TData, unknown>) =>
-  column.columnDef.size !== undefined
+const hasExplicitSize = <TData extends RowData>(
+  column: DataTableColumn<TData>
+) => column.columnDef.size !== undefined
 
 const getPinnedStyle = (
-  isPinned: false | "left" | "right",
+  isPinned: ColumnPinningPosition,
   offset: number,
   isHeader: boolean
 ): CSSProperties | undefined => {
   if (!isPinned) return undefined
 
-  // Later left-pinned columns (higher offset) stack above earlier ones.
+  // Later start-pinned columns (higher offset) stack above earlier ones.
   // Keep this well above header filters (z-0) and plain sticky headers (z-2).
   const fill = isHeader ? "var(--muted)" : "var(--card)"
   const stackBase = isHeader ? 30 : 10
 
   return {
     position: "sticky",
-    left: isPinned === "left" ? `${offset}px` : undefined,
-    right: isPinned === "right" ? `${offset}px` : undefined,
+    insetInlineStart: isPinned === "start" ? `${offset}px` : undefined,
+    insetInlineEnd: isPinned === "end" ? `${offset}px` : undefined,
     zIndex: stackBase + Math.round(offset),
     backgroundColor: fill,
   }
 }
 
 /** Lock pinned cell width to getSize() so pinned columns keep their declared width. */
-const getPinnedWidthStyle = <TData,>(
-  column: Column<TData, unknown>,
-  isPinned: false | "left" | "right",
+const getPinnedWidthStyle = <TData extends RowData>(
+  column: DataTableColumn<TData>,
+  isPinned: ColumnPinningPosition,
   widthStyle: CSSProperties
 ): CSSProperties => {
   if (!isPinned) return widthStyle
@@ -114,8 +121,8 @@ const getPinnedWidthStyle = <TData,>(
   }
 }
 
-const getColumnWidthStyle = <TData,>(
-  column: Column<TData, unknown>,
+const getColumnWidthStyle = <TData extends RowData>(
+  column: DataTableColumn<TData>,
   columnSizing: ColumnSizingState
 ): CSSProperties => {
   const def = column.columnDef
@@ -173,12 +180,151 @@ const pinnedOffsetsChanged = (
   return false
 }
 
-const DataTable = <TData,>({
+/** Sticky offset for a column: end-pinned offsets come from TanStack, start offsets from measured headers. */
+const getPinnedOffset = <TData extends RowData>(
+  column: DataTableColumn<TData>,
+  pinnedStartOffsets: Record<string, number>
+) =>
+  column.getIsPinned() === "end"
+    ? column.getAfter("end")
+    : (pinnedStartOffsets[column.id] ?? 0)
+
+type DataTableBodyRowProps<TData extends RowData> = {
+  row: DataTableRow<TData>
+  isOddRow: boolean
+  isSelected: boolean
+  enableRowSelection: boolean
+  /** Only compared: a new column set rebuilds the cell renderers. */
+  columns: DataTableColumnDef<TData>[]
+  columnSizing: ColumnSizingState
+  /** Only compared: cells read pinning through their column at render time. */
+  columnPinning: ColumnPinningState
+  pinnedStartOffsets: Record<string, number>
+  onRowClick: (
+    event: MouseEvent<HTMLTableRowElement>,
+    row: DataTableRow<TData>
+  ) => void
+  onRowKeyDown: (
+    event: KeyboardEvent<HTMLTableRowElement>,
+    row: DataTableRow<TData>
+  ) => void
+}
+
+const DataTableBodyRowView = <TData extends RowData>({
+  row,
+  isOddRow,
+  isSelected,
+  enableRowSelection,
+  columnSizing,
+  pinnedStartOffsets,
+  onRowClick,
+  onRowKeyDown,
+}: DataTableBodyRowProps<TData>) => (
+  <tr
+    className={cn(
+      "border-border border-b transition-colors",
+      isOddRow && "bg-foreground/[0.015]",
+      "hover:bg-foreground/[0.03]",
+      isSelected && "bg-primary/10 hover:bg-primary/15",
+      enableRowSelection && "cursor-pointer"
+    )}
+    data-selected={isSelected || undefined}
+    onClick={
+      enableRowSelection ? (event) => onRowClick(event, row) : undefined
+    }
+    onKeyDown={
+      enableRowSelection ? (event) => onRowKeyDown(event, row) : undefined
+    }
+    tabIndex={enableRowSelection ? -1 : undefined}
+    aria-selected={enableRowSelection ? isSelected : undefined}
+  >
+    {row.getAllCells().map((cell) => {
+      const isPinned = cell.column.getIsPinned()
+      const offset = getPinnedOffset(cell.column, pinnedStartOffsets)
+      const meta = getColumnMeta(cell.column)
+      const value = cell.getValue()
+      const dynamicClass =
+        typeof meta.cellClassName === "function"
+          ? meta.cellClassName(row.original, value)
+          : typeof meta.cellClassName === "string"
+            ? meta.cellClassName
+            : ""
+      const pinnedStyle = getPinnedStyle(isPinned, offset, false)
+      const widthStyle = getColumnWidthStyle(cell.column, columnSizing)
+      const pinnedWidthStyle = getPinnedWidthStyle(
+        cell.column,
+        isPinned,
+        widthStyle
+      )
+
+      return (
+        <td
+          key={cell.id}
+          data-cell-column-id={cell.column.id}
+          style={{
+            ...(isPinned && isSelected
+              ? {
+                  ...pinnedStyle,
+                  backgroundColor:
+                    "color-mix(in oklch, var(--primary) 10%, var(--card))",
+                }
+              : pinnedStyle),
+            ...pinnedWidthStyle,
+          }}
+          className={cn(
+            "relative h-9 overflow-hidden px-2.5 align-middle whitespace-nowrap",
+            isPinned && "bg-card",
+            isSelected && isPinned && "bg-primary/10",
+            meta.numeric && "text-center font-bold tabular-nums",
+            dynamicClass
+          )}
+        >
+          {isPinned ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundColor: isSelected
+                  ? "color-mix(in oklch, var(--primary) 10%, var(--card))"
+                  : "var(--card)",
+              }}
+            />
+          ) : null}
+          <div className="relative z-[1]">
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </div>
+        </td>
+      )
+    })}
+  </tr>
+)
+
+/** Keeps unchanged rows from re-rendering on edits, searches, and selection of other rows. */
+const areBodyRowPropsEqual = <TData extends RowData>(
+  prev: DataTableBodyRowProps<TData>,
+  next: DataTableBodyRowProps<TData>
+) =>
+  prev.row.original === next.row.original &&
+  prev.isOddRow === next.isOddRow &&
+  prev.isSelected === next.isSelected &&
+  prev.enableRowSelection === next.enableRowSelection &&
+  prev.columns === next.columns &&
+  prev.columnSizing === next.columnSizing &&
+  prev.columnPinning === next.columnPinning &&
+  prev.pinnedStartOffsets === next.pinnedStartOffsets
+
+const DataTableBodyRow = memo(
+  DataTableBodyRowView,
+  areBodyRowPropsEqual
+) as typeof DataTableBodyRowView
+
+const DataTable = <TData extends RowData>({
   columns,
   data,
   globalFilter,
   onGlobalFilterChange,
   globalFilterFn,
+  globalFilterColumnIds,
   enableRowSelection = false,
   rowSelection,
   onRowSelectionChange,
@@ -192,8 +338,11 @@ const DataTable = <TData,>({
     pageIndex: 0,
     pageSize: DEFAULT_PAGE_SIZE,
   })
-  const [columnPinning] = useState<ColumnPinningState>(
-    initialColumnPinning ?? { left: [], right: [] }
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(
+    () => ({
+      start: initialColumnPinning?.start ?? [],
+      end: initialColumnPinning?.end ?? [],
+    })
   )
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({})
   const [internalSelection, setInternalSelection] = useState<RowSelectionState>(
@@ -202,7 +351,7 @@ const DataTable = <TData,>({
   const lastSelectedRowIdRef = useRef<string | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const tableRef = useRef<HTMLTableElement>(null)
-  const [pinnedLeftOffsets, setPinnedLeftOffsets] = useState<
+  const [pinnedStartOffsets, setPinnedStartOffsets] = useState<
     Record<string, number>
   >({})
 
@@ -212,7 +361,8 @@ const DataTable = <TData,>({
   const memoData = useMemo(() => data, [data])
   const memoColumns = useMemo(() => columns, [columns])
 
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     data: memoData,
     columns: memoColumns,
     defaultColumn: {
@@ -233,6 +383,7 @@ const DataTable = <TData,>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
+    onColumnPinningChange: setColumnPinning,
     onColumnSizingChange: setColumnSizing,
     onGlobalFilterChange,
     onRowSelectionChange: enableRowSelection
@@ -242,10 +393,8 @@ const DataTable = <TData,>({
     enableMultiRowSelection: true,
     enableColumnPinning: true,
     globalFilterFn,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getColumnCanGlobalFilter: (column) =>
+      !globalFilterColumnIds || globalFilterColumnIds.includes(column.id),
     getRowId,
   })
 
@@ -322,10 +471,10 @@ const DataTable = <TData,>({
     pagination.pageSize,
   ])
 
-  // Sticky left offsets must equal the rendered widths of the pinned columns
+  // Sticky start offsets must equal the rendered widths of the pinned columns
   // before them. TanStack's getStart() sums getSize(), which is 0 for columns
   // without an explicit size, so the offsets are measured from the header.
-  const measurePinnedLeftOffsets = useCallback(() => {
+  const measurePinnedStartOffsets = useCallback(() => {
     const tableElement = tableRef.current
     if (!tableElement) return
 
@@ -335,7 +484,7 @@ const DataTable = <TData,>({
     const nextOffsets: Record<string, number> = {}
     let runningOffset = 0
 
-    for (const columnId of columnPinning.left ?? []) {
+    for (const columnId of columnPinning.start) {
       nextOffsets[columnId] = runningOffset
       const headerCell = headerCells.find(
         (cell) => cell.dataset.columnId === columnId
@@ -343,30 +492,25 @@ const DataTable = <TData,>({
       runningOffset += headerCell?.getBoundingClientRect().width ?? 0
     }
 
-    setPinnedLeftOffsets((prev) =>
+    setPinnedStartOffsets((prev) =>
       pinnedOffsetsChanged(prev, nextOffsets) ? nextOffsets : prev
     )
   }, [columnPinning])
 
-  const getPinnedOffset = (column: Column<TData, unknown>) =>
-    column.getIsPinned() === "right"
-      ? column.getAfter("right")
-      : (pinnedLeftOffsets[column.id] ?? 0)
-
-  // Re-measure after every render so offsets follow header width changes.
-  // The state update is skipped when nothing moved.
+  // Header widths follow columnSizing and the column set, so only those re-measure.
+  // Viewport and content resizes are covered by the ResizeObserver below.
   useLayoutEffect(() => {
-    measurePinnedLeftOffsets()
-  })
+    measurePinnedStartOffsets()
+  }, [measurePinnedStartOffsets, columnSizing, memoColumns])
 
   useLayoutEffect(() => {
     const tableElement = tableRef.current
     if (!tableElement) return
 
-    const observer = new ResizeObserver(measurePinnedLeftOffsets)
+    const observer = new ResizeObserver(measurePinnedStartOffsets)
     observer.observe(tableElement)
     return () => observer.disconnect()
-  }, [measurePinnedLeftOffsets])
+  }, [measurePinnedStartOffsets])
 
   const isInteractiveTarget = (target: EventTarget | null) => {
     if (!(target instanceof HTMLElement)) return false
@@ -377,7 +521,10 @@ const DataTable = <TData,>({
     )
   }
 
-  const handleRowClick = (event: MouseEvent<HTMLTableRowElement>, row: Row<TData>) => {
+  const handleRowClick = (
+    event: MouseEvent<HTMLTableRowElement>,
+    row: DataTableRow<TData>
+  ) => {
     if (!enableRowSelection) return
 
     // Checkbox / control clicks own their toggle; still update the Shift anchor.
@@ -430,7 +577,7 @@ const DataTable = <TData,>({
 
   const handleRowKeyDown = (
     event: KeyboardEvent<HTMLTableRowElement>,
-    row: Row<TData>
+    row: DataTableRow<TData>
   ) => {
     if (!enableRowSelection) return
     if (event.key !== " " && event.key !== "Enter") return
@@ -445,6 +592,23 @@ const DataTable = <TData,>({
     }
     lastSelectedRowIdRef.current = row.id
   }
+
+  // Memoized rows keep the handlers from their last real render, so they call
+  // through a ref that always holds the latest closures.
+  const rowHandlersRef = useRef({ handleRowClick, handleRowKeyDown })
+  useLayoutEffect(() => {
+    rowHandlersRef.current = { handleRowClick, handleRowKeyDown }
+  })
+  const handleBodyRowClick = useCallback(
+    (event: MouseEvent<HTMLTableRowElement>, row: DataTableRow<TData>) =>
+      rowHandlersRef.current.handleRowClick(event, row),
+    []
+  )
+  const handleBodyRowKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLTableRowElement>, row: DataTableRow<TData>) =>
+      rowHandlersRef.current.handleRowKeyDown(event, row),
+    []
+  )
 
   const autoColumnsReady = table
     .getAllLeafColumns()
@@ -462,7 +626,9 @@ const DataTable = <TData,>({
     >
       <div
         ref={scrollContainerRef}
-        className="file-grid-scroll min-h-0 min-w-0 flex-1 overflow-auto"
+        // isolate: pinned cells' z-index stays inside this scroll container, so
+        // portalled popups (FieldSelect, z-50 at the document root) render above them.
+        className="file-grid-scroll isolate min-h-0 min-w-0 flex-1 overflow-auto"
       >
         <table
           ref={tableRef}
@@ -476,7 +642,10 @@ const DataTable = <TData,>({
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const isPinned = header.column.getIsPinned()
-                  const offset = getPinnedOffset(header.column)
+                  const offset = getPinnedOffset(
+                    header.column,
+                    pinnedStartOffsets
+                  )
                   const canSort = header.column.getCanSort()
                   const sorted = header.column.getIsSorted()
                   const canFilter = header.column.getCanFilter()
@@ -594,106 +763,21 @@ const DataTable = <TData,>({
                 </td>
               </tr>
             ) : (
-              table.getRowModel().rows.map((row, rowIndex) => {
-                const isSelected = row.getIsSelected()
-                return (
-                  <tr
-                    key={row.id}
-                    className={cn(
-                      "border-border border-b transition-colors",
-                      rowIndex % 2 === 1 && "bg-foreground/[0.015]",
-                      "hover:bg-foreground/[0.03]",
-                      isSelected && "bg-primary/10 hover:bg-primary/15",
-                      enableRowSelection && "cursor-pointer"
-                    )}
-                    data-selected={isSelected || undefined}
-                    onClick={
-                      enableRowSelection
-                        ? (event) => handleRowClick(event, row)
-                        : undefined
-                    }
-                    onKeyDown={
-                      enableRowSelection
-                        ? (event) => handleRowKeyDown(event, row)
-                        : undefined
-                    }
-                    tabIndex={enableRowSelection ? -1 : undefined}
-                    aria-selected={
-                      enableRowSelection ? isSelected : undefined
-                    }
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const isPinned = cell.column.getIsPinned()
-                      const offset = getPinnedOffset(cell.column)
-                      const meta = getColumnMeta(cell.column)
-                      const value = cell.getValue()
-                      const dynamicClass =
-                        typeof meta.cellClassName === "function"
-                          ? meta.cellClassName(row.original, value)
-                          : typeof meta.cellClassName === "string"
-                            ? meta.cellClassName
-                            : ""
-                      const pinnedStyle = getPinnedStyle(
-                        isPinned,
-                        offset,
-                        false
-                      )
-                      const widthStyle = getColumnWidthStyle(
-                        cell.column,
-                        columnSizing
-                      )
-                      const pinnedWidthStyle = getPinnedWidthStyle(
-                        cell.column,
-                        isPinned,
-                        widthStyle
-                      )
-
-                      return (
-                        <td
-                          key={cell.id}
-                          data-cell-column-id={cell.column.id}
-                          style={{
-                            ...(isPinned && isSelected
-                              ? {
-                                  ...pinnedStyle,
-                                  backgroundColor:
-                                    "color-mix(in oklch, var(--primary) 10%, var(--card))",
-                                }
-                              : pinnedStyle),
-                            ...pinnedWidthStyle,
-                          }}
-                          className={cn(
-                            "relative h-9 overflow-hidden px-2.5 align-middle whitespace-nowrap",
-                            isPinned && "bg-card",
-                            isSelected && isPinned && "bg-primary/10",
-                            meta.numeric &&
-                              "text-center font-bold tabular-nums",
-                            dynamicClass
-                          )}
-                        >
-                          {isPinned ? (
-                            <div
-                              aria-hidden
-                              className="pointer-events-none absolute inset-0"
-                              style={{
-                                backgroundColor: isSelected
-                                  ? "color-mix(in oklch, var(--primary) 10%, var(--card))"
-                                  : "var(--card)",
-                              }}
-                            />
-                          ) : null}
-                          <div className="relative z-[1]">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </div>
-                        </td>
-                      )
-                    })}
-                  </tr>
-                )
-              })
+              table.getRowModel().rows.map((row, rowIndex) => (
+                <DataTableBodyRow
+                  key={row.id}
+                  row={row}
+                  isOddRow={rowIndex % 2 === 1}
+                  isSelected={row.getIsSelected()}
+                  enableRowSelection={enableRowSelection}
+                  columns={memoColumns}
+                  columnSizing={columnSizing}
+                  columnPinning={columnPinning}
+                  pinnedStartOffsets={pinnedStartOffsets}
+                  onRowClick={handleBodyRowClick}
+                  onRowKeyDown={handleBodyRowKeyDown}
+                />
+              ))
             )}
           </tbody>
         </table>

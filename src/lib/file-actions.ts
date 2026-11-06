@@ -6,7 +6,9 @@ import { exportAbgleichPdfFromRows } from "./pdf"
 import { writeFile } from "@tauri-apps/plugin-fs"
 import {
   OFFENE_POSTEN_EXCEL_HEADERS,
+  lotIdGridRowsForExport,
   type EditorSnapshot,
+  type LotIdGridRow,
 } from "./inventur"
 
 type ToastInfo = {
@@ -78,7 +80,7 @@ const handleExcelDownload = async (
 
 /** Editor grid rows, one entry per Excel sheet. */
 type AbgleichSheets = {
-  lotIdRows: Record<string, unknown>[]
+  lotIdRows: LotIdGridRow[]
   artNrRows: Record<string, unknown>[]
   erpRows: Record<string, unknown>[]
   rfidRows: Record<string, unknown>[]
@@ -90,7 +92,7 @@ const buildAbgleichWorkbook = (args: AbgleichSheets): WorkBook => {
   const wb = utils.book_new()
   utils.book_append_sheet(
     wb,
-    utils.json_to_sheet(args.lotIdRows),
+    utils.json_to_sheet(lotIdGridRowsForExport(args.lotIdRows)),
     "Bestandsabgleich LotId"
   )
   utils.book_append_sheet(

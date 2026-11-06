@@ -1,4 +1,13 @@
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import {
   handleSnapshotExcelDownload,
   handleSnapshotPdfDownload,
@@ -22,7 +31,7 @@ import RfidTable from "@/components/editor/tables/RfidTable"
 import { Toaster } from "@/components/ui/sonner"
 import { useLocation } from "wouter"
 import {
-  artNrRowsForGrid,
+  artNrAggregateRowsFromLotId,
   buildSnapshotFromEditorState,
   erpRowsForGrid,
   isStichprobenComplete,
@@ -33,6 +42,7 @@ import {
   sumErpQuantityTotal,
   type EditorSnapshot,
   type InventurSessionState,
+  type LotIdGridRow,
 } from "@/lib/inventur"
 import {
   loadInventurDraft,
@@ -107,11 +117,9 @@ const EditorWorkspace = ({
   )
   const [savePending, setSavePending] = useState(false)
   const [projectStatus, setProjectStatus] = useState<ProjectStatus>("open")
-  const skipNextAutosave = useRef(true)
   const isDirtyRef = useRef(false)
   const autosaveTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const nextAutosaveAtRef = useRef(Date.now() + AUTOSAVE_MS)
-  const latestSnapshotRef = useRef(snapshot)
 
   useEffect(() => {
     let cancelled = false
@@ -132,11 +140,13 @@ const EditorWorkspace = ({
     hasHeaderButtons: false,
   }
 
-  const [artNrData, setArtNrData] = useState(() =>
-    artNrRowsForGrid(snapshot.art_nr_rows)
-  )
   const [lotIdData, setLotIdData] = useState(() =>
     lotIdRowsForGrid(snapshot.lot_id_rows)
+  )
+  const deferredSearchQuery = useDeferredValue(searchQuery)
+  const artNrData = useMemo(
+    () => artNrAggregateRowsFromLotId(lotIdData),
+    [lotIdData]
   )
   const [erpRows] = useState(() => erpRowsForGrid(snapshot.ax_bestand))
   const [rfidRows] = useState(() => rfidRowsForGrid(snapshot.rfid_scan))
@@ -144,96 +154,70 @@ const EditorWorkspace = ({
     offenePostenRowsForGrid(snapshot.offene_posten)
   )
 
-  const stichprobenProgress = useMemo(() => {
-    const rows = Array.isArray(lotIdData) ? lotIdData : []
-    const done = rows.filter((row) => {
-      const value = String(row["Stichprobe"] ?? "")
-        .trim()
-        .toUpperCase()
-      return value === "X"
-    }).length
-    const required = stichprobenRequiredFromErpTotal(
-      sumErpQuantityTotal(snapshot.ax_bestand)
-    )
-    return { done, required }
-  }, [lotIdData, snapshot.ax_bestand])
+  const lotIdStats = useMemo(() => {
+    let abweichungen = 0
+    let offeneTodos = 0
+    let stichprobenDone = 0
+    for (const row of lotIdData) {
+      if (isLotIdAbweichung(row)) abweichungen += 1
+      if (isLotIdOffenerTodo(row)) offeneTodos += 1
+      if (String(row["Stichprobe"] ?? "").trim().toUpperCase() === "X") {
+        stichprobenDone += 1
+      }
+    }
+    return { abweichungen, offeneTodos, stichprobenDone }
+  }, [lotIdData])
+
+  const stichprobenRequired = useMemo(
+    () =>
+      stichprobenRequiredFromErpTotal(sumErpQuantityTotal(snapshot.ax_bestand)),
+    [snapshot.ax_bestand]
+  )
+  const stichprobenDone = lotIdStats.stichprobenDone
 
   const completedStichproben =
-    activeTab === "lotId" ? stichprobenProgress.done : undefined
+    activeTab === "lotId" ? stichprobenDone : undefined
   const requiredStichproben =
-    activeTab === "lotId" ? stichprobenProgress.required : undefined
+    activeTab === "lotId" ? stichprobenRequired : undefined
   const stichprobenMet = isStichprobenComplete(
-    stichprobenProgress.done,
-    stichprobenProgress.required
+    stichprobenDone,
+    stichprobenRequired
   )
 
   const assertStichprobenGate = (actionLabel: string) => {
     if (stichprobenMet) return true
-    const remaining = Math.max(
-      0,
-      stichprobenProgress.required - stichprobenProgress.done
-    )
+    const remaining = Math.max(0, stichprobenRequired - stichprobenDone)
     toast.error("Stichproben unvollständig", {
-      description: `${actionLabel} erst möglich nach ${stichprobenProgress.required} Stichproben (noch ${remaining} offen). Quote: 1 % der ERP-Menge (aufgerundet).`,
+      description: `${actionLabel} erst möglich nach ${stichprobenRequired} Stichproben (noch ${remaining} offen). Quote: 1 % der ERP-Menge (aufgerundet).`,
     })
     return false
   }
 
-  useEffect(() => {
-    if (!lotIdData) return
-
-    const groupedData = lotIdData.reduce(
-      (acc: Record<string, any>, row: any) => {
-        const artikelNr = row["Artikelnummer"]
-        if (!artikelNr) return acc
-
-        if (!acc[artikelNr]) {
-          acc[artikelNr] = {
-            Artikelnummer: artikelNr,
-            Produktname: row["Produktname"],
-            "Eigenbestand nach ERP": 0,
-            "RFID-Scan": 0,
-            Differenz: 0,
-            id: artikelNr,
-          }
-        }
-
-        acc[artikelNr]["Eigenbestand nach ERP"] +=
-          Number(row["Eigenbestand nach ERP"]) || 0
-        acc[artikelNr]["RFID-Scan"] += Number(row["RFID-Scan"]) || 0
-        acc[artikelNr].Differenz =
-          acc[artikelNr]["RFID-Scan"] -
-          acc[artikelNr]["Eigenbestand nach ERP"]
-
-        return acc
-      },
-      {}
-    )
-
-    setArtNrData(Object.values(groupedData))
-  }, [lotIdData])
+  const handleLotIdChange = useCallback(
+    (update: SetStateAction<LotIdGridRow[]>) => {
+      isDirtyRef.current = true
+      setAutosaveStatus("idle")
+      setLotIdData(update)
+    },
+    []
+  )
 
   const buildLiveSnapshot = useCallback(
     () =>
       buildSnapshotFromEditorState({
         base: snapshot,
-        lotIdRows: Array.isArray(lotIdData) ? lotIdData : [],
-        artNrRows: Array.isArray(artNrData) ? artNrData : [],
+        lotIdRows: lotIdData,
+        artNrRows: artNrData,
       }),
     [snapshot, lotIdData, artNrData]
   )
 
-  useEffect(() => {
-    latestSnapshotRef.current = buildLiveSnapshot()
-  }, [buildLiveSnapshot])
-
   const flushDraft = useCallback(
     async (opts?: { silent?: boolean; markExported?: boolean }) => {
-      const next = latestSnapshotRef.current
       setSavePending(true)
       setAutosaveStatus("saving")
       try {
-        await saveInventurDraft(projectId, next)
+        await saveInventurDraft(projectId, buildLiveSnapshot())
         if (opts?.markExported) {
           await updateInventurStatus(projectId, "exported")
         }
@@ -255,23 +239,13 @@ const EditorWorkspace = ({
         setSavePending(false)
       }
     },
-    [projectId]
+    [projectId, buildLiveSnapshot]
   )
 
   const flushDraftRef = useRef(flushDraft)
   useEffect(() => {
     flushDraftRef.current = flushDraft
   }, [flushDraft])
-
-  useEffect(() => {
-    if (skipNextAutosave.current) {
-      skipNextAutosave.current = false
-      return
-    }
-
-    isDirtyRef.current = true
-    setAutosaveStatus("idle")
-  }, [lotIdData])
 
   useEffect(() => {
     nextAutosaveAtRef.current = Date.now() + AUTOSAVE_MS
@@ -321,17 +295,6 @@ const EditorWorkspace = ({
     }
     toast.error(info.title, { description: info.description })
   }
-
-  const lotIdMiniStats = useMemo(() => {
-    const rows = Array.isArray(lotIdData) ? lotIdData : []
-    const abweichungen = rows.filter((row) => isLotIdAbweichung(row)).length
-    const offeneTodos = rows.filter((row) => isLotIdOffenerTodo(row)).length
-    return {
-      abweichungen,
-      offeneTodos,
-      stichprobe: `${stichprobenProgress.done}/${stichprobenProgress.required}`,
-    }
-  }, [lotIdData, stichprobenProgress.done, stichprobenProgress.required])
 
   const handleAutoFillKommentare = useCallback(() => {
     const grouped: Record<string, any[]> = {}
@@ -395,7 +358,7 @@ const EditorWorkspace = ({
         description: `${[...new Set(affectedArtikelnummern)].length} Artikelnummer(n) automatisch kommentiert.`,
       })
 
-      setLotIdData((prevData: any[]) => {
+      handleLotIdChange((prevData) => {
         return prevData.map((row) => {
           if (changesToApply.has(row.id)) {
             return { ...row, ...changesToApply.get(row.id) }
@@ -411,7 +374,7 @@ const EditorWorkspace = ({
         description: "Keine passenden Paare zum Kommentieren gefunden.",
       })
     }
-  }, [lotIdData])
+  }, [lotIdData, handleLotIdChange])
 
   const handleAutoSiebeAndOffenePosten = useCallback(() => {
     const changesToApply = new Map<string, any>()
@@ -444,7 +407,7 @@ const EditorWorkspace = ({
     })
 
     if (siebRowCount > 0 || offenePostenRowCount > 0) {
-      setLotIdData((prevData: any[]) => {
+      handleLotIdChange((prevData) => {
         return prevData.map((row) => {
           if (changesToApply.has(row.id)) {
             return { ...row, ...changesToApply.get(row.id) }
@@ -476,7 +439,7 @@ const EditorWorkspace = ({
           "Keine Zeilen für 'SIEB', 'INST' oder 'Offene Posten' gefunden.",
       })
     }
-  }, [lotIdData])
+  }, [lotIdData, handleLotIdChange])
 
   const handleDownloadExcel = async () => {
     if (!assertStichprobenGate("Excel-Export")) return
@@ -563,29 +526,33 @@ const EditorWorkspace = ({
   const renderPageContent = (): ReactNode => {
     switch (activeTab) {
       case "erp":
-        return <ErpTable data={erpRows} globalFilter={searchQuery} />
+        return <ErpTable data={erpRows} globalFilter={deferredSearchQuery} />
       case "offenePosten":
         return (
           <OffenePostenTable
             data={offenePostenRows}
-            globalFilter={searchQuery}
+            globalFilter={deferredSearchQuery}
           />
         )
       case "rfid":
-        return <RfidTable data={rfidRows} globalFilter={searchQuery} />
+        return (
+          <RfidTable data={rfidRows} globalFilter={deferredSearchQuery} />
+        )
       case "lotId":
         return (
           <LotIdTable
             data={lotIdData}
-            globalFilter={searchQuery}
+            globalFilter={deferredSearchQuery}
             statusFilter={lotIdStatusFilter}
             isBulkEditOpen={isBulkEditOpen}
             onBulkEditOpenChange={setIsBulkEditOpen}
-            onChange={setLotIdData}
+            onChange={handleLotIdChange}
           />
         )
       case "artikelNr":
-        return <ArtNrTable data={artNrData} globalFilter={searchQuery} />
+        return (
+          <ArtNrTable data={artNrData} globalFilter={deferredSearchQuery} />
+        )
       default:
         return (
           <div>
@@ -645,9 +612,9 @@ const EditorWorkspace = ({
               activeTab === "lotId" ? (
                 <div className="flex flex-col gap-2">
                   <MiniStats
-                    abweichungen={lotIdMiniStats.abweichungen}
-                    stichprobe={lotIdMiniStats.stichprobe}
-                    offeneTodos={lotIdMiniStats.offeneTodos}
+                    abweichungen={lotIdStats.abweichungen}
+                    stichprobe={`${stichprobenDone}/${stichprobenRequired}`}
+                    offeneTodos={lotIdStats.offeneTodos}
                     autosaveStatus={autosaveStatus}
                     autosaveCountdown={autosaveCountdown}
                     activeStatusFilter={lotIdStatusFilter}

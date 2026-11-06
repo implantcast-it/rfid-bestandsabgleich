@@ -1,6 +1,7 @@
 import { useMemo } from "react"
-import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
+import { createColumnHelper } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
+import type { DataTableFeatures } from "@/lib/data-table-features"
 import { createIdentityGlobalFilterFn } from "@/lib/search"
 import {
   EXPIRY_TOOLTIP,
@@ -11,7 +12,7 @@ import {
 
 type ErpRow = Record<string, unknown>
 
-const columnHelper = createColumnHelper<ErpRow>()
+const columnHelper = createColumnHelper<DataTableFeatures, ErpRow>()
 
 const erpIdentityFilter = createIdentityGlobalFilterFn<ErpRow>([
   "LotId",
@@ -30,7 +31,7 @@ const ErpTable = ({ data, globalFilter }: ErpTableProps) => {
 
   const columns = useMemo(
     () =>
-      [
+      columnHelper.columns([
         columnHelper.accessor((row) => row["Artikelnummer"], {
           id: "Artikelnummer",
           header: "Artikelnummer",
@@ -55,7 +56,7 @@ const ErpTable = ({ data, globalFilter }: ErpTableProps) => {
           id: "Ablaufdatum",
           header: "Ablaufdatum",
           cell: (info) => formatAblaufdatum(info.getValue()),
-          sortingFn: (rowA, rowB, columnId) =>
+          sortFn: (rowA, rowB, columnId) =>
             sortAblaufdatum(rowA.getValue(columnId), rowB.getValue(columnId)),
           enableColumnFilter: false,
           meta: {
@@ -70,7 +71,7 @@ const ErpTable = ({ data, globalFilter }: ErpTableProps) => {
           filterFn: "includesString",
           meta: { numeric: true },
         }),
-      ] as ColumnDef<ErpRow, unknown>[],
+      ]),
     []
   )
 
@@ -81,7 +82,7 @@ const ErpTable = ({ data, globalFilter }: ErpTableProps) => {
       globalFilter={globalFilter}
       globalFilterFn={erpIdentityFilter}
       initialColumnPinning={{
-        left: ["Artikelnummer", "LotId", "Kennzeichen 3"],
+        start: ["Artikelnummer", "LotId", "Kennzeichen 3"],
       }}
       getRowId={(row, index) =>
         String(row.id ?? `${row["Artikelnummer"]}-${row["LotId"]}-${index}`)

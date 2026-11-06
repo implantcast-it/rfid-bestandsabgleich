@@ -1,12 +1,13 @@
 import { useMemo } from "react"
-import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
+import { createColumnHelper } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
+import type { DataTableFeatures } from "@/lib/data-table-features"
 import { createIdentityGlobalFilterFn } from "@/lib/search"
 import { differenzCellClass } from "./cell-styles"
 
 type ArtNrRow = Record<string, unknown>
 
-const columnHelper = createColumnHelper<ArtNrRow>()
+const columnHelper = createColumnHelper<DataTableFeatures, ArtNrRow>()
 
 const artNrIdentityFilter = createIdentityGlobalFilterFn<ArtNrRow>([
   "Artikelnummer",
@@ -23,7 +24,7 @@ const ArtNrTable = ({ data, globalFilter }: ArtNrTableProps) => {
 
   const columns = useMemo(
     () =>
-      [
+      columnHelper.columns([
         columnHelper.accessor((row) => row["Artikelnummer"], {
           id: "Artikelnummer",
           header: "Artikelnummer",
@@ -56,7 +57,7 @@ const ArtNrTable = ({ data, globalFilter }: ArtNrTableProps) => {
               differenzCellClass(value),
           },
         }),
-      ] as ColumnDef<ArtNrRow, unknown>[],
+      ]),
     []
   )
 
@@ -67,7 +68,7 @@ const ArtNrTable = ({ data, globalFilter }: ArtNrTableProps) => {
       globalFilter={globalFilter}
       globalFilterFn={artNrIdentityFilter}
       initialColumnPinning={{
-        left: ["Artikelnummer", "Produktname"],
+        start: ["Artikelnummer", "Produktname"],
       }}
       getRowId={(row, index) => String(row.id ?? index)}
     />

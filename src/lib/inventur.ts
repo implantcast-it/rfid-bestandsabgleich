@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core"
 import { open } from "@tauri-apps/plugin-dialog"
+import { toAblaufdatumTimestamp } from "@/lib/ablaufdatum"
+import { buildIdentitySearchText } from "@/lib/search"
 
 /** Mirrors Rust `EditorStats` (serde snake_case). */
 type EditorStats = {
@@ -106,6 +108,10 @@ export type LotIdGridRow = {
   Stichprobe: string
   id: string
   isEdited?: boolean
+  /** View-only: normalized identity text for the global search (never exported). */
+  searchText: string
+  /** View-only: Ablaufdatum timestamp for sorting (never exported). */
+  ablaufdatumTimestamp: number
 }
 
 /** German column keys used by OffenePostenTable and the Excel sheet. */
@@ -293,18 +299,54 @@ export const lotIdRowsForGrid = (rows: LotIdCompareRow[]): LotIdGridRow[] =>
     Anmerkung: row.anmerkung,
     Stichprobe: row.stichprobe,
     id: row.id,
+    searchText: buildIdentitySearchText([
+      row.lot_id,
+      row.artikelnummer,
+      row.produktname,
+      row.kennzeichen_3,
+    ]),
+    ablaufdatumTimestamp: toAblaufdatumTimestamp(row.ablaufdatum),
   }))
 
-/** Map ArtNr DTOs to German column keys. */
-export const artNrRowsForGrid = (rows: ArtNrCompareRow[]) =>
-  rows.map((row) => ({
-    Artikelnummer: row.artikelnummer,
-    Produktname: row.produktname,
-    "Eigenbestand nach ERP": row.eigenbestand_nach_erp,
-    "RFID-Scan": row.rfid_scan,
-    Differenz: row.differenz,
-    id: row.id,
-  }))
+/** Excel rows for the LotId sheet: view-only keys are removed, all other keys stay as before. */
+export const lotIdGridRowsForExport = (rows: LotIdGridRow[]) =>
+  rows.map(({ searchText, ablaufdatumTimestamp, ...exportRow }) => exportRow)
+
+/** ArtNr grid row aggregated from LotId grid rows (ERP and RFID counts). */
+export type ArtNrAggregateRow = {
+  Artikelnummer: string
+  Produktname: string
+  "Eigenbestand nach ERP": number
+  "RFID-Scan": number
+  Differenz: number
+  id: string
+}
+
+/** Aggregate LotId grid rows per Artikelnummer; rows without Artikelnummer are skipped. */
+export const artNrAggregateRowsFromLotId = (
+  rows: LotIdGridRow[]
+): ArtNrAggregateRow[] => {
+  const aggregateByArtikelnummer: Record<string, ArtNrAggregateRow> = {}
+  for (const row of rows) {
+    const artikelnummer = row.Artikelnummer
+    if (!artikelnummer) continue
+
+    const aggregate = aggregateByArtikelnummer[artikelnummer] ?? {
+      Artikelnummer: artikelnummer,
+      Produktname: row.Produktname,
+      "Eigenbestand nach ERP": 0,
+      "RFID-Scan": 0,
+      Differenz: 0,
+      id: artikelnummer,
+    }
+    aggregate["Eigenbestand nach ERP"] += asNumber(row["Eigenbestand nach ERP"])
+    aggregate["RFID-Scan"] += asNumber(row["RFID-Scan"])
+    aggregate.Differenz =
+      aggregate["RFID-Scan"] - aggregate["Eigenbestand nach ERP"]
+    aggregateByArtikelnummer[artikelnummer] = aggregate
+  }
+  return Object.values(aggregateByArtikelnummer)
+}
 
 /** Map ERP DTOs to German column keys. */
 export const erpRowsForGrid = (rows: ErpRow[]) =>

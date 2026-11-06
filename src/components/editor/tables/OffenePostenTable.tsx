@@ -1,6 +1,7 @@
 import { useMemo } from "react"
-import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
+import { createColumnHelper } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
+import type { DataTableFeatures } from "@/lib/data-table-features"
 import { createIdentityGlobalFilterFn } from "@/lib/search"
 import {
   EXPIRY_TOOLTIP,
@@ -11,7 +12,7 @@ import {
 
 type OffenePostenRow = Record<string, unknown>
 
-const columnHelper = createColumnHelper<OffenePostenRow>()
+const columnHelper = createColumnHelper<DataTableFeatures, OffenePostenRow>()
 
 const offenePostenIdentityFilter = createIdentityGlobalFilterFn<OffenePostenRow>(
   ["LotId", "Artikelnummer", "Produktname"]
@@ -28,7 +29,7 @@ const OffenePostenTable = ({ data, globalFilter }: OffenePostenTableProps) => {
 
   const columns = useMemo(
     () =>
-      [
+      columnHelper.columns([
         columnHelper.accessor((row) => row["Artikelnummer"], {
           id: "Artikelnummer",
           header: "Artikelnummer",
@@ -48,7 +49,7 @@ const OffenePostenTable = ({ data, globalFilter }: OffenePostenTableProps) => {
           id: "Ablaufdatum",
           header: "MHD",
           cell: (info) => formatAblaufdatum(info.getValue()),
-          sortingFn: (rowA, rowB, columnId) =>
+          sortFn: (rowA, rowB, columnId) =>
             sortAblaufdatum(rowA.getValue(columnId), rowB.getValue(columnId)),
           enableColumnFilter: false,
           meta: {
@@ -63,7 +64,7 @@ const OffenePostenTable = ({ data, globalFilter }: OffenePostenTableProps) => {
           filterFn: "includesString",
           meta: { numeric: true },
         }),
-      ] as ColumnDef<OffenePostenRow, unknown>[],
+      ]),
     []
   )
 
@@ -74,7 +75,7 @@ const OffenePostenTable = ({ data, globalFilter }: OffenePostenTableProps) => {
       globalFilter={globalFilter}
       globalFilterFn={offenePostenIdentityFilter}
       initialColumnPinning={{
-        left: ["Artikelnummer", "LotId"],
+        start: ["Artikelnummer", "LotId"],
       }}
       getRowId={(row, index) =>
         String(row.id ?? `${row["Artikelnummer"]}-${row["LotId"]}-${index}`)

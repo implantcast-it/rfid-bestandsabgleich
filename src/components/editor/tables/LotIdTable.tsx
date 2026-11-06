@@ -1,12 +1,18 @@
-import { useCallback, useMemo, useState } from "react"
+import {
+  memo,
+  useCallback,
+  useMemo,
+  useState,
+  type ComponentProps,
+} from "react"
 import {
   createColumnHelper,
-  type ColumnDef,
   type RowSelectionState,
 } from "@tanstack/react-table"
 import { toast } from "sonner"
 import { DataTable, SelectionCheckbox } from "@/components/ui/data-table"
-import { FieldSelect } from "@/components/ui/field-select"
+import type { DataTableFeatures } from "@/lib/data-table-features"
+import { LazyFieldSelect } from "@/components/ui/field-select"
 import { BulkEditPanel } from "@/components/editor/BulkEditPanel"
 import {
   EXPIRY_TOOLTIP,
@@ -14,11 +20,10 @@ import {
   erpRfidCompareClass,
   expiryCellClass,
   formatAblaufdatum,
-  sortAblaufdatum,
 } from "./cell-styles"
 import type { LotIdGridRow } from "@/lib/inventur"
 import {
-  createIdentityGlobalFilterFn,
+  createSearchTextGlobalFilterFn,
   matchesLotIdStatus,
   type LotIdStatusFilter,
 } from "@/lib/search"
@@ -54,7 +59,7 @@ const ANMERKUNG_OPTIONS = [
 
 const STICHPROBE_OPTIONS = ["", "X"]
 
-const columnHelper = createColumnHelper<LotIdGridRow>()
+const columnHelper = createColumnHelper<DataTableFeatures, LotIdGridRow>()
 
 type LotIdTableProps = {
   data: LotIdGridRow[]
@@ -67,12 +72,10 @@ type LotIdTableProps = {
   ) => void
 }
 
-const lotIdIdentityFilter = createIdentityGlobalFilterFn<LotIdGridRow>([
-  "LotId",
-  "Artikelnummer",
-  "Produktname",
-  "Kennzeichen 3",
-])
+const lotIdSearchFilterFn = createSearchTextGlobalFilterFn<LotIdGridRow>()
+
+/** Only LotId is globally searchable, so the search runs once per row. */
+const LOT_ID_GLOBAL_SEARCH_COLUMN_IDS = ["LotId"]
 
 const toSelectOptions = (values: string[], emptyLabel: string) =>
   values.map((value) => ({
@@ -82,6 +85,82 @@ const toSelectOptions = (values: string[], emptyLabel: string) =>
 
 const cellSelectTriggerClass =
   "h-7 min-w-[96px] rounded-none px-1.5 text-sm"
+
+const RFID_SELECT_OPTIONS = [
+  { value: "0", label: "0" },
+  { value: "1", label: "1" },
+]
+const TODO_SELECT_OPTIONS = toSelectOptions(TODO_OPTIONS, "—")
+const ANMERKUNG_SELECT_OPTIONS = toSelectOptions(ANMERKUNG_OPTIONS, "—")
+const STICHPROBE_SELECT_OPTIONS = toSelectOptions(STICHPROBE_OPTIONS, "—")
+const BULK_TODO_OPTIONS = toSelectOptions(TODO_OPTIONS, "--- Leeren ---")
+const BULK_ANMERKUNG_OPTIONS = toSelectOptions(
+  ANMERKUNG_OPTIONS,
+  "--- Leeren ---"
+)
+const BULK_RFID_OPTIONS = [
+  { value: "", label: "--- Auswählen ---" },
+  { value: "0", label: "0" },
+  { value: "1", label: "1" },
+]
+
+type LotIdEditableField = "RFID-Scan" | "To Do" | "Anmerkung" | "Stichprobe"
+type SelectOptions = ComponentProps<typeof LazyFieldSelect>["options"]
+type SelectCellContext = {
+  row: { original: LotIdGridRow }
+  getValue: () => unknown
+}
+
+type LotIdSelectCellProps = {
+  rowId: string
+  field: LotIdEditableField
+  value: string
+  options: SelectOptions
+  ariaLabel: string
+  onEdit: (rowId: string, field: LotIdEditableField, value: string) => void
+}
+
+/** Memoized so an edit or search re-renders only the select cells whose value changed. */
+const LotIdSelectCell = memo(
+  ({
+    rowId,
+    field,
+    value,
+    options,
+    ariaLabel,
+    onEdit,
+  }: LotIdSelectCellProps) => {
+    const handleValueChange = (next: string) => onEdit(rowId, field, next)
+
+    return (
+      <LazyFieldSelect
+        value={value}
+        onValueChange={handleValueChange}
+        aria-label={ariaLabel}
+        triggerClassName={cellSelectTriggerClass}
+        options={options}
+      />
+    )
+  }
+)
+
+const renderLotIdSelectCell =
+  (
+    onEdit: LotIdSelectCellProps["onEdit"],
+    field: LotIdEditableField,
+    ariaLabel: string,
+    options: SelectOptions
+  ) =>
+  ({ row, getValue }: SelectCellContext) => (
+    <LotIdSelectCell
+      rowId={row.original.id}
+      field={field}
+      value={String(getValue() ?? "")}
+      options={options}
+      ariaLabel={ariaLabel}
+      onEdit={onEdit}
+    />
+  )
 
 const LotIdTable = ({
   data,
@@ -169,13 +248,16 @@ const LotIdTable = ({
 
   const columns = useMemo(
     () =>
-      [
+      columnHelper.columns([
         columnHelper.display({
           id: "select",
           header: ({ table }) => (
             <SelectionCheckbox
               checked={table.getIsAllPageRowsSelected()}
-              indeterminate={table.getIsSomePageRowsSelected()}
+              indeterminate={
+                table.getIsSomePageRowsSelected() &&
+                !table.getIsAllPageRowsSelected()
+              }
               onCheckedChange={(checked) =>
                 table.toggleAllPageRowsSelected(checked)
               }
@@ -230,8 +312,9 @@ const LotIdTable = ({
           id: "Ablaufdatum",
           header: "Ablaufdatum",
           cell: (info) => formatAblaufdatum(info.getValue()),
-          sortingFn: (rowA, rowB, columnId) =>
-            sortAblaufdatum(rowA.getValue(columnId), rowB.getValue(columnId)),
+          sortFn: (rowA, rowB) =>
+            rowA.original.ablaufdatumTimestamp -
+            rowB.original.ablaufdatumTimestamp,
           enableColumnFilter: false,
           meta: {
             tooltip: EXPIRY_TOOLTIP,
@@ -257,19 +340,11 @@ const LotIdTable = ({
           id: "RFID-Scan",
           header: "RFID",
           filterFn: "includesString",
-          cell: ({ row, getValue }) => (
-            <FieldSelect
-              value={String(getValue() ?? "")}
-              onValueChange={(next) =>
-                handleCellEdit(row.original.id, "RFID-Scan", next)
-              }
-              aria-label="RFID-Scan bearbeiten"
-              triggerClassName={cellSelectTriggerClass}
-              options={[
-                { value: "0", label: "0" },
-                { value: "1", label: "1" },
-              ]}
-            />
+          cell: renderLotIdSelectCell(
+            handleCellEdit,
+            "RFID-Scan",
+            "RFID-Scan bearbeiten",
+            RFID_SELECT_OPTIONS
           ),
           meta: {
             numeric: true,
@@ -285,16 +360,11 @@ const LotIdTable = ({
           id: "To Do",
           header: "To Do",
           filterFn: "includesString",
-          cell: ({ row, getValue }) => (
-            <FieldSelect
-              value={String(getValue() ?? "")}
-              onValueChange={(next) =>
-                handleCellEdit(String(row.original.id), "To Do", next)
-              }
-              aria-label="To Do bearbeiten"
-              triggerClassName={cellSelectTriggerClass}
-              options={toSelectOptions(TODO_OPTIONS, "—")}
-            />
+          cell: renderLotIdSelectCell(
+            handleCellEdit,
+            "To Do",
+            "To Do bearbeiten",
+            TODO_SELECT_OPTIONS
           ),
           meta: {
             cellClassName: (row: LotIdGridRow) =>
@@ -309,16 +379,11 @@ const LotIdTable = ({
           id: "Anmerkung",
           header: "Anmerkung",
           filterFn: "includesString",
-          cell: ({ row, getValue }) => (
-            <FieldSelect
-              value={String(getValue() ?? "")}
-              onValueChange={(next) =>
-                handleCellEdit(String(row.original.id), "Anmerkung", next)
-              }
-              aria-label="Anmerkung bearbeiten"
-              triggerClassName={cellSelectTriggerClass}
-              options={toSelectOptions(ANMERKUNG_OPTIONS, "—")}
-            />
+          cell: renderLotIdSelectCell(
+            handleCellEdit,
+            "Anmerkung",
+            "Anmerkung bearbeiten",
+            ANMERKUNG_SELECT_OPTIONS
           ),
         }),
         columnHelper.accessor((row) => row["Stichprobe"], {
@@ -328,19 +393,14 @@ const LotIdTable = ({
           size: 140,
           minSize: 140,
           maxSize: 140,
-          cell: ({ row, getValue }) => (
-            <FieldSelect
-              value={String(getValue() ?? "")}
-              onValueChange={(next) =>
-                handleCellEdit(String(row.original.id), "Stichprobe", next)
-              }
-              aria-label="Stichprobe bearbeiten"
-              triggerClassName={cellSelectTriggerClass}
-              options={toSelectOptions(STICHPROBE_OPTIONS, "—")}
-            />
+          cell: renderLotIdSelectCell(
+            handleCellEdit,
+            "Stichprobe",
+            "Stichprobe bearbeiten",
+            STICHPROBE_SELECT_OPTIONS
           ),
         }),
-      ] as ColumnDef<LotIdGridRow, unknown>[],
+      ]),
     [handleCellEdit]
   )
 
@@ -368,12 +428,13 @@ const LotIdTable = ({
         columns={columns}
         data={statusRows}
         globalFilter={globalFilter}
-        globalFilterFn={lotIdIdentityFilter}
+        globalFilterFn={lotIdSearchFilterFn}
+        globalFilterColumnIds={LOT_ID_GLOBAL_SEARCH_COLUMN_IDS}
         enableRowSelection
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         initialColumnPinning={{
-          left: [
+          start: [
             "select",
             "Index",
             "LotId",
@@ -395,7 +456,7 @@ const LotIdTable = ({
               id: "bulk-todo",
               label: "To Do setzen",
               value: bulkToDo,
-              options: toSelectOptions(TODO_OPTIONS, "--- Leeren ---"),
+              options: BULK_TODO_OPTIONS,
               onValueChange: setBulkToDo,
               onApply: handleApplyBulkToDo,
             },
@@ -403,7 +464,7 @@ const LotIdTable = ({
               id: "bulk-anmerkung",
               label: "Anmerkung setzen",
               value: bulkAnmerkung,
-              options: toSelectOptions(ANMERKUNG_OPTIONS, "--- Leeren ---"),
+              options: BULK_ANMERKUNG_OPTIONS,
               onValueChange: setBulkAnmerkung,
               onApply: handleApplyBulkAnmerkung,
             },
@@ -411,11 +472,7 @@ const LotIdTable = ({
               id: "bulk-rfid",
               label: "RFID-Scan setzen",
               value: bulkRfidScan,
-              options: [
-                { value: "", label: "--- Auswählen ---" },
-                { value: "0", label: "0" },
-                { value: "1", label: "1" },
-              ],
+              options: BULK_RFID_OPTIONS,
               onValueChange: setBulkRfidScan,
               onApply: handleApplyBulkRfidScan,
             },
@@ -426,4 +483,4 @@ const LotIdTable = ({
   )
 }
 
-export default LotIdTable
+export default memo(LotIdTable)

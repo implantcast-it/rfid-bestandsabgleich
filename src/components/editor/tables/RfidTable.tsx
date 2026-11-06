@@ -1,11 +1,12 @@
 import { useMemo } from "react"
-import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
+import { createColumnHelper } from "@tanstack/react-table"
 import { DataTable } from "@/components/ui/data-table"
+import type { DataTableFeatures } from "@/lib/data-table-features"
 import { createIdentityGlobalFilterFn } from "@/lib/search"
 
 type RfidRow = Record<string, unknown>
 
-const columnHelper = createColumnHelper<RfidRow>()
+const columnHelper = createColumnHelper<DataTableFeatures, RfidRow>()
 
 const rfidIdentityFilter = createIdentityGlobalFilterFn<RfidRow>([
   "LotId",
@@ -24,7 +25,7 @@ const RfidTable = ({ data, globalFilter }: RfidTableProps) => {
 
   const columns = useMemo(
     () =>
-      [
+      columnHelper.columns([
         columnHelper.accessor((row) => row["Artikelnummer"], {
           id: "Artikelnummer",
           header: "Artikelnummer",
@@ -51,7 +52,7 @@ const RfidTable = ({ data, globalFilter }: RfidTableProps) => {
           header: "Erfasst um",
           enableColumnFilter: false,
         }),
-      ] as ColumnDef<RfidRow, unknown>[],
+      ]),
     []
   )
 
@@ -62,7 +63,7 @@ const RfidTable = ({ data, globalFilter }: RfidTableProps) => {
       globalFilter={globalFilter}
       globalFilterFn={rfidIdentityFilter}
       initialColumnPinning={{
-        left: ["Artikelnummer", "LotId"],
+        start: ["Artikelnummer", "LotId"],
       }}
       getRowId={(row, index) =>
         String(row.id ?? `${row["Artikelnummer"]}-${row["LotId"]}-${index}`)
