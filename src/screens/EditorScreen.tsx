@@ -2,23 +2,23 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "re
 import {
   handleSnapshotExcelDownload,
   handleSnapshotPdfDownload,
-} from "./lib/file-actions"
+} from "@/lib/file-actions"
 import { toast } from "sonner"
 
-import ArtNrTable from "./components/editor/tables/artNr_table"
-import AppTopbar from "./components/chrome/AppTopbar"
-import EditorPage from "./components/editor/EditorPage"
+import ArtNrTable from "@/components/editor/tables/ArtNrTable"
+import AppTopbar from "@/components/layout/AppTopbar"
+import EditorPage from "@/components/editor/EditorPage"
 import EditorRail, {
   defaultEditorNavSections,
-} from "./components/editor/EditorRail"
-import ErpTable from "./components/editor/tables/erp_table"
-import LotIdTable from "./components/editor/tables/lotid_table"
-import OffenePostenTable from "./components/editor/tables/offene_posten_table"
-import LotIdStatusChips from "./components/editor/LotIdStatusChips"
+} from "@/components/editor/EditorRail"
+import ErpTable from "@/components/editor/tables/ErpTable"
+import LotIdTable from "@/components/editor/tables/LotIdTable"
+import OffenePostenTable from "@/components/editor/tables/OffenePostenTable"
+import LotIdStatusChips from "@/components/editor/LotIdStatusChips"
 import MiniStats, {
   type AutosaveStatus,
-} from "./components/editor/MiniStats"
-import RfidTable from "./components/editor/tables/rfid_table"
+} from "@/components/editor/MiniStats"
+import RfidTable from "@/components/editor/tables/RfidTable"
 import { Toaster } from "@/components/ui/sonner"
 import { useLocation } from "wouter"
 import {
@@ -33,18 +33,18 @@ import {
   sumErpQuantityTotal,
   type EditorSnapshot,
   type InventurSessionState,
-} from "./lib/inventur"
+} from "@/lib/inventur"
 import {
   loadInventurDraft,
   saveInventurDraft,
   updateInventurStatus,
   type ProjectStatus,
-} from "./lib/projects"
+} from "@/lib/projects"
 import {
   isLotIdAbweichung,
   isLotIdOffenerTodo,
   type LotIdStatusFilter,
-} from "./lib/search"
+} from "@/lib/search"
 
 const AUTOSAVE_MS = 5 * 60 * 1000
 

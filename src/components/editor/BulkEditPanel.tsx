@@ -94,4 +94,3 @@ const BulkEditPanel = ({
 }
 
 export { BulkEditPanel }
-export type { BulkEditPanelProps, BulkField }

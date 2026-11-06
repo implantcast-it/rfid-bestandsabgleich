@@ -2,14 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { useLocation } from "wouter"
 import { getVersion } from "@tauri-apps/api/app"
 import { toast } from "sonner"
-import { UpdaterDialog } from "./components/ui/UpdaterDialog"
-import { Toaster } from "./components/ui/sonner"
-import HomeTopbar from "./components/home/HomeTopbar"
-import UploadPanel from "./components/home/UploadPanel"
-import InsightCards from "./components/home/InsightCards"
+import { UpdaterDialog } from "@/components/feedback/UpdaterDialog"
+import { Toaster } from "@/components/ui/sonner"
+import HomeTopbar from "@/components/home/HomeTopbar"
+import UploadPanel from "@/components/home/UploadPanel"
+import InsightCards from "@/components/home/InsightCards"
 import InventurenFileGrid, {
   type InventurFile,
-} from "./components/home/InventurenFileGrid"
+} from "@/components/home/InventurenFileGrid"
 import {
   catalogGateMessage,
   formatDebitorSummary,
@@ -17,14 +17,14 @@ import {
   searchDebitors,
   type CatalogReady,
   type DebitorEntry,
-} from "./lib/catalog"
+} from "@/lib/catalog"
 import {
   loadAbgleichFromDialog,
   runInventur,
   type EditorSnapshot,
   type InventurSessionState,
-} from "./lib/inventur"
-import type { ProcessPhase } from "./components/home/ProcessPanel"
+} from "@/lib/inventur"
+import type { ProcessPhase } from "@/components/home/ProcessPanel"
 import {
   createInventurProject,
   deleteInventurProject,
@@ -33,7 +33,7 @@ import {
   projectMetaToInventurFile,
   updateInventurTitle,
   type ProjectMeta,
-} from "./lib/projects"
+} from "@/lib/projects"
 
 const inventurjahrDefault = () => String(new Date().getFullYear())
 

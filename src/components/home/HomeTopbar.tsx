@@ -1,4 +1,4 @@
-import AppTopbar from "@/components/chrome/AppTopbar"
+import AppTopbar from "@/components/layout/AppTopbar"
 
 type HomeTopbarProps = {
   searchQuery: string

@@ -4,8 +4,8 @@ import { Delete02Icon, PencilEdit01Icon } from "@hugeicons/core-free-icons"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { normalizeSearchText } from "@/lib/search"
-import DeleteInventurDialog from "@/components/ui/DeleteInventurDialog"
-import RenameInventurDialog from "@/components/ui/RenameInventurDialog"
+import DeleteInventurDialog from "@/components/home/DeleteInventurDialog"
+import RenameInventurDialog from "@/components/home/RenameInventurDialog"
 
 type FileStatus = "open" | "exported" | "done"
 

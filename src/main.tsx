@@ -2,10 +2,10 @@ import "./index.css"
 
 import { Redirect, Route, Switch } from "wouter"
 
-import EditorScreen from "./EditorScreen"
+import EditorScreen from "./screens/EditorScreen"
 import React from "react"
 import ReactDOM from "react-dom/client"
-import StartScreen from "./StartScreen"
+import StartScreen from "./screens/StartScreen"
 import { ThemeProvider } from "./context/ThemeContext"
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

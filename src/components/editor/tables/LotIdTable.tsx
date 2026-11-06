@@ -7,9 +7,9 @@ import {
 } from "@tanstack/react-table"
 import { DataTable, SelectionCheckbox } from "@/components/ui/data-table"
 import { FieldSelect } from "@/components/ui/field-select"
-import ErrorToast from "@/components/ui/ErrorToast"
-import SuccessToast from "@/components/ui/SuccessToast"
-import { BulkEditPanel } from "./bulk-edit-panel"
+import ErrorToast from "@/components/feedback/ErrorToast"
+import SuccessToast from "@/components/feedback/SuccessToast"
+import { BulkEditPanel } from "@/components/editor/BulkEditPanel"
 import {
   EXPIRY_TOOLTIP,
   emptyTodoDiffClass,
