@@ -778,5 +778,4 @@ const SelectionCheckbox = ({
   )
 }
 
-export { DataTable, SelectionCheckbox, PAGE_SIZE_OPTIONS, DEFAULT_PAGE_SIZE }
-export type { DataTableProps }
+export { DataTable, SelectionCheckbox }

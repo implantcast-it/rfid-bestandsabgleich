@@ -9,7 +9,7 @@ import {
   type EditorSnapshot,
 } from "./inventur"
 
-export type ToastInfo = {
+type ToastInfo = {
   open: boolean
   type: "success" | "error"
   title: string
@@ -19,7 +19,7 @@ export type ToastInfo = {
 type SetToastInfo = (info: ToastInfo | null) => void
 
 // Async handler for Excel download
-export const handleExcelDownload = async (
+const handleExcelDownload = async (
   results: { debitor: any; masterData: WorkBook },
   setToastInfo: SetToastInfo
 ) => {
@@ -86,7 +86,7 @@ type AbgleichSheets = {
 }
 
 /** Build a SheetJS workbook from editable editor grids (Excel download). */
-export const buildAbgleichWorkbook = (args: AbgleichSheets): WorkBook => {
+const buildAbgleichWorkbook = (args: AbgleichSheets): WorkBook => {
   const wb = utils.book_new()
   utils.book_append_sheet(
     wb,

@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export type EditorNavItem = {
+type EditorNavItem = {
   id: string
   name: string
   icon: ReactNode

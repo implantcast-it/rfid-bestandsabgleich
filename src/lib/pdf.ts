@@ -4,7 +4,7 @@ import { writeFile } from "@tauri-apps/plugin-fs"
 import type { OffenePostenRow } from "./inventur"
 
 /** LotId row DTO matching Rust `LotIdCompareRow` (snake_case for serde). */
-export type LotIdPdfRow = {
+type LotIdPdfRow = {
   artikelnummer: string
   produktname: string
   kennzeichen_3: string
@@ -19,7 +19,7 @@ export type LotIdPdfRow = {
   index: number
 }
 
-export type PdfExportInput = {
+type PdfExportInput = {
   debitor: string
   kundenname?: string
   lots: LotIdPdfRow[]
@@ -48,7 +48,7 @@ const asIndex = (value: unknown): number => {
 }
 
 /** Map SheetJS / editor LotId rows to the Rust PDF DTO. */
-export const mapSheetRowsToPdfLots = (rows: SheetLotRow[]): LotIdPdfRow[] =>
+const mapSheetRowsToPdfLots = (rows: SheetLotRow[]): LotIdPdfRow[] =>
   rows.map((row) => ({
     artikelnummer: asString(row.Artikelnummer),
     produktname: asString(row.Produktname),

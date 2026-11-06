@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 /** Sentinel for empty string options — Base UI Select treats "" as unset. */
 const EMPTY_VALUE = "__empty__"
 
-export type FieldSelectOption = {
+type FieldSelectOption = {
   value: string
   label: string
 }
@@ -84,4 +84,4 @@ const FieldSelect = ({
   )
 }
 
-export { FieldSelect, EMPTY_VALUE }
+export { FieldSelect }

@@ -70,7 +70,7 @@ export const projectMetaToInventurFile = (meta: ProjectMeta) => ({
 })
 
 /** Relative / short German label from an ISO timestamp. */
-export const formatRelativeUpdatedAt = (iso: string): string => {
+const formatRelativeUpdatedAt = (iso: string): string => {
   const then = Date.parse(iso)
   if (Number.isNaN(then)) return iso
   const diffMs = Date.now() - then

@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core"
 import { open } from "@tauri-apps/plugin-dialog"
 
-export type ImportSheetStats = {
+type ImportSheetStats = {
   inserted: number
   skipped_existing: number
   rows_read: number
@@ -36,7 +36,7 @@ export type DebitorEntry = {
 }
 
 /** One-line address from catalog fields (empty parts omitted). */
-export const formatDebitorAddress = (
+const formatDebitorAddress = (
   entry: Pick<DebitorEntry, "postanschrift" | "plz" | "ort">
 ): string => {
   const street = (entry.postanschrift ?? "").trim()

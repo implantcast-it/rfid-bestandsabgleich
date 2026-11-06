@@ -1,5 +1,3 @@
-import { cn } from "@/lib/utils"
-
 const STATUS_OK =
   "bg-emerald-500/[0.08] text-emerald-700 dark:text-[#3dd68c]"
 const STATUS_MISS =
@@ -34,7 +32,7 @@ const excelSerialToLocalDate = (serial: number): Date | null => {
  * ISO `yyyy-mm-dd`, or a raw Excel serial kept by drafts saved before dates
  * were formatted. Other text falls back to `Date` parsing.
  */
-export const parseAblaufdatum = (value: unknown): Date | null => {
+const parseAblaufdatum = (value: unknown): Date | null => {
   const text = String(value ?? "").trim()
   if (text === "") return null
 
@@ -118,9 +116,6 @@ export const emptyTodoDiffClass = (
   const isEmpty = !todoValue || String(todoValue).trim() === ""
   return hasDifference && isEmpty ? STATUS_TODO_EMPTY : ""
 }
-
-export const cellStatusClass = (...classes: Array<string | false | null | undefined>) =>
-  cn(...classes)
 
 export const EXPIRY_TOOLTIP =
   "GELB: Datum läuft bald ab - ROT: Datum ist abgelaufen"

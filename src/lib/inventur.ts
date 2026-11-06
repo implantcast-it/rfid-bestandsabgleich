@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core"
 import { open } from "@tauri-apps/plugin-dialog"
 
 /** Mirrors Rust `EditorStats` (serde snake_case). */
-export type EditorStats = {
+type EditorStats = {
   abweichungen: number
   offene_todos: number
   stichproben_done: number
@@ -141,7 +141,7 @@ const asNumber = (value: unknown): number => {
 }
 
 /** Parse an Ax-Bestand ERP quantity cell; invalid/empty/negative → 0. */
-export const erpQuantityAsNumber = (raw: unknown): number => {
+const erpQuantityAsNumber = (raw: unknown): number => {
   const trimmed = asString(raw).trim().replace(",", ".")
   if (!trimmed) return 0
   const n = Number(trimmed)
@@ -163,7 +163,7 @@ export const isStichprobenComplete = (
 ): boolean => done >= required
 
 /** Map LotId grid rows back to serde DTOs for draft persistence. */
-export const lotIdGridToCompareRows = (
+const lotIdGridToCompareRows = (
   rows: LotIdGridRow[]
 ): LotIdCompareRow[] =>
   rows.map((row, index) => ({
@@ -182,7 +182,7 @@ export const lotIdGridToCompareRows = (
   }))
 
 /** Map ArtNr grid rows back to serde DTOs. */
-export const artNrGridToCompareRows = (
+const artNrGridToCompareRows = (
   rows: ArtNrGridRow[]
 ): ArtNrCompareRow[] =>
   rows.map((row) => ({
@@ -202,7 +202,7 @@ export const sumErpQuantityTotal = (axBestand: ErpRow[]): number =>
   )
 
 /** Recompute editor stats from live LotId grid rows + Ax-Bestand. */
-export const computeEditorStatsFromLotIdGrid = (
+const computeEditorStatsFromLotIdGrid = (
   rows: LotIdGridRow[],
   axBestand: ErpRow[] = []
 ): EditorStats => {
@@ -262,7 +262,7 @@ export const runInventur = (erpPath: string, rfidPath: string) =>
     rfidPath,
   })
 
-export const loadAbgleich = (path: string) =>
+const loadAbgleich = (path: string) =>
   invoke<EditorSnapshot>("load_abgleich", { path })
 
 /** Open dialog and load an existing Abgleich workbook. */

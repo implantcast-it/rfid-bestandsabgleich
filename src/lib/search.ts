@@ -43,7 +43,7 @@ export const isLotIdAbweichung = (row: Record<string, unknown>) =>
 export const isLotIdOffenerTodo = (row: Record<string, unknown>) =>
   isLotIdAbweichung(row) && String(row["To Do"] ?? "").trim().length === 0
 
-export const isLotIdOhneStichprobe = (row: Record<string, unknown>) =>
+const isLotIdOhneStichprobe = (row: Record<string, unknown>) =>
   String(row["Stichprobe"] ?? "")
     .trim()
     .toUpperCase() !== "X"
