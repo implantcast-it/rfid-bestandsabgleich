@@ -1,6 +1,7 @@
 import { WorkBook, utils } from "xlsx";
 
-import { DataRow } from "./compare";
+/** Generic row object after sheet_to_json */
+type DataRow = Record<string, any>
 
 /**
  * Prepares the workbook for download by cleaning up comparison sheets.
