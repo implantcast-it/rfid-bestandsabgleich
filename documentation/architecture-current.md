@@ -2,6 +2,8 @@
 
 As-is technical map. For product behavior see [product-intent.md](./product-intent.md). For rewrite targets see [rework-notes.md](./rework-notes.md).
 
+> **Snapshot of v4.1.3 (before the v5 rewrite).** The layout and module table below describe v4 and no longer match the code. The current project structure is described in the [root README](../README.md#projektstruktur).
+
 ---
 
 ## Stack

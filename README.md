@@ -24,11 +24,48 @@ Für einen geplanten Rewrite (UI, Implementierung, Tests, Performance) zuerst le
 
 Das Programm wurde mit folgenden Tools & Frameworks geschrieben:
 
-**Frontend:** React, wouter, TailwindCSS, RadixUI, MaterialIcons, AG-Grid
+**Frontend:** React 19, TypeScript, Vite, TailwindCSS v4, shadcn / Base UI, TanStack Table, wouter, sonner
 
-**Applikation:** Tauri v2, Node
+**Backend:** Tauri v2 mit Rust (Fachlogik in `src-tauri/src/domain`: Excel-Import und -Export, Abgleich, lokaler SQLite-Katalog, PDF-Erzeugung mit Typst)
 
-**Programmiersprachen:** TypeScript, (Rust möglich, aber nicht verwendet)
+**Programmiersprachen:** TypeScript, Rust
+
+## Projektstruktur
+
+```text
+rfid-bestandsabgleich/
+├── src/                    # Frontend (React, TypeScript)
+│   ├── main.tsx            # Routen (wouter) und Theme-Provider
+│   ├── screens/            # Seiten: StartScreen (Inventur) und EditorScreen (Abgleich)
+│   ├── components/
+│   │   ├── home/           # Bausteine der Startseite
+│   │   ├── editor/         # Bausteine des Editors, inkl. tables/ (Tabellen)
+│   │   ├── layout/         # App-Topbar
+│   │   ├── feedback/       # Fehler- und Erfolgsmeldungen, Updater-Dialog
+│   │   └── ui/             # Basis-Komponenten (shadcn / Base UI)
+│   ├── context/            # React-Context (Theme)
+│   └── lib/                # Logik ohne eigene Komponenten: Tauri-Aufrufe, Excel/PDF, Suche
+├── src-tauri/              # Backend (Tauri v2, Rust)
+│   ├── src/
+│   │   ├── main.rs         # App-Start und Registrierung der Tauri-Befehle
+│   │   ├── commands.rs     # Tauri-Befehle (Schnittstelle zum Frontend)
+│   │   ├── lib.rs          # Einstieg der Bibliothek
+│   │   └── domain/         # Fachlogik: parse, compare, editor, export, catalog, pdf, projects
+│   ├── assets/             # PDF-Vorlagen (Typst), Schriften, Logo
+│   └── tests/              # Integrationstests
+├── documentation/          # Produkt-, Architektur- und Entwicklerdokumentation (Einstieg: documentation/README.md)
+├── context/                # Notizen für KI-Agenten, kein Produktcode
+├── public/                 # Statische Frontend-Assets (Logo, Favicon)
+└── .github/workflows/      # CI (Rust-Tests) und Release
+```
+
+Konfiguration liegt im Wurzelverzeichnis: `package.json`, `vite.config.ts`, `tsconfig*.json` und `components.json` (shadcn).
+
+Konventionen im Frontend:
+
+- Feature-Komponenten: Dateiname = Komponentenname in PascalCase (z. B. `LotIdTable.tsx`).
+- Basis-Komponenten in `src/components/ui/` folgen den shadcn-Konventionen (Dateinamen in kebab-case).
+- Imports aus `src/` nutzen den Alias `@/`, z. B. `@/lib/utils`.
 
 ## Screenshots
 

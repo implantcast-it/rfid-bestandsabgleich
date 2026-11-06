@@ -4,12 +4,10 @@ Technical contracts implied by `src/lib/*` and the editor. Required reading for 
 
 Primary sources:
 
-- `src/lib/readFiles.ts`
-- `src/lib/compare.ts`
 - `src/lib/download.ts`
 - `src/lib/pdf.ts` (+ Rust `domain/pdf`)
-- `src/components/editor/tables/lotid_table.tsx`
-- `src/EditorScreen.tsx`
+- `src/components/editor/tables/LotIdTable.tsx`
+- `src/screens/EditorScreen.tsx`
 
 ---
 

@@ -9,7 +9,7 @@ Für den geplanten Voll-Rewrite ist die **Produkt-Intent-Dokumentation** maßgeb
 - [User Flows](./user-flows.md) — End-to-end Journeys, Screens, Fehlerfälle
 - [Data Model & Business Rules](./data-model-and-rules.md) — Dateischemas, Vergleichslogik, Exporte
 - [Feature Parity Checklist](./feature-parity.md) — Was die neue Version können muss
-- [Current Architecture](./architecture-current.md) — Ist-Zustand Tech-Stack & Struktur
+- [Architektur v4.1.3 (historisch)](./architecture-current.md) — Stand vor dem Rewrite: Tech-Stack & Struktur der Version 4
 - [Rework Notes](./rework-notes.md) — Empfohlene Vorgehensweise für UI/Impl/Tests/Perf
 - [Import Stack Research](./import-stack-research.md) — Excel/CSV libraries (JS vs Rust), security, recommendation
 - [Rust Domain Engine](./domain-rust.md) — Domain + local GTIN/Debitor catalog import (Settings button)
@@ -18,6 +18,7 @@ Für den geplanten Voll-Rewrite ist die **Produkt-Intent-Dokumentation** maßgeb
 ## Entwickler-Setup (Ist-Stand)
 
 - [Installation & Starten (lokal)](./installation.md)
+- [Projektstruktur](../README.md#projektstruktur) — Ordner und Verantwortlichkeiten (v5)
 - [GitHub Nutzung](./github.md)
 
 ---
