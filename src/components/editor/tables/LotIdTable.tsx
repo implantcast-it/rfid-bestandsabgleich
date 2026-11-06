@@ -1,14 +1,12 @@
-import * as Toast from "@radix-ui/react-toast"
 import { useCallback, useMemo, useState } from "react"
 import {
   createColumnHelper,
   type ColumnDef,
   type RowSelectionState,
 } from "@tanstack/react-table"
+import { toast } from "sonner"
 import { DataTable, SelectionCheckbox } from "@/components/ui/data-table"
 import { FieldSelect } from "@/components/ui/field-select"
-import ErrorToast from "@/components/feedback/ErrorToast"
-import SuccessToast from "@/components/feedback/SuccessToast"
 import { BulkEditPanel } from "@/components/editor/BulkEditPanel"
 import {
   EXPIRY_TOOLTIP,
@@ -97,12 +95,6 @@ const LotIdTable = ({
   const [bulkToDo, setBulkToDo] = useState("")
   const [bulkAnmerkung, setBulkAnmerkung] = useState("")
   const [bulkRfidScan, setBulkRfidScan] = useState("")
-  const [toastInfo, setToastInfo] = useState<{
-    open: boolean
-    type: "success" | "error"
-    title: string
-    description: string
-  } | null>(null)
 
   const rows = useMemo(() => (Array.isArray(data) ? data : []), [data])
   const statusRows = useMemo(
@@ -143,20 +135,14 @@ const LotIdTable = ({
       )
 
       if (selectedIds.size === 0) {
-        setToastInfo({
-          type: "error",
-          open: true,
-          title: "Keine Zeilen ausgewählt",
+        toast.error("Keine Zeilen ausgewählt", {
           description: "Bitte wählen Sie Zeilen aus, die Sie ändern möchten.",
         })
         return
       }
 
       if (options?.requireValue && value === "") {
-        setToastInfo({
-          type: "error",
-          open: true,
-          title: "Kein Wert ausgewählt",
+        toast.error("Kein Wert ausgewählt", {
           description: `Bitte wählen Sie einen '${options.valueLabel ?? field}' Wert aus.`,
         })
         return
@@ -169,10 +155,7 @@ const LotIdTable = ({
         })
       )
 
-      setToastInfo({
-        type: "success",
-        open: true,
-        title: `'${field}' aktualisiert`,
+      toast.success(`'${field}' aktualisiert`, {
         description:
           field === "RFID-Scan"
             ? `${selectedIds.size} Zeile(n) wurden auf '${value}' gesetzt.`
@@ -380,86 +363,66 @@ const LotIdTable = ({
   }
 
   return (
-    <Toast.Provider>
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-        <DataTable
-          columns={columns}
-          data={statusRows}
-          globalFilter={globalFilter}
-          globalFilterFn={lotIdIdentityFilter}
-          enableRowSelection
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          initialColumnPinning={{
-            left: [
-              "select",
-              "Index",
-              "LotId",
-              "Artikelnummer",
-              "Produktname",
-              "Kennzeichen 3",
-            ],
-          }}
-          getRowId={(row, index) => String(row.id ?? index)}
-        />
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+      <DataTable
+        columns={columns}
+        data={statusRows}
+        globalFilter={globalFilter}
+        globalFilterFn={lotIdIdentityFilter}
+        enableRowSelection
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        initialColumnPinning={{
+          left: [
+            "select",
+            "Index",
+            "LotId",
+            "Artikelnummer",
+            "Produktname",
+            "Kennzeichen 3",
+          ],
+        }}
+        getRowId={(row, index) => String(row.id ?? index)}
+      />
 
-        <div id="bulk-edit-panel">
-          <BulkEditPanel
-            open={isBulkEditOpen}
-            onOpenChange={(open) => onBulkEditOpenChange?.(open)}
-            selectedCount={selectedCount}
-            fields={[
-              {
-                id: "bulk-todo",
-                label: "To Do setzen",
-                value: bulkToDo,
-                options: toSelectOptions(TODO_OPTIONS, "--- Leeren ---"),
-                onValueChange: setBulkToDo,
-                onApply: handleApplyBulkToDo,
-              },
-              {
-                id: "bulk-anmerkung",
-                label: "Anmerkung setzen",
-                value: bulkAnmerkung,
-                options: toSelectOptions(ANMERKUNG_OPTIONS, "--- Leeren ---"),
-                onValueChange: setBulkAnmerkung,
-                onApply: handleApplyBulkAnmerkung,
-              },
-              {
-                id: "bulk-rfid",
-                label: "RFID-Scan setzen",
-                value: bulkRfidScan,
-                options: [
-                  { value: "", label: "--- Auswählen ---" },
-                  { value: "0", label: "0" },
-                  { value: "1", label: "1" },
-                ],
-                onValueChange: setBulkRfidScan,
-                onApply: handleApplyBulkRfidScan,
-              },
-            ]}
-          />
-        </div>
+      <div id="bulk-edit-panel">
+        <BulkEditPanel
+          open={isBulkEditOpen}
+          onOpenChange={(open) => onBulkEditOpenChange?.(open)}
+          selectedCount={selectedCount}
+          fields={[
+            {
+              id: "bulk-todo",
+              label: "To Do setzen",
+              value: bulkToDo,
+              options: toSelectOptions(TODO_OPTIONS, "--- Leeren ---"),
+              onValueChange: setBulkToDo,
+              onApply: handleApplyBulkToDo,
+            },
+            {
+              id: "bulk-anmerkung",
+              label: "Anmerkung setzen",
+              value: bulkAnmerkung,
+              options: toSelectOptions(ANMERKUNG_OPTIONS, "--- Leeren ---"),
+              onValueChange: setBulkAnmerkung,
+              onApply: handleApplyBulkAnmerkung,
+            },
+            {
+              id: "bulk-rfid",
+              label: "RFID-Scan setzen",
+              value: bulkRfidScan,
+              options: [
+                { value: "", label: "--- Auswählen ---" },
+                { value: "0", label: "0" },
+                { value: "1", label: "1" },
+              ],
+              onValueChange: setBulkRfidScan,
+              onApply: handleApplyBulkRfidScan,
+            },
+          ]}
+        />
       </div>
-
-      {toastInfo?.type === "success" ? (
-        <SuccessToast
-          open={toastInfo.open}
-          onOpenChange={(isOpen) => !isOpen && setToastInfo(null)}
-          title={toastInfo.title}
-          description={toastInfo.description}
-        />
-      ) : null}
-      {toastInfo?.type === "error" ? (
-        <ErrorToast
-          open={toastInfo.open}
-          onOpenChange={(isOpen) => !isOpen && setToastInfo(null)}
-          title={toastInfo.title}
-          description={toastInfo.description}
-        />
-      ) : null}
-      <Toast.Viewport className="[--viewport-padding:_25px] fixed right-0 bottom-0 z-[2147483647] m-0 flex w-[390px] max-w-[100vw] list-none flex-col gap-[10px] p-[var(--viewport-padding)] outline-none" />
-    </Toast.Provider>
+    </div>
   )
 }
 

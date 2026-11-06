@@ -3,9 +3,12 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Update, check } from "@tauri-apps/plugin-updater";
 import { useEffect, useState } from "react";
 
-import CloseIcon from "@mui/icons-material/Close";
-import DownloadIcon from "@mui/icons-material/Download";
-import UpdateIcon from "@mui/icons-material/Update";
+import {
+  Cancel01Icon,
+  Download04Icon,
+  SystemUpdate01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { relaunch } from "@tauri-apps/plugin-process";
 
 export function UpdaterDialog() {
@@ -84,7 +87,12 @@ export function UpdaterDialog() {
         <Dialog.Overlay className='z-40 fixed inset-0 bg-black/60 dark:bg-black/80 data-[state=open]:animate-overlayShow' />
         <Dialog.Content className='top-1/2 left-1/2 z-50 fixed bg-gray-50 dark:bg-gray-900 shadow-[var(--shadow-6)] p-[25px] rounded-md focus:outline-none w-[90vw] max-w-[500px] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 data-[state=open]:animate-contentShow'>
           <div className='flex items-center gap-2'>
-            <UpdateIcon className='text-primary dark:text-gray-200' />
+            <HugeiconsIcon
+              icon={SystemUpdate01Icon}
+              size={22}
+              strokeWidth={2}
+              className='text-primary dark:text-gray-200'
+            />
             <Dialog.Title className='m-0 font-bold text-primary dark:text-gray-200 text-lg'>
               Update verfügbar
             </Dialog.Title>
@@ -107,7 +115,12 @@ export function UpdaterDialog() {
           {/* Progress Indicator */}
           {isDownloading && (
             <div className='flex items-center gap-2 mt-4 text-primary text-sm'>
-              <DownloadIcon className='w-4 h-4 animate-pulse' />
+              <HugeiconsIcon
+                icon={Download04Icon}
+                size={16}
+                strokeWidth={2}
+                className='animate-pulse'
+              />
               <span>{downloadProgress}</span>
             </div>
           )}
@@ -123,7 +136,7 @@ export function UpdaterDialog() {
               </button>
             </Dialog.Close>
             <button
-              className='inline-flex justify-center items-center bg-primary hover:bg-primary/80 px-[15px] rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-gray-800 outline-offset-1 h-[35px] font-medium text-white leading-none select-none'
+              className='inline-flex justify-center items-center gap-1.5 bg-primary hover:bg-primary/80 px-[15px] rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-gray-800 outline-offset-1 h-[35px] font-medium text-white leading-none select-none'
               onClick={handleInstallUpdate}
               disabled={isDownloading}
             >
@@ -131,7 +144,11 @@ export function UpdaterDialog() {
                 "Installieren..."
               ) : (
                 <>
-                  <DownloadIcon className='w-4 h-4' />
+                  <HugeiconsIcon
+                    icon={Download04Icon}
+                    size={16}
+                    strokeWidth={2}
+                  />
                   Installieren und neu starten
                 </>
               )}
@@ -142,8 +159,9 @@ export function UpdaterDialog() {
           <Dialog.Close
             className='top-4 right-4 absolute opacity-70 hover:opacity-100 rounded-sm focus:outline-none focus:ring-2 focus:ring-primary text-gray-500 transition-opacity disabled:pointer-events-none'
             disabled={isDownloading}
+            aria-label='Schließen'
           >
-            <CloseIcon className='w-5 h-5' />
+            <HugeiconsIcon icon={Cancel01Icon} size={20} strokeWidth={2} />
             <span className='sr-only'>Schließen</span>
           </Dialog.Close>
         </Dialog.Content>
