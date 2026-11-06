@@ -1,63 +1,77 @@
-import { useCallback, useEffect, useState } from "react";
+import { useMemo } from "react"
+import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
+import { DataTable } from "@/components/ui/data-table"
+import { createIdentityGlobalFilterFn } from "@/lib/search"
+import { differenzCellClass } from "./cell-styles"
 
-import { AG_GRID_LOCALE_DE } from "@ag-grid-community/locale";
-import { AgGridReact } from "ag-grid-react";
+type ArtNrRow = Record<string, unknown>
 
-export default function ArtNrTable({ data, theme }: { data: any; theme: any }) {
-  const [columns, setColumns] = useState<any[]>([]);
+const columnHelper = createColumnHelper<ArtNrRow>()
 
-  useEffect(() => {
-    const columns = [
-      {
-        field: "Artikelnummer",
-        pinned: "left",
-        filter: true,
-      },
-      {
-        field: "Produktname",
-        pinned: "left",
-        filter: true,
-      },
-      {
-        field: "Eigenbestand nach ERP",
-        filter: true,
-      },
-      {
-        field: "RFID-Scan",
-        filter: true,
-      },
-      {
-        field: "Differenz",
-        filter: true,
-        cellClassRules: {
-          "bg-green-100 dark:bg-green-400/30 dark:text-green-400 text-green-800":
-            (params: any) => params.value == 0,
-          "bg-amber-100 dark:bg-amber-400/30 dark:text-amber-400 text-amber-800":
-            (params: any) => params.value < 0,
-          "bg-red-100 dark:bg-red-400/30 dark:text-red-400 text-red-800": (
-            params: any
-          ) => params.value > 0,
-        },
-      },
-    ];
-    setColumns(columns);
-  }, []);
+const artNrIdentityFilter = createIdentityGlobalFilterFn<ArtNrRow>([
+  "Artikelnummer",
+  "Produktname",
+])
 
-  const getRowId = useCallback((params: any) => params.data.id, []);
+type ArtNrTableProps = {
+  data: ArtNrRow[]
+  globalFilter?: string
+}
+
+const ArtNrTable = ({ data, globalFilter }: ArtNrTableProps) => {
+  const rows = useMemo(() => (Array.isArray(data) ? data : []), [data])
+
+  const columns = useMemo(
+    () =>
+      [
+        columnHelper.accessor((row) => row["Artikelnummer"], {
+          id: "Artikelnummer",
+          header: "Artikelnummer",
+          filterFn: "includesString",
+        }),
+        columnHelper.accessor((row) => row["Produktname"], {
+          id: "Produktname",
+          header: "Produktname",
+          filterFn: "includesString",
+        }),
+        columnHelper.accessor((row) => row["Eigenbestand nach ERP"], {
+          id: "Eigenbestand nach ERP",
+          header: "Eigenbestand nach ERP",
+          filterFn: "includesString",
+          meta: { numeric: true },
+        }),
+        columnHelper.accessor((row) => row["RFID-Scan"], {
+          id: "RFID-Scan",
+          header: "RFID-Scan",
+          filterFn: "includesString",
+          meta: { numeric: true },
+        }),
+        columnHelper.accessor((row) => row["Differenz"], {
+          id: "Differenz",
+          header: "Differenz",
+          filterFn: "includesString",
+          meta: {
+            numeric: true,
+            cellClassName: (_row: ArtNrRow, value: unknown) =>
+              differenzCellClass(value),
+          },
+        }),
+      ] as ColumnDef<ArtNrRow, unknown>[],
+    []
+  )
 
   return (
-    <AgGridReact
-      theme={theme}
-      rowData={data}
-      columnDefs={columns}
-      paginationPageSize={50}
-      paginationPageSizeSelector={[20, 50, 100, 500, 1000, 2000]}
-      pagination
-      animateRows={false}
-      autoSizeStrategy={{ type: "fitCellContents" }}
-      readOnlyEdit
-      getRowId={getRowId}
-      localeText={AG_GRID_LOCALE_DE}
+    <DataTable
+      columns={columns}
+      data={rows}
+      globalFilter={globalFilter}
+      globalFilterFn={artNrIdentityFilter}
+      initialColumnPinning={{
+        left: ["Artikelnummer", "Produktname"],
+      }}
+      getRowId={(row, index) => String(row.id ?? index)}
     />
-  );
+  )
 }
+
+export default ArtNrTable

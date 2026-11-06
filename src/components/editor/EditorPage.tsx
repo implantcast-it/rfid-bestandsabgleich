@@ -1,41 +1,54 @@
-import EditorHeader from "./EditorHeader.tsx";
-import { ReactNode } from "react";
+import { ReactNode } from "react"
+import EditorSheetHead from "./EditorSheetHead"
 
-// --- Type Definitions ---
 interface EditorPageProps {
-  title: string;
-  hasHeaderButtons: boolean;
-  completedStichproben?: number;
-  requiredStichproben?: number;
-  onAutoCheck?: () => void;
-  onAutoFill?: () => void;
-  children: ReactNode; // Accept children to render the actual page content
+  title: string
+  hasHeaderButtons: boolean
+  completedStichproben?: number
+  requiredStichproben?: number
+  onAutoCheck?: () => void
+  onAutoFill?: () => void
+  isBulkEditOpen?: boolean
+  onBulkEditToggle?: () => void
+  children: ReactNode
+  miniStats?: ReactNode
 }
 
-// --- Component ---
-export default function EditorPage({
+const EditorPage = ({
   title,
   hasHeaderButtons,
   completedStichproben,
   requiredStichproben,
   onAutoCheck,
   onAutoFill,
-  children, // Accept children to render the actual page content
-}: EditorPageProps) {
+  isBulkEditOpen,
+  onBulkEditToggle,
+  children,
+  miniStats,
+}: EditorPageProps) => {
   return (
-    <>
-      <EditorHeader
-        title={title}
-        showButtons={hasHeaderButtons}
-        completedStichproben={completedStichproben}
-        requiredStichproben={requiredStichproben}
-        onAutoCheck={onAutoCheck}
-        onAutoFill={onAutoFill}
-      />
-      {/* Content Area */}
-      <div className='flex-1 bg-slate-100 dark:bg-neutral-950 p-4 overflow-auto'>
-        {children}
-      </div>
-    </>
-  );
+    <div className="bg-background flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-auto p-4">
+      {miniStats}
+      <section
+        className="bg-card border-border flex min-h-0 flex-1 flex-col overflow-hidden border"
+        aria-label={title}
+      >
+        <EditorSheetHead
+          title={title}
+          showTools={hasHeaderButtons}
+          completedStichproben={completedStichproben}
+          requiredStichproben={requiredStichproben}
+          onAutoCheck={onAutoCheck}
+          onAutoFill={onAutoFill}
+          isBulkEditOpen={isBulkEditOpen}
+          onBulkEditToggle={onBulkEditToggle}
+        />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          {children}
+        </div>
+      </section>
+    </div>
+  )
 }
+
+export default EditorPage
