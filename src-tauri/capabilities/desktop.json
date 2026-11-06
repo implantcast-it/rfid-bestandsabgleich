@@ -4,6 +4,7 @@
   "windows": ["main"],
   "permissions": [
     "updater:default",
+    "process:allow-restart",
     "core:default",
     "core:window:allow-set-effects",
     "fs:allow-read-file",
