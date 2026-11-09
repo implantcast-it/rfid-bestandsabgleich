@@ -9,8 +9,8 @@ use std::path::{Path, PathBuf};
 use calamine::{open_workbook_auto, Data, Reader};
 use pretty_assertions::assert_eq;
 use rfid_bestandsabgleich::{
-    load_abgleich_xlsx, load_gtin_catalog, parse_erp, parse_rfid, run_compare,
-    write_abgleich_xlsx, CompareInput, CompareResult, DomainError, ErpImport,
+    load_abgleich_xlsx, load_gtin_catalog, parse_erp, parse_rfid, run_compare, write_abgleich_xlsx,
+    CompareInput, CompareResult, DomainError, ErpImport,
 };
 use rust_xlsxwriter::Workbook;
 use tempfile::TempDir;
@@ -57,7 +57,15 @@ fn write_erp(path: &Path) {
         ("100", "Implant A", "L1", "IMP", "1/1/2030", "10521", "1"),
         ("100", "Implant A", "L2", "IMP", "1/1/2030", "10521", "1"),
         ("100", "Implant A", "", "IMP", "1/1/2030", "10521", "1"),
-        ("200", "Instrument B", "L200", "INST", "2/2/2030", "10521", "1"),
+        (
+            "200",
+            "Instrument B",
+            "L200",
+            "INST",
+            "2/2/2030",
+            "10521",
+            "1",
+        ),
     ];
     for (r, row) in rows.iter().enumerate() {
         let r = (r + 1) as u32;
@@ -277,6 +285,22 @@ fn export_roundtrip_preserves_required_sheets_and_counts() {
     assert!(lot_rows
         .iter()
         .any(|r| r.get("LotId").map(String::as_str) == Some("L1")));
+
+    let mut wb = open_workbook_auto(&out).unwrap();
+    let lot_sheet = wb.worksheet_range("Bestandsabgleich LotId").unwrap();
+    let expiration_row = lot_sheet
+        .rows()
+        .enumerate()
+        .skip(1)
+        .find_map(|(index, row)| {
+            matches!(row.get(3), Some(Data::String(lot_id)) if lot_id == "L1")
+                .then_some(index as u32)
+        })
+        .unwrap();
+    assert!(matches!(
+        lot_sheet.get_value((expiration_row, 9)),
+        Some(Data::DateTime(_) | Data::Float(_))
+    ));
 }
 
 #[test]
@@ -314,10 +338,7 @@ fn erp_accepts_legacy_kennzeichen_column() {
 }
 
 /// Writes master, RFID and the ERP fixture from `write_erp_fixture` into `dir`, then runs the compare.
-fn compare_from_fixtures(
-    dir: &TempDir,
-    write_erp_fixture: fn(&Path),
-) -> CompareResult {
+fn compare_from_fixtures(dir: &TempDir, write_erp_fixture: fn(&Path)) -> CompareResult {
     let master = dir.path().join("master.xlsx");
     let erp = dir.path().join("erp.xlsx");
     let rfid = dir.path().join("rfid.txt");
