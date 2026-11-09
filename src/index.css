@@ -1,32 +1,284 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/raleway";
 
-/* Animation for the Collapsible on the lotid table */
-.CollapsibleContentAnimation {
-  overflow: hidden;
-}
-.CollapsibleContentAnimation[data-state="open"] {
-  animation: slideDown 300ms ease-out;
-}
-.CollapsibleContentAnimation[data-state="closed"] {
-  animation: slideUp 300ms ease-out;
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --font-sans: "Inter Variable", sans-serif;
+  --font-heading: "Raleway Variable", sans-serif;
 }
 
-@keyframes slideDown {
-  from {
-    height: 0;
+:root {
+  /* Fixed shell colors — no OS glass / translucency. */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  /* Brand teal ~#006860 */
+  --primary: oklch(0.45 0.08 186);
+  --primary-foreground: oklch(0.984 0.014 180.72);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.55 0.08 186);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.45 0.08 186);
+  --sidebar-primary-foreground: oklch(0.984 0.014 180.72);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.55 0.08 186);
+  /* Soft brand wash over the fixed shell */
+  --bg-highlight: color-mix(in oklch, var(--primary) 22%, transparent);
+}
+
+.dark {
+  /* ~#121212 — matches home mockup solid shell */
+  --background: oklch(0.18 0 0);
+  --foreground: oklch(0.96 0 0);
+  --card: oklch(0.22 0 0);
+  --card-foreground: oklch(0.96 0 0);
+  --popover: oklch(0.22 0 0);
+  --popover-foreground: oklch(0.96 0 0);
+  --primary: oklch(0.5 0.09 186);
+  --primary-foreground: oklch(0.984 0.014 180.72);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.55 0.09 186);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.2 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.55 0.1 186);
+  --sidebar-primary-foreground: oklch(0.277 0.046 192.524);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.55 0.09 186);
+  --bg-highlight: color-mix(in oklch, var(--primary) 28%, transparent);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-  to {
-    height: var(--radix-collapsible-content-height);
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    background-color: var(--background);
+  }
+  html {
+    @apply font-sans overflow-hidden;
+  }
+  body {
+    @apply text-foreground font-sans overflow-hidden;
+    background-image: radial-gradient(
+      1200px 420px at 50% -120px,
+      var(--bg-highlight),
+      transparent 60%
+    );
+    background-attachment: fixed;
+    background-repeat: no-repeat;
   }
 }
 
-@keyframes slideUp {
-  from {
-    height: var(--radix-collapsible-content-height);
+/* Soft-card overrides — insight / inventuren / mini-stats stay soft despite --radius: 0 */
+@layer utilities {
+  .rounded-soft-card {
+    border-radius: 20px;
   }
-  to {
-    height: 0;
+  .rounded-soft-stat {
+    border-radius: 20px;
+  }
+
+  /* Scroll works; scrollbar chrome stays hidden */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Inventuren document silhouettes — match home-inspired.html */
+@layer components {
+  .file-grid-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #454545 #1a1a1a;
+  }
+
+  .file-grid-scroll::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+
+  .file-grid-scroll::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 999px;
+  }
+
+  .file-grid-scroll::-webkit-scrollbar-thumb {
+    background: #454545;
+    border-radius: 999px;
+    border: 1px solid #1a1a1a;
+  }
+
+  .file-grid-scroll::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a;
+  }
+
+  html:not(.dark) .file-grid-scroll {
+    scrollbar-color: #b0b0b0 #e8e8e8;
+  }
+
+  html:not(.dark) .file-grid-scroll::-webkit-scrollbar-track {
+    background: #e8e8e8;
+  }
+
+  html:not(.dark) .file-grid-scroll::-webkit-scrollbar-thumb {
+    background: #b0b0b0;
+    border-color: #e8e8e8;
+  }
+
+  html:not(.dark) .file-grid-scroll::-webkit-scrollbar-thumb:hover {
+    background: #909090;
+  }
+
+  .file-card {
+    --fold: 28px;
+    --sheet: #232323;
+    --sheet-edge: #323232;
+    --sheet-fold: #1a1a1a;
+    position: relative;
+    width: 100%;
+    height: 272px;
+    overflow: hidden;
+    border: 1px solid var(--sheet-edge);
+    border-radius: 4px 0 4px 4px;
+    background: var(--sheet);
+    color: inherit;
+    text-align: left;
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--fold, 28px)) 0,
+      100% var(--fold, 28px),
+      100% 100%,
+      0 100%
+    );
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .file-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 20;
+    width: var(--fold, 28px);
+    height: var(--fold, 28px);
+    background: linear-gradient(
+      225deg,
+      transparent 49.5%,
+      var(--sheet-fold) 50%
+    );
+    box-shadow: -1px 1px 0 var(--sheet-edge);
+    pointer-events: none;
+  }
+
+  .file-card:hover {
+    --sheet: #282828;
+    --sheet-edge: #3d3d3d;
+    --sheet-fold: #1c1c1c;
+    transform: translateY(-1px);
+  }
+
+  .file-card:has(:focus-visible) {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 4px var(--ring);
+  }
+
+  html:not(.dark) .file-card {
+    --sheet: #f4f4f4;
+    --sheet-edge: #d4d4d4;
+    --sheet-fold: #e8e8e8;
+  }
+
+  html:not(.dark) .file-card:hover {
+    --sheet: #efefef;
+    --sheet-edge: #c4c4c4;
+    --sheet-fold: #e0e0e0;
   }
 }

@@ -1,13 +1,14 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
+import tailwindcss from "@tailwindcss/vite"
+import path from "path"
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
 
@@ -20,8 +21,9 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     watch: {
-      // 3. tell vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      // 3. tell vite to ignore watching `src-tauri` and test fixtures
+      // (Windows can EBUSY-lock zips under test-rfid and crash the watcher)
+      ignored: ["**/src-tauri/**", "**/test-rfid/**"],
     },
   },
-}));
+}))

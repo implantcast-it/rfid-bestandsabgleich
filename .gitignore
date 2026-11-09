@@ -13,6 +13,10 @@ dist-ssr
 *.local
 target
 
+# Local working notes — keep out of remote for now
+/context/
+/documentation/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -24,3 +28,11 @@ target
 *.sln
 *.sw?
 .tauri
+
+# Local / confidential reference catalogs (never commit real customer data)
+**/catalogs.sqlite
+**/catalogs.sqlite-*
+fixtures/private/
+**/*.confidential.xlsx
+test-rfid/
+
