@@ -273,20 +273,23 @@ impl CatalogDb {
     }
 
     pub fn stats(&self) -> DomainResult<CatalogStats> {
-        let gtin_count: u64 = self
-            .conn
-            .query_row("SELECT COUNT(*) FROM gtin_products", [], |r| r.get(0))
-            .map_err(|e| DomainError::CatalogDb(e.to_string()))?;
-        let debitor_count: u64 = self
-            .conn
-            .query_row("SELECT COUNT(*) FROM debitors", [], |r| r.get(0))
-            .map_err(|e| DomainError::CatalogDb(e.to_string()))?;
+        let gtin_count = self.count_rows("SELECT COUNT(*) FROM gtin_products")?;
+        let debitor_count = self.count_rows("SELECT COUNT(*) FROM debitors")?;
         Ok(CatalogStats {
             gtin_count,
             debitor_count,
             last_import_filename: self.get_meta("last_import_filename")?,
             last_import_at: self.get_meta("last_import_at")?,
         })
+    }
+
+    /// `COUNT(*)` as `u64`. Read as `i64` because rusqlite has no `FromSql` for `u64`.
+    fn count_rows(&self, sql: &str) -> DomainResult<u64> {
+        let count: i64 = self
+            .conn
+            .query_row(sql, [], |row| row.get(0))
+            .map_err(|e| DomainError::CatalogDb(e.to_string()))?;
+        u64::try_from(count).map_err(|e| DomainError::CatalogDb(e.to_string()))
     }
 
     /// Bulk-insert GTIN rows; updates `stats` counters.
