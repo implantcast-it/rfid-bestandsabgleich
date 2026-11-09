@@ -160,8 +160,6 @@
     #v(4mm)
     #text(size: 9pt, weight: "bold", fill: brand-dark)[Offene Posten]
     #v(0.6mm)
-    #text(size: 7pt, fill: muted)[Bestellt, aber nicht im Bestand vorhanden. Nicht in SOLL, IST oder Abweichung enthalten.]
-    #v(1.5mm)
   ]
   #block(width: 75%)[
     #table(
