@@ -9,18 +9,23 @@ import {
   type ProjectMeta,
 } from "@/domains/projects"
 
+const isInventurjahr = (inventurDate: string, inventurjahr: string) =>
+  inventurDate.startsWith(inventurjahr)
+
 export const useHomeProjects = (inventurjahr: string) => {
   const [projects, setProjects] = useState<ProjectMeta[]>([])
 
+  const yearProjects = useMemo(
+    () => projects.filter((p) => isInventurjahr(p.inventur_date, inventurjahr)),
+    [projects, inventurjahr]
+  )
+
   const inventurFiles: InventurFile[] = useMemo(
-    () => projects.map(projectMetaToInventurFile),
-    [projects]
+    () => yearProjects.map(projectMetaToInventurFile),
+    [yearProjects]
   )
 
   const insightCounts = useMemo(() => {
-    const yearProjects = projects.filter((p) =>
-      p.inventur_date.startsWith(inventurjahr)
-    )
     const offene = yearProjects.filter((p) => p.status === "open").length
     const stichproben = yearProjects.reduce((sum, project) => {
       const done = Number(project.stichproben_done)
@@ -34,7 +39,7 @@ export const useHomeProjects = (inventurjahr: string) => {
       offene,
       stichproben,
     }
-  }, [projects, inventurjahr])
+  }, [yearProjects])
 
   const refreshProjects = useCallback(async () => {
     try {

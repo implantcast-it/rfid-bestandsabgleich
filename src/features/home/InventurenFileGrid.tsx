@@ -39,10 +39,11 @@ const InventurenFileGrid = ({
 
   const visible = useMemo(() => {
     return files.filter((file) => {
+      if (!file.inventurDate.startsWith(inventurjahr)) return false
       if (filter !== "all" && file.status !== filter) return false
       return matchesInventurSearch(file, searchQuery)
     })
-  }, [filter, files, searchQuery])
+  }, [filter, files, inventurjahr, searchQuery])
 
   const handleFilterClick = (value: string) => {
     setFilter(value)
@@ -106,9 +107,14 @@ const InventurenFileGrid = ({
     })
   }
 
+  const yearFiles = useMemo(
+    () => files.filter((file) => file.inventurDate.startsWith(inventurjahr)),
+    [files, inventurjahr]
+  )
+
   const emptyMessage =
-    files.length === 0
-      ? "Noch keine Inventuren. Starte einen Abgleich oder lies eine bestehende Datei ein."
+    yearFiles.length === 0
+      ? `Noch keine Inventuren für ${inventurjahr}. Starte einen Abgleich oder lies eine bestehende Datei ein.`
       : "Keine Inventuren gefunden."
 
   return (
