@@ -202,17 +202,7 @@ export const EditorWorkspace = ({
     if (!assertStichprobenGate("Excel-Export")) return
     const live = buildLiveSnapshot()
     await flushDraft({ silent: true })
-    await handleSnapshotExcelDownload(
-      live,
-      {
-        lotIdRows: lotIdData,
-        artNrRows: artNrData,
-        erpRows,
-        rfidRows,
-        offenePostenRows,
-      },
-      setToastInfo
-    )
+    await handleSnapshotExcelDownload(live, setToastInfo)
     try {
       await updateInventurStatus(projectId, "exported")
       setProjectStatus("exported")

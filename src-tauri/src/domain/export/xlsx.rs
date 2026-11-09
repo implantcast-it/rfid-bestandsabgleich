@@ -3,7 +3,7 @@
 //! Sheet names match v4 for Logistik parity (ERP / RFID / ArtNr / LotId).
 //! Sheets are always registered (no silent drop). No barcode sheets.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use rust_xlsxwriter::{Workbook, XlsxError};
 
@@ -15,22 +15,37 @@ use crate::domain::types::{
 
 /// Write a scratch Abgleich workbook to `path`.
 pub fn write_abgleich_xlsx(result: &CompareResult, path: &Path) -> DomainResult<()> {
-    let mut workbook = Workbook::new();
-
-    write_ax_bestand(&mut workbook, &result.ax_bestand).map_err(|e| export_err(path, e))?;
-    write_rfid_scan(&mut workbook, &result.rfid_scan).map_err(|e| export_err(path, e))?;
-    write_art_nr(&mut workbook, &result.bestandsabgleich_artikelnummer)
-        .map_err(|e| export_err(path, e))?;
-    write_lot_id(&mut workbook, &result.bestandsabgleich_lot_id).map_err(|e| export_err(path, e))?;
-    write_offene_posten(&mut workbook, &result.offene_posten).map_err(|e| export_err(path, e))?;
-
+    let mut workbook = build_workbook(result).map_err(|e| export_err(path, e))?;
     workbook.save(path).map_err(|e| export_err(path, e))?;
     Ok(())
+}
+
+/// Build the same workbook as [`write_abgleich_xlsx`] and return raw `.xlsx` bytes.
+pub fn write_abgleich_xlsx_bytes(result: &CompareResult) -> DomainResult<Vec<u8>> {
+    let mut workbook = build_workbook(result).map_err(|e| export_err_memory(e))?;
+    workbook.save_to_buffer().map_err(export_err_memory)
+}
+
+fn build_workbook(result: &CompareResult) -> Result<Workbook, XlsxError> {
+    let mut workbook = Workbook::new();
+    write_ax_bestand(&mut workbook, &result.ax_bestand)?;
+    write_rfid_scan(&mut workbook, &result.rfid_scan)?;
+    write_art_nr(&mut workbook, &result.bestandsabgleich_artikelnummer)?;
+    write_lot_id(&mut workbook, &result.bestandsabgleich_lot_id)?;
+    write_offene_posten(&mut workbook, &result.offene_posten)?;
+    Ok(workbook)
 }
 
 fn export_err(path: &Path, err: XlsxError) -> DomainError {
     DomainError::Export {
         path: path.to_path_buf(),
+        message: err.to_string(),
+    }
+}
+
+fn export_err_memory(err: XlsxError) -> DomainError {
+    DomainError::Export {
+        path: PathBuf::from("<memory>"),
         message: err.to_string(),
     }
 }

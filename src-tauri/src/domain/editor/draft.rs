@@ -30,7 +30,7 @@ use crate::domain::editor::types::{
     EditorSnapshot, EditorStats, LotIdEditField, LotIdPatch,
 };
 use crate::domain::error::DomainResult;
-use crate::domain::export::write_abgleich_xlsx;
+use crate::domain::export::{write_abgleich_xlsx, write_abgleich_xlsx_bytes};
 use crate::domain::types::{
     ArtNrCompareRow, CompareResult, ErpRow, LotIdCompareRow, OffenePostenRow, RfidRow,
 };
@@ -67,6 +67,24 @@ impl InventurDraft {
             edited_ids: HashSet::new(),
             dirty: false,
         }
+    }
+
+    /// Resume a draft from a UI / project [`EditorSnapshot`].
+    ///
+    /// Snapshot ArtNr rows are ignored; export re-aggregates from LotId.
+    pub fn from_snapshot(snapshot: EditorSnapshot) -> Self {
+        let mut draft = Self::from_compare(CompareResult {
+            debitor: snapshot.debitor,
+            kundenname: snapshot.kundenname,
+            ax_bestand: snapshot.ax_bestand,
+            rfid_scan: snapshot.rfid_scan,
+            bestandsabgleich_artikelnummer: snapshot.art_nr_rows,
+            bestandsabgleich_lot_id: snapshot.lot_id_rows,
+            offene_posten: snapshot.offene_posten,
+        });
+        draft.edited_ids = snapshot.edited_ids.into_iter().collect();
+        draft.dirty = snapshot.dirty;
+        draft
     }
 
     pub fn lot_id_rows(&self) -> &[LotIdCompareRow] {
@@ -275,6 +293,11 @@ impl InventurDraft {
     /// Rebuild ArtNr from lots and write the scratch Abgleich workbook.
     pub fn write_xlsx(&self, path: &Path) -> DomainResult<()> {
         write_abgleich_xlsx(&self.to_export_result(), path)
+    }
+
+    /// Same workbook as [`Self::write_xlsx`], as raw `.xlsx` bytes for the UI save dialog.
+    pub fn write_xlsx_bytes(&self) -> DomainResult<Vec<u8>> {
+        write_abgleich_xlsx_bytes(&self.to_export_result())
     }
 }
 

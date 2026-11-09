@@ -47,7 +47,7 @@ const asIndex = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0
 }
 
-/** Map SheetJS / editor LotId rows to the Rust PDF DTO. */
+/** Map editor LotId grid rows to the Rust PDF DTO. */
 const mapSheetRowsToPdfLots = (rows: SheetLotRow[]): LotIdPdfRow[] =>
   rows.map((row) => ({
     artikelnummer: asString(row.Artikelnummer),

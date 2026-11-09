@@ -130,13 +130,3 @@ export type ArtNrAggregateRow = {
 }
 
 export type ArtNrGridRow = Record<string, unknown>
-
-/** Excel header order for the "Offene Posten" sheet (matches the Rust writer). */
-export const OFFENE_POSTEN_EXCEL_HEADERS = [
-  "Artikelnummer",
-  "Produktname",
-  "LotId",
-  "Ablaufdatum",
-  "Offen",
-  "id",
-]

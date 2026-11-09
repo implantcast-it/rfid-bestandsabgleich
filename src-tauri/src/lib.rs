@@ -13,7 +13,7 @@ pub use domain::{
         AutoKommentareResult, AutoSiebeResult, EditorSnapshot, EditorStats, InventurDraft,
         LotIdEditField, LotIdPatch,
     },
-    export::write_abgleich_xlsx,
+    export::{write_abgleich_xlsx, write_abgleich_xlsx_bytes},
     gtin::{load_gtin_catalog, GtinCatalog},
     parse::{load_abgleich_xlsx, parse_erp, parse_rfid, ErpImport},
     pdf::{render_abgleich_pdf, render_bestaetigung_pdf, PdfExportInput, PdfTotals},

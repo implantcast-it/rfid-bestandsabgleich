@@ -1,4 +1,3 @@
-export { downloadFile } from "@/domains/export/download"
 export {
   handleSnapshotExcelDownload,
   handleSnapshotPdfDownload,

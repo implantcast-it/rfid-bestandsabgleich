@@ -33,10 +33,6 @@ export const lotIdRowsForGrid = (rows: LotIdCompareRow[]): LotIdGridRow[] =>
     ablaufdatumTimestamp: toAblaufdatumTimestamp(row.ablaufdatum),
   }))
 
-/** Excel rows for the LotId sheet: view-only keys are removed, all other keys stay as before. */
-export const lotIdGridRowsForExport = (rows: LotIdGridRow[]) =>
-  rows.map(({ searchText, ablaufdatumTimestamp, ...exportRow }) => exportRow)
-
 /** Map ERP DTOs to German column keys. */
 export const erpRowsForGrid = (rows: ErpRow[]) =>
   rows.map((row) => ({

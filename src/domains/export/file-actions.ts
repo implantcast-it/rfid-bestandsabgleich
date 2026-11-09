@@ -1,14 +1,8 @@
-import { utils, WorkBook, write } from "xlsx"
+import { invoke } from "@tauri-apps/api/core"
 import { save } from "@tauri-apps/plugin-dialog"
 import { writeFile } from "@tauri-apps/plugin-fs"
-import { downloadFile } from "@/domains/export/download"
 import { exportAbgleichPdfFromRows } from "@/domains/pdf"
-import {
-  OFFENE_POSTEN_EXCEL_HEADERS,
-  lotIdGridRowsForExport,
-  type EditorSnapshot,
-  type LotIdGridRow,
-} from "@/domains/inventur"
+import type { EditorSnapshot } from "@/domains/inventur"
 
 type ToastInfo = {
   open: boolean
@@ -19,42 +13,71 @@ type ToastInfo = {
 
 type SetToastInfo = (info: ToastInfo | null) => void
 
-const handleExcelDownload = async (
-  results: { debitor: unknown; masterData: WorkBook },
-  setToastInfo: SetToastInfo
-) => {
-  if (!results) return
+type ExcelExportResult = {
+  success: boolean
+  filePath?: string
+  error?: Error
+  cancelled?: boolean
+}
+
+const saveAbgleichXlsxBytes = async (
+  snapshot: EditorSnapshot
+): Promise<ExcelExportResult> => {
+  const xlsxBytes = await invoke<number[]>("export_abgleich_xlsx", { snapshot })
+  const binary = new Uint8Array(xlsxBytes)
 
   const suggestedFilename = `[${
-    results.debitor
+    snapshot.debitor
   }] Bestandsabgleich ${new Date().toLocaleDateString("de-DE")}.xlsx`
 
-  try {
-    const filePath = await save({
-      title: "Excel-Vergleich speichern",
-      defaultPath: suggestedFilename,
-      filters: [
-        {
-          name: "Excel-Arbeitsmappe",
-          extensions: ["xlsx"],
-        },
-      ],
-    })
+  const filePath = await save({
+    title: "Excel-Vergleich speichern",
+    defaultPath: suggestedFilename,
+    filters: [
+      {
+        name: "Excel-Arbeitsmappe",
+        extensions: ["xlsx"],
+      },
+    ],
+  })
 
-    if (filePath === null) {
+  if (!filePath) {
+    return { success: false, cancelled: true }
+  }
+
+  await writeFile(filePath, binary)
+  return { success: true, filePath }
+}
+
+/** Excel export via Rust rust_xlsxwriter (same schema as Abgleich einlesen). */
+export const handleSnapshotExcelDownload = async (
+  snapshot: EditorSnapshot,
+  setToastInfo: SetToastInfo
+) => {
+  try {
+    const result = await saveAbgleichXlsxBytes(snapshot)
+
+    if (result.success) {
+      setToastInfo({
+        open: true,
+        type: "success",
+        title: "Speichern erfolgreich",
+        description: `Datei wurde gespeichert: ${result.filePath?.split(/[\\/]/).pop()}`,
+      })
       return
     }
 
-    const wb = downloadFile(results.masterData)
-    const binaryData = write(wb, { bookType: "xlsx", type: "array" })
-    await writeFile(filePath, binaryData)
+    if (result.cancelled) return
 
-    setToastInfo({
-      open: true,
-      type: "success",
-      title: "Speichern erfolgreich",
-      description: `Datei wurde gespeichert: ${filePath.split(/[\\/]/).pop()}`,
-    })
+    if (result.error) {
+      setToastInfo({
+        open: true,
+        type: "error",
+        title: "Speichern fehlgeschlagen",
+        description:
+          result.error.message || "Die Datei konnte nicht geschrieben werden.",
+      })
+    }
   } catch (err: unknown) {
     console.error("Fehler beim Speichern der Excel-Datei:", err)
     setToastInfo({
@@ -65,52 +88,6 @@ const handleExcelDownload = async (
         (err as Error).message || "Die Datei konnte nicht geschrieben werden.",
     })
   }
-}
-
-/** Editor grid rows, one entry per Excel sheet. */
-type AbgleichSheets = {
-  lotIdRows: LotIdGridRow[]
-  artNrRows: Record<string, unknown>[]
-  erpRows: Record<string, unknown>[]
-  rfidRows: Record<string, unknown>[]
-  offenePostenRows: Record<string, unknown>[]
-}
-
-/** Build a SheetJS workbook from editable editor grids (Excel download). */
-const buildAbgleichWorkbook = (args: AbgleichSheets): WorkBook => {
-  const wb = utils.book_new()
-  utils.book_append_sheet(
-    wb,
-    utils.json_to_sheet(lotIdGridRowsForExport(args.lotIdRows)),
-    "Bestandsabgleich LotId"
-  )
-  utils.book_append_sheet(
-    wb,
-    utils.json_to_sheet(args.artNrRows),
-    "Bestandsabgleich Artikelnummer"
-  )
-  utils.book_append_sheet(wb, utils.json_to_sheet(args.erpRows), "Ax-Bestand")
-  utils.book_append_sheet(wb, utils.json_to_sheet(args.rfidRows), "RFID-Scan")
-  utils.book_append_sheet(
-    wb,
-    utils.json_to_sheet(args.offenePostenRows, {
-      header: OFFENE_POSTEN_EXCEL_HEADERS,
-    }),
-    "Offene Posten"
-  )
-  return wb
-}
-
-export const handleSnapshotExcelDownload = async (
-  snapshot: EditorSnapshot,
-  sheets: AbgleichSheets,
-  setToastInfo: SetToastInfo
-) => {
-  const masterData = buildAbgleichWorkbook(sheets)
-  await handleExcelDownload(
-    { debitor: snapshot.debitor, masterData },
-    setToastInfo
-  )
 }
 
 export const handleSnapshotPdfDownload = async (

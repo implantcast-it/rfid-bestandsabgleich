@@ -2,4 +2,4 @@
 
 mod xlsx;
 
-pub use xlsx::write_abgleich_xlsx;
+pub use xlsx::{write_abgleich_xlsx, write_abgleich_xlsx_bytes};

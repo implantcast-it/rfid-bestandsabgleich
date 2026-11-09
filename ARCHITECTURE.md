@@ -44,7 +44,7 @@ src/
 │   ├── projects/            # Project library IPC + InventurFile
 │   ├── catalog/             # Reference catalog IPC
 │   ├── pdf/                 # PDF export adapters
-│   └── export/              # Excel download / SheetJS helpers
+│   └── export/              # Excel/PDF download adapters (Rust bytes + save dialog)
 └── core/
     ├── ui/                  # shadcn/Base UI + data-table/*
     ├── utils/               # cn, ablaufdatum

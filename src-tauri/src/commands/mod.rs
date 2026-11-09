@@ -1,6 +1,7 @@
-//! Tauri commands exposing catalog, inventur compare, PDF, and projects to the React UI.
+//! Tauri commands exposing catalog, inventur compare, export, PDF, and projects to the React UI.
 
 mod catalog;
+mod export;
 mod inventur;
 mod pdf;
 mod projects;
@@ -18,6 +19,9 @@ pub use catalog::{
     __cmd__catalog_ready, __cmd__get_catalog_stats, __cmd__import_reference_catalog,
     __cmd__search_debitors, __tauri_command_name_catalog_ready, __tauri_command_name_get_catalog_stats,
     __tauri_command_name_import_reference_catalog, __tauri_command_name_search_debitors,
+};
+pub use export::{
+    export_abgleich_xlsx, __cmd__export_abgleich_xlsx, __tauri_command_name_export_abgleich_xlsx,
 };
 pub use inventur::{
     load_abgleich, run_inventur, __cmd__load_abgleich, __cmd__run_inventur,

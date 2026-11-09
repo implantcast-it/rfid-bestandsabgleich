@@ -14,6 +14,7 @@ fn main() {
             rfid_bestandsabgleich::commands::search_debitors,
             rfid_bestandsabgleich::commands::run_inventur,
             rfid_bestandsabgleich::commands::load_abgleich,
+            rfid_bestandsabgleich::commands::export_abgleich_xlsx,
             rfid_bestandsabgleich::commands::export_abgleich_pdf,
             rfid_bestandsabgleich::commands::export_bestaetigung_pdf,
             rfid_bestandsabgleich::commands::create_inventur_project,

@@ -1,7 +1,7 @@
 {
   "name": "rfid-bestandsabgleich",
   "private": true,
-  "version": "4.1.3",
+  "version": "5.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -31,8 +31,7 @@
     "sonner": "^2.0.8",
     "tailwindcss": "^4.3.4",
     "tw-animate-css": "^1.4.0",
-    "wouter": "^3.13.0",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+    "wouter": "^3.13.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.12.4",

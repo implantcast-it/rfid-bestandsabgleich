@@ -12,7 +12,6 @@ export type {
   OffenePostenRow,
   RfidRow,
 } from "@/domains/inventur/types"
-export { OFFENE_POSTEN_EXCEL_HEADERS } from "@/domains/inventur/types"
 
 export {
   artNrAggregateRowsFromLotId,
@@ -30,7 +29,6 @@ export type {
 export { loadAbgleichFromDialog, runInventur } from "@/domains/inventur/invoke"
 export {
   erpRowsForGrid,
-  lotIdGridRowsForExport,
   lotIdRowsForGrid,
   offenePostenRowsForGrid,
   rfidRowsForGrid,
