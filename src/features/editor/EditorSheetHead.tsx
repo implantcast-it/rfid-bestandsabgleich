@@ -62,7 +62,7 @@ const EditorSheetHead = ({
             variant="secondary"
             className="h-7 rounded-none px-2.5 text-sm"
             onClick={onAutoCheck}
-            aria-label="Auto SIEB/INST und Offene Posten"
+            aria-label="Auto SIEB/INST"
           >
             <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />
             <span className="max-w-[160px] truncate">Auto SIEB/INST</span>

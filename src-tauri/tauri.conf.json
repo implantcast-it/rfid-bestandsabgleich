@@ -45,7 +45,7 @@
         "transparent": false,
         "backgroundColor": [18, 18, 18, 255],
         "useHttpsScheme": true,
-        "dragDropEnabled": true
+        "dragDropEnabled": false
       }
     ],
     "security": {

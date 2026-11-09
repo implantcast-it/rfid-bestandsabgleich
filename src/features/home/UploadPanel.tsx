@@ -1,10 +1,10 @@
-import { HugeiconsIcon } from "@hugeicons/react"
+﻿import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Alert02Icon,
   FileUploadIcon,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/core/ui/button"
-import DropSlot from "@/features/home/DropSlot"
+import FilePickSlot from "@/features/home/FilePickSlot"
 import ProcessPanel from "@/features/home/ProcessPanel"
 import type { CatalogReady } from "@/domains/catalog"
 import { catalogGateMessage } from "@/domains/catalog"
@@ -157,7 +157,7 @@ const UploadPanel = ({
       )}
 
       <div className="grid gap-2.5 sm:grid-cols-2">
-        <DropSlot
+        <FilePickSlot
           title="ERP-Bestand"
           acceptLabel="Excel"
           description=".xlsx / .xls"
@@ -165,7 +165,7 @@ const UploadPanel = ({
           filePath={erpPath ?? undefined}
           onSelect={onErpSelect}
         />
-        <DropSlot
+        <FilePickSlot
           title="RFID-Scan"
           acceptLabel="Text"
           description=".txt"

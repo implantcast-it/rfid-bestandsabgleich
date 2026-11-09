@@ -1,7 +1,7 @@
 import { open } from "@tauri-apps/plugin-dialog"
 import { cn } from "@/core/utils"
 
-type DropSlotProps = {
+type FilePickSlotProps = {
   title: string
   acceptLabel: string
   description: string
@@ -16,7 +16,7 @@ const fileName = (path?: string) => {
   return path.replace(/^.*[\\/]/, "")
 }
 
-const DropSlot = ({
+const FilePickSlot = ({
   title,
   acceptLabel,
   description,
@@ -24,7 +24,7 @@ const DropSlot = ({
   filePath,
   required = true,
   onSelect,
-}: DropSlotProps) => {
+}: FilePickSlotProps) => {
   const name = fileName(filePath)
   const ready = Boolean(name)
 
@@ -54,7 +54,6 @@ const DropSlot = ({
       type="button"
       onClick={() => void handlePick()}
       onKeyDown={handleKeyDown}
-      data-dropzone-id={title}
       className={cn(
         "focus-visible:ring-ring grid min-h-24 grid-rows-[auto_1fr_auto] gap-2 border-[1.5px] border-dashed p-3 text-left transition outline-none focus-visible:ring-2",
         ready
@@ -114,4 +113,4 @@ const DropSlot = ({
   )
 }
 
-export default DropSlot
+export default FilePickSlot

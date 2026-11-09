@@ -24,7 +24,6 @@ export const ANMERKUNG_OPTIONS = [
   "Klinik bestellt",
   "Mitnahme",
   "nicht scanbar / Lot korrekt",
-  "offener Posten",
 ]
 
 export const STICHPROBE_OPTIONS = ["", "X"]
