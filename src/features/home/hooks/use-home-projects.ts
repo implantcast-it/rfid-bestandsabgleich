@@ -12,12 +12,12 @@ import {
 const isInventurjahr = (inventurDate: string, inventurjahr: string) =>
   inventurDate.startsWith(inventurjahr)
 
-/** Current year, previous year, and every year that already has inventuren. */
+/** Years that already have inventuren, newest first. */
 export const buildInventurjahrOptions = (
   inventurDates: string[],
   currentYear = new Date().getFullYear()
 ): string[] => {
-  const years = new Set<number>([currentYear, currentYear - 1])
+  const years = new Set<number>()
   for (const date of inventurDates) {
     const year = Number(date.slice(0, 4))
     if (!Number.isFinite(year)) continue

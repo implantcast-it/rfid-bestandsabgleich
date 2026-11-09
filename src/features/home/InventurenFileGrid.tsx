@@ -48,11 +48,10 @@ const InventurenFileGrid = ({
   const [pendingRename, setPendingRename] = useState<InventurFile | null>(null)
   const [pendingDelete, setPendingDelete] = useState<InventurFile | null>(null)
 
-  const years = useMemo(() => {
-    const options = yearOptions?.length ? [...yearOptions] : [inventurjahr]
-    if (!options.includes(inventurjahr)) options.unshift(inventurjahr)
-    return options
-  }, [inventurjahr, yearOptions])
+  const years = useMemo(
+    () => (yearOptions?.length ? [...yearOptions] : []),
+    [yearOptions]
+  )
 
   const handleInventurjahrChange = (value: string | null) => {
     if (!value || value === inventurjahr) return
@@ -152,26 +151,30 @@ const InventurenFileGrid = ({
           >
             Inventuren
           </h2>
-          <Select
-            value={inventurjahr}
-            onValueChange={handleInventurjahrChange}
-          >
-            <SelectTrigger
-              size="sm"
-              className="h-7 rounded-none px-2 text-[12px] font-semibold"
-              aria-label="Inventurjahr wählen"
-              aria-controls="fileGrid"
+          {years.length > 0 && (
+            <Select
+              value={
+                years.includes(inventurjahr) ? inventurjahr : years[0]
+              }
+              onValueChange={handleInventurjahrChange}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="start">
-              {years.map((year) => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                size="sm"
+                className="h-7 rounded-none px-2 text-[12px] font-semibold"
+                aria-label="Inventurjahr wählen"
+                aria-controls="fileGrid"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="start">
+                {years.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="text-muted-foreground text-xs font-medium">

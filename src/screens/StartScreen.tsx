@@ -65,6 +65,12 @@ const StartScreen = () => {
     void refreshProjects()
   }, [refreshCatalogReady, refreshProjects])
 
+  useEffect(() => {
+    if (availableYears.length === 0) return
+    if (availableYears.includes(inventurjahr)) return
+    setInventurjahr(availableYears[0])
+  }, [availableYears, inventurjahr])
+
   return (
     <div className="text-foreground relative flex h-svh min-w-0 flex-col overflow-hidden">
       <HomeTopbar
