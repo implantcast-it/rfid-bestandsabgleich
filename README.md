@@ -1,4 +1,4 @@
-# RFID-Applikation – Bestandsabgleich v4.1.3
+# RFID-Applikation – Bestandsabgleich v5.0.0
 
 Um eine händische Inventur beim Kunden effizienter zu gestalten, wurde eine RFID-unterstützte Inventur eingeführt. Diese soll den händischen und zeitintensiven Prozess ablösen.
 Dafür wurde eine Software für implantcast entwickelt, welche die erfassten Daten des RFID-Geräts mit unserem Bestand abgleicht.
@@ -34,38 +34,35 @@ Das Programm wurde mit folgenden Tools & Frameworks geschrieben:
 
 ```text
 rfid-bestandsabgleich/
-├── src/                    # Frontend (React, TypeScript)
-│   ├── main.tsx            # Routen (wouter) und Theme-Provider
-│   ├── screens/            # Seiten: StartScreen (Inventur) und EditorScreen (Abgleich)
-│   ├── components/
-│   │   ├── home/           # Bausteine der Startseite
-│   │   ├── editor/         # Bausteine des Editors, inkl. tables/ (Tabellen)
-│   │   ├── layout/         # App-Topbar
-│   │   ├── feedback/       # Fehler- und Erfolgsmeldungen, Updater-Dialog
-│   │   └── ui/             # Basis-Komponenten (shadcn / Base UI)
-│   ├── context/            # React-Context (Theme)
-│   └── lib/                # Logik ohne eigene Komponenten: Tauri-Aufrufe, Excel/PDF, Suche
-├── src-tauri/              # Backend (Tauri v2, Rust)
+├── src/                         # Frontend (React, TypeScript)
+│   ├── main.tsx                 # Routen (wouter) und Theme-Provider
+│   ├── screens/                 # Dünne Routen: StartScreen, EditorScreen
+│   ├── features/                # UI + Hooks (home, editor, catalog, shell, feedback)
+│   ├── domains/                 # Pure TS: Types, Tauri-invoke, Mapper (kein React)
+│   └── core/                    # UI-Primitives, Utils, Theme
+├── src-tauri/                   # Backend (Tauri v2, Rust)
 │   ├── src/
-│   │   ├── main.rs         # App-Start und Registrierung der Tauri-Befehle
-│   │   ├── commands.rs     # Tauri-Befehle (Schnittstelle zum Frontend)
-│   │   ├── lib.rs          # Einstieg der Bibliothek
-│   │   └── domain/         # Fachlogik: parse, compare, editor, export, catalog, pdf, projects
-│   ├── assets/             # PDF-Vorlagen (Typst), Schriften, Logo
-│   └── tests/              # Integrationstests
-├── documentation/          # Produkt-, Architektur- und Entwicklerdokumentation (Einstieg: documentation/README.md)
-├── context/                # Notizen für KI-Agenten, kein Produktcode
-├── public/                 # Statische Frontend-Assets (Logo, Favicon)
-└── .github/workflows/      # CI (Rust-Tests) und Release
+│   │   ├── main.rs              # App-Start und Registrierung der Tauri-Befehle
+│   │   ├── commands.rs          # Tauri-Befehle (Schnittstelle zum Frontend)
+│   │   ├── lib.rs               # Einstieg der Bibliothek
+│   │   └── domain/              # Fachlogik: parse, compare, editor, export, catalog, pdf, projects
+│   ├── assets/                  # PDF-Vorlagen (Typst), Schriften, Logo
+│   └── tests/                   # Integrationstests
+├── ARCHITECTURE.md              # Frontend-Schichten und Dependency-Regeln
+├── documentation/               # Produkt-, Architektur- und Entwicklerdokumentation
+├── context/                     # Notizen für KI-Agenten, kein Produktcode
+├── public/                      # Statische Frontend-Assets (Logo, Favicon)
+└── .github/workflows/           # CI (Rust-Tests) und Release
 ```
 
 Konfiguration liegt im Wurzelverzeichnis: `package.json`, `vite.config.ts`, `tsconfig*.json` und `components.json` (shadcn).
 
 Konventionen im Frontend:
 
+- Abhängigkeiten zeigen nach innen: `screens → features → domains/core` (Details: [ARCHITECTURE.md](./ARCHITECTURE.md)).
 - Feature-Komponenten: Dateiname = Komponentenname in PascalCase (z. B. `LotIdTable.tsx`).
-- Basis-Komponenten in `src/components/ui/` folgen den shadcn-Konventionen (Dateinamen in kebab-case).
-- Imports aus `src/` nutzen den Alias `@/`, z. B. `@/lib/utils`.
+- Basis-Komponenten in `src/core/ui/` folgen den shadcn-Konventionen (Dateinamen in kebab-case).
+- Imports aus `src/` nutzen den Alias `@/`, z. B. `@/core/utils`, `@/domains/inventur`.
 
 ## Screenshots
 

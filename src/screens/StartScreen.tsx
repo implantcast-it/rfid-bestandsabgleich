@@ -1,116 +1,34 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useLocation } from "wouter"
 import { getVersion } from "@tauri-apps/api/app"
-import { toast } from "sonner"
-import { UpdaterDialog } from "@/components/feedback/UpdaterDialog"
-import { Toaster } from "@/components/ui/sonner"
-import HomeTopbar from "@/components/home/HomeTopbar"
-import UploadPanel from "@/components/home/UploadPanel"
-import InsightCards from "@/components/home/InsightCards"
-import InventurenFileGrid, {
-  type InventurFile,
-} from "@/components/home/InventurenFileGrid"
-import {
-  catalogGateMessage,
-  formatDebitorSummary,
-  getCatalogReady,
-  searchDebitors,
-  type CatalogReady,
-  type DebitorEntry,
-} from "@/lib/catalog"
-import {
-  loadAbgleichFromDialog,
-  runInventur,
-  type EditorSnapshot,
-  type InventurSessionState,
-} from "@/lib/inventur"
-import type { ProcessPhase } from "@/components/home/ProcessPanel"
-import {
-  createInventurProject,
-  deleteInventurProject,
-  listInventurProjects,
-  loadInventurDraft,
-  projectMetaToInventurFile,
-  updateInventurTitle,
-  type ProjectMeta,
-} from "@/lib/projects"
+import { UpdaterDialog } from "@/features/feedback/UpdaterDialog"
+import { Toaster } from "@/core/ui/sonner"
+import HomeTopbar from "@/features/home/HomeTopbar"
+import UploadPanel from "@/features/home/UploadPanel"
+import InsightCards from "@/features/home/InsightCards"
+import InventurenFileGrid from "@/features/home/InventurenFileGrid"
+import { getCatalogReady, type CatalogReady } from "@/domains/catalog"
+import { useHomeProjects } from "@/features/home/hooks/use-home-projects"
+import { useInventurCompare } from "@/features/home/hooks/use-inventur-compare"
 
 const inventurjahrDefault = () => String(new Date().getFullYear())
 
-const formatDebitorLabel = (
-  snapshot: EditorSnapshot | null,
-  entry: DebitorEntry | null
-) => {
-  if (entry) return formatDebitorSummary(entry)
-  if (!snapshot) return "—"
-  if (snapshot.kundenname && snapshot.kundenname !== snapshot.debitor) {
-    return `${snapshot.debitor} · ${snapshot.kundenname}`
-  }
-  return snapshot.debitor || "—"
-}
-
-const openEditorSession = (
-  setLocation: (to: string, options?: { state?: InventurSessionState }) => void,
-  meta: ProjectMeta,
-  snapshot: EditorSnapshot,
-  inventurjahr: string
-) => {
-  const state: InventurSessionState = {
-    projectId: meta.id,
-    snapshot,
-    projectTitle: meta.title,
-    inventurjahr,
-  }
-  setLocation("/editor", { state })
-}
-
-/* Start Screen for the Application */
 const StartScreen = () => {
   const [appVersion, setAppVersion] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [, setLocation] = useLocation()
-
   const [catalogReady, setCatalogReady] = useState<CatalogReady | null>(null)
   const [erpPath, setErpPath] = useState<string | null>(null)
   const [rfidPath, setRfidPath] = useState<string | null>(null)
   const [inventurjahr] = useState(inventurjahrDefault)
 
-  const [processPhase, setProcessPhase] = useState<ProcessPhase | null>(null)
-  const [processTitle, setProcessTitle] = useState("Abgleich läuft")
-  const [processStatus, setProcessStatus] = useState("")
-  const [processPercent, setProcessPercent] = useState(0)
-  const [progressLabel, setProgressLabel] = useState("Vorbereitung")
-  const [snapshot, setSnapshot] = useState<EditorSnapshot | null>(null)
-  const [pendingProjectId, setPendingProjectId] = useState<string | null>(null)
-  const [debitorEntry, setDebitorEntry] = useState<DebitorEntry | null>(null)
-  const [loadingAbgleich, setLoadingAbgleich] = useState(false)
-  const [projects, setProjects] = useState<ProjectMeta[]>([])
-
-  const inventurFiles: InventurFile[] = useMemo(
-    () => projects.map(projectMetaToInventurFile),
-    [projects]
-  )
-
-  const insightCounts = useMemo(() => {
-    const year = inventurjahr
-    const yearProjects = projects.filter((p) =>
-      p.inventur_date.startsWith(year)
-    )
-    const offene = yearProjects.filter((p) => p.status === "open").length
-    // Remaining samples vs ceil(1% ERP qty) quota across all inventuren
-    const stichproben = yearProjects.reduce((sum, project) => {
-      const done = Number(project.stichproben_done)
-      const required = Number(project.stichproben_required)
-      const completed = Number.isFinite(done) ? done : 0
-      const target = Number.isFinite(required) ? required : 0
-      return sum + Math.max(0, target - completed)
-    }, 0)
-    return {
-      vergleiche: yearProjects.length,
-      offene,
-      stichproben,
-    }
-  }, [projects, inventurjahr])
+  const {
+    inventurFiles,
+    insightCounts,
+    refreshProjects,
+    handleRenameInventur,
+    handleDeleteInventur,
+  } = useHomeProjects(inventurjahr)
 
   const refreshCatalogReady = useCallback(async () => {
     try {
@@ -122,52 +40,14 @@ const StartScreen = () => {
     }
   }, [])
 
-  const refreshProjects = useCallback(async () => {
-    try {
-      const items = await listInventurProjects()
-      setProjects(items)
-    } catch (error) {
-      console.error("Inventuren konnten nicht geladen werden:", error)
-      setProjects([])
-    }
-  }, [])
-
-  const resolveDebitorEntry = useCallback(async (debitorId: string) => {
-    const id = debitorId.trim()
-    if (!id) {
-      setDebitorEntry(null)
-      return null
-    }
-    try {
-      const hits = await searchDebitors(id, 20)
-      const exact =
-        hits.find((row) => row.debitorenkonto.trim() === id) ?? null
-      setDebitorEntry(exact)
-      return exact
-    } catch (error) {
-      console.error("Debitor-Details nicht geladen:", error)
-      setDebitorEntry(null)
-      return null
-    }
-  }, [])
-
-  const createProjectFromSnapshot = useCallback(
-    async (result: EditorSnapshot, entry: DebitorEntry | null) => {
-      const title =
-        entry?.kundenname ||
-        (result.kundenname && result.kundenname !== result.debitor
-          ? result.kundenname
-          : result.debitor) ||
-        "Inventur"
-      return createInventurProject(result, {
-        title,
-        plz: entry?.plz ?? "",
-        ort: entry?.ort ?? "",
-        inventur_date: new Date().toISOString().slice(0, 10),
-      })
-    },
-    []
-  )
+  const compare = useInventurCompare({
+    inventurjahr,
+    catalogReady,
+    erpPath,
+    rfidPath,
+    setLocation,
+    refreshProjects,
+  })
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -183,137 +63,6 @@ const StartScreen = () => {
     void refreshCatalogReady()
     void refreshProjects()
   }, [refreshCatalogReady, refreshProjects])
-
-  const handleStartCompare = async () => {
-    if (!erpPath || !rfidPath) return
-
-    const gate = catalogGateMessage(catalogReady)
-    if (gate) {
-      toast.error("Katalog nicht bereit", { description: gate })
-      return
-    }
-
-    setSnapshot(null)
-    setPendingProjectId(null)
-    setDebitorEntry(null)
-    setProcessPhase("processing")
-    setProcessTitle("Abgleich läuft")
-    setProcessStatus("Dateien werden gelesen und mit dem Katalog abgeglichen…")
-    setProgressLabel("Vergleich")
-    setProcessPercent(35)
-
-    try {
-      setProcessPercent(70)
-      const result = await runInventur(erpPath, rfidPath)
-      const entry = await resolveDebitorEntry(result.debitor)
-      const meta = await createProjectFromSnapshot(result, entry)
-      setSnapshot(result)
-      setPendingProjectId(meta.id)
-      await refreshProjects()
-      setProcessPercent(100)
-      setProgressLabel("Fertig")
-      setProcessTitle("Abgleich abgeschlossen")
-      setProcessStatus(
-        `${result.lot_id_rows.length} LotId-Zeilen · ${result.art_nr_rows.length} Artikel`
-      )
-      setProcessPhase("success")
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error)
-      setProcessTitle("Abgleich fehlgeschlagen")
-      setProcessStatus(message)
-      setProgressLabel("Fehler")
-      setProcessPercent(100)
-      setProcessPhase("error")
-      toast.error("Abgleich fehlgeschlagen", { description: message })
-    }
-  }
-
-  const handleRetry = () => {
-    setProcessPhase(null)
-    setProcessPercent(0)
-    setProcessStatus("")
-    setSnapshot(null)
-    setPendingProjectId(null)
-    setDebitorEntry(null)
-  }
-
-  const handleOpenEditor = () => {
-    if (!snapshot || !pendingProjectId) return
-    const title =
-      debitorEntry?.kundenname ||
-      snapshot.kundenname ||
-      snapshot.debitor ||
-      "Inventur"
-    const state: InventurSessionState = {
-      projectId: pendingProjectId,
-      snapshot,
-      projectTitle: title,
-      inventurjahr,
-    }
-    setLocation("/editor", { state })
-  }
-
-  const handleOpenExisting = async () => {
-    setLoadingAbgleich(true)
-    try {
-      const result = await loadAbgleichFromDialog()
-      if (!result) return
-      const entry = await resolveDebitorEntry(result.debitor)
-      const meta = await createProjectFromSnapshot(result, entry)
-      await refreshProjects()
-      toast.success("Einlesen erfolgreich", {
-        description: "Abgleich geladen — Editor wird geöffnet.",
-      })
-      openEditorSession(setLocation, meta, result, inventurjahr)
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error)
-      toast.error("Einlesen fehlgeschlagen", { description: message })
-    } finally {
-      setLoadingAbgleich(false)
-    }
-  }
-
-  const handleOpenInventur = async (id: string) => {
-    try {
-      const loaded = await loadInventurDraft(id)
-      openEditorSession(
-        setLocation,
-        loaded.meta,
-        loaded.snapshot,
-        inventurjahr
-      )
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error)
-      toast.error("Inventur konnte nicht geöffnet werden", {
-        description: message,
-      })
-    }
-  }
-
-  const handleRenameInventur = async (id: string, title: string) => {
-    try {
-      await updateInventurTitle(id, title)
-      await refreshProjects()
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error)
-      toast.error("Umbenennen fehlgeschlagen", { description: message })
-    }
-  }
-
-  const handleDeleteInventur = async (id: string) => {
-    try {
-      await deleteInventurProject(id)
-      await refreshProjects()
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error)
-      toast.error("Löschen fehlgeschlagen", { description: message })
-    }
-  }
 
   return (
     <div className="text-foreground relative flex h-svh min-w-0 flex-col overflow-hidden">
@@ -332,21 +81,21 @@ const StartScreen = () => {
             rfidPath={rfidPath}
             onErpSelect={setErpPath}
             onRfidSelect={setRfidPath}
-            processPhase={processPhase}
-            processTitle={processTitle}
-            processStatus={processStatus}
-            processPercent={processPercent}
-            progressLabel={progressLabel}
-            debitorLabel={formatDebitorLabel(snapshot, debitorEntry)}
-            loadingAbgleich={loadingAbgleich}
-            onStartCompare={() => void handleStartCompare()}
-            onOpenExisting={() => void handleOpenExisting()}
-            onRetry={handleRetry}
-            onOpenEditor={handleOpenEditor}
+            processPhase={compare.processPhase}
+            processTitle={compare.processTitle}
+            processStatus={compare.processStatus}
+            processPercent={compare.processPercent}
+            progressLabel={compare.progressLabel}
+            debitorLabel={compare.debitorLabel}
+            loadingAbgleich={compare.loadingAbgleich}
+            onStartCompare={() => void compare.handleStartCompare()}
+            onOpenExisting={() => void compare.handleOpenExisting()}
+            onRetry={compare.handleRetry}
+            onOpenEditor={compare.handleOpenEditor}
           />
           <div
             className={
-              processPhase === "processing"
+              compare.processPhase === "processing"
                 ? "pointer-events-none min-w-0 space-y-3 opacity-55 transition-opacity"
                 : "min-w-0 space-y-3"
             }
@@ -362,7 +111,7 @@ const StartScreen = () => {
               files={inventurFiles}
               inventurjahr={inventurjahr}
               searchQuery={searchQuery}
-              onOpenFile={(id) => void handleOpenInventur(id)}
+              onOpenFile={(id) => void compare.handleOpenInventur(id)}
               onRenameFile={(id, title) => void handleRenameInventur(id, title)}
               onDeleteFile={(id) => void handleDeleteInventur(id)}
             />

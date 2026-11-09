@@ -1,12 +1,11 @@
-import "./index.css"
+import "@/index.css"
 
 import { Redirect, Route, Switch } from "wouter"
-
-import EditorScreen from "./screens/EditorScreen"
 import React from "react"
 import ReactDOM from "react-dom/client"
-import StartScreen from "./screens/StartScreen"
-import { ThemeProvider } from "./context/ThemeContext"
+import { ThemeProvider } from "@/core/theme/ThemeContext"
+import EditorScreen from "@/screens/EditorScreen"
+import StartScreen from "@/screens/StartScreen"
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
