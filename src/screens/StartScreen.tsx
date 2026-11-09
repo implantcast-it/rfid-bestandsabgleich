@@ -20,10 +20,11 @@ const StartScreen = () => {
   const [catalogReady, setCatalogReady] = useState<CatalogReady | null>(null)
   const [erpPath, setErpPath] = useState<string | null>(null)
   const [rfidPath, setRfidPath] = useState<string | null>(null)
-  const [inventurjahr] = useState(inventurjahrDefault)
+  const [inventurjahr, setInventurjahr] = useState(inventurjahrDefault)
 
   const {
     inventurFiles,
+    availableYears,
     insightCounts,
     refreshProjects,
     handleRenameInventur,
@@ -111,7 +112,9 @@ const StartScreen = () => {
             <InventurenFileGrid
               files={inventurFiles}
               inventurjahr={inventurjahr}
+              yearOptions={availableYears}
               searchQuery={searchQuery}
+              onInventurjahrChange={setInventurjahr}
               onOpenFile={(id) => void compare.handleOpenInventur(id)}
               onRenameFile={(id, title) => void handleRenameInventur(id, title)}
               onDeleteFile={(id) => void handleDeleteInventur(id)}

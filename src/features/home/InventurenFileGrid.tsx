@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/core/ui/select"
 import { cn } from "@/core/utils"
 import type { InventurFile } from "@/domains/projects"
 import DeleteInventurDialog from "@/features/home/DeleteInventurDialog"
@@ -12,7 +19,9 @@ export type { InventurFile }
 type InventurenFileGridProps = {
   files?: InventurFile[]
   inventurjahr?: string
+  yearOptions?: string[]
   searchQuery: string
+  onInventurjahrChange?: (year: string) => void
   onOpenFile?: (id: string) => void
   onRenameFile?: (id: string, title: string) => void
   onDeleteFile?: (id: string) => void
@@ -28,7 +37,9 @@ const FILTERS = [
 const InventurenFileGrid = ({
   files = [],
   inventurjahr = String(new Date().getFullYear()),
+  yearOptions,
   searchQuery,
+  onInventurjahrChange,
   onOpenFile,
   onRenameFile,
   onDeleteFile,
@@ -36,6 +47,17 @@ const InventurenFileGrid = ({
   const [filter, setFilter] = useState<string>("all")
   const [pendingRename, setPendingRename] = useState<InventurFile | null>(null)
   const [pendingDelete, setPendingDelete] = useState<InventurFile | null>(null)
+
+  const years = useMemo(() => {
+    const options = yearOptions?.length ? [...yearOptions] : [inventurjahr]
+    if (!options.includes(inventurjahr)) options.unshift(inventurjahr)
+    return options
+  }, [inventurjahr, yearOptions])
+
+  const handleInventurjahrChange = (value: string | null) => {
+    if (!value || value === inventurjahr) return
+    onInventurjahrChange?.(value)
+  }
 
   const visible = useMemo(() => {
     return files.filter((file) => {
@@ -123,12 +145,34 @@ const InventurenFileGrid = ({
       aria-labelledby="libraryTitle"
     >
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-        <h2
-          id="libraryTitle"
-          className="text-sm font-bold tracking-[-0.01em]"
-        >
-          Inventuren {inventurjahr}
-        </h2>
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          <h2
+            id="libraryTitle"
+            className="text-sm font-bold tracking-[-0.01em]"
+          >
+            Inventuren
+          </h2>
+          <Select
+            value={inventurjahr}
+            onValueChange={handleInventurjahrChange}
+          >
+            <SelectTrigger
+              size="sm"
+              className="h-7 rounded-none px-2 text-[12px] font-semibold"
+              aria-label="Inventurjahr wählen"
+              aria-controls="fileGrid"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="start">
+              {years.map((year) => (
+                <SelectItem key={year} value={year}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="text-muted-foreground text-xs font-medium">
             {visible.length} Datei{visible.length === 1 ? "" : "en"}

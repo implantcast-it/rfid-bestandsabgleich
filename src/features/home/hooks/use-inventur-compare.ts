@@ -37,6 +37,27 @@ const formatDebitorLabel = (
   return snapshot.debitor || "—"
 }
 
+/** Stamp inventur_date in the selected Inventurjahr (today when that is the current year). */
+const inventurDateForYear = (inventurjahr: string) => {
+  const now = new Date()
+  const currentYear = String(now.getFullYear())
+  if (inventurjahr === currentYear) {
+    return now.toISOString().slice(0, 10)
+  }
+
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const day = String(now.getDate()).padStart(2, "0")
+  const candidate = `${inventurjahr}-${month}-${day}`
+  const parsed = new Date(`${candidate}T12:00:00`)
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    String(parsed.getFullYear()) !== inventurjahr
+  ) {
+    return `${inventurjahr}-01-01`
+  }
+  return candidate
+}
+
 const openEditorSession = (
   setLocation: (to: string, options?: { state?: InventurSessionState }) => void,
   meta: ProjectMeta,
@@ -120,10 +141,10 @@ export const useInventurCompare = ({
         title,
         plz: entry?.plz ?? "",
         ort: entry?.ort ?? "",
-        inventur_date: new Date().toISOString().slice(0, 10),
+        inventur_date: inventurDateForYear(inventurjahr),
       })
     },
-    []
+    [inventurjahr]
   )
 
   const handleStartCompare = async () => {

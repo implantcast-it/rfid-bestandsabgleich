@@ -12,8 +12,29 @@ import {
 const isInventurjahr = (inventurDate: string, inventurjahr: string) =>
   inventurDate.startsWith(inventurjahr)
 
+/** Current year, previous year, and every year that already has inventuren. */
+export const buildInventurjahrOptions = (
+  inventurDates: string[],
+  currentYear = new Date().getFullYear()
+): string[] => {
+  const years = new Set<number>([currentYear, currentYear - 1])
+  for (const date of inventurDates) {
+    const year = Number(date.slice(0, 4))
+    if (!Number.isFinite(year)) continue
+    if (year < 2000 || year > currentYear + 1) continue
+    years.add(year)
+  }
+  return [...years].sort((a, b) => b - a).map(String)
+}
+
 export const useHomeProjects = (inventurjahr: string) => {
   const [projects, setProjects] = useState<ProjectMeta[]>([])
+
+  const availableYears = useMemo(
+    () =>
+      buildInventurjahrOptions(projects.map((project) => project.inventur_date)),
+    [projects]
+  )
 
   const yearProjects = useMemo(
     () => projects.filter((p) => isInventurjahr(p.inventur_date, inventurjahr)),
@@ -82,6 +103,7 @@ export const useHomeProjects = (inventurjahr: string) => {
   return {
     projects,
     inventurFiles,
+    availableYears,
     insightCounts,
     refreshProjects,
     handleRenameInventur,
