@@ -182,11 +182,13 @@ fn write_lot_id(wb: &mut Workbook, rows: &[LotIdCompareRow]) -> Result<(), XlsxE
         sheet.write_string(r, 10, &row.id)?;
         sheet.write_number(r, 11, row.index as f64)?;
     }
-    let table = Table::new()
-        .set_columns(&columns)
-        .set_name("Bestandsabgleich_LotId")
-        .set_style(TableStyle::Light15);
-    sheet.add_table(0, 0, rows.len() as u32, columns.len() as u16 - 1, &table)?;
+    if !rows.is_empty() {
+        let table = Table::new()
+            .set_columns(&columns)
+            .set_name("Bestandsabgleich_LotId")
+            .set_style(TableStyle::Light15);
+        sheet.add_table(0, 0, rows.len() as u32, columns.len() as u16 - 1, &table)?;
+    }
 
     // Formula-based rules recalculate in Excel as TODAY() changes.
     let format_red = Format::new().set_background_color(Color::Theme(5, 3)); // Red
