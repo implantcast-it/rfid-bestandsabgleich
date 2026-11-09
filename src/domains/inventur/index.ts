@@ -12,6 +12,7 @@ export type {
   OffenePostenRow,
   RfidRow,
 } from "@/domains/inventur/types"
+export { OFFENE_POSTEN_EXCEL_HEADERS } from "@/domains/inventur/types"
 
 export {
   artNrAggregateRowsFromLotId,
@@ -28,7 +29,20 @@ export type {
 } from "@/domains/inventur/autofill"
 export { loadAbgleichFromDialog, runInventur } from "@/domains/inventur/invoke"
 export {
+  applyInventurProgress,
+  INITIAL_PIPELINE_STEPS,
+  INVENTUR_STEP_LABELS,
+  markActiveStepFailed,
+} from "@/domains/inventur/progress"
+export type {
+  InventurProgressEvent,
+  InventurProgressKind,
+  InventurStepId,
+  PipelineStepState,
+} from "@/domains/inventur/progress"
+export {
   erpRowsForGrid,
+  lotIdGridRowsForExport,
   lotIdRowsForGrid,
   offenePostenRowsForGrid,
   rfidRowsForGrid,
