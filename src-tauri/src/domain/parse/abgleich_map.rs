@@ -6,7 +6,9 @@ use uuid::Uuid;
 
 use crate::domain::error::DomainResult;
 use crate::domain::normalize::{normalize_gtin, normalize_lot_id};
-use crate::domain::parse::abgleich_cells::{get, parse_i64, parse_u32, presence_flag, require_column};
+use crate::domain::parse::abgleich_cells::{
+    get, parse_i64, parse_u32, presence_flag, require_column,
+};
 use crate::domain::types::{
     sheet_names, ArtNrCompareRow, ErpRow, LotIdCompareRow, OffenePostenRow, RfidRow, UNBEKANNT,
 };
@@ -54,7 +56,12 @@ pub(crate) fn map_lot_id_row(
     require_column(&row, "Artikelnummer", ctx)?;
     require_column(&row, "Produktname", ctx)?;
     require_column(&row, "Kennzeichen 3", ctx)?;
-    require_column(&row, "Eigenbestand nach ERP", ctx)?;
+    let erp_header = if row.contains_key("ERP") {
+        "ERP"
+    } else {
+        "Eigenbestand nach ERP"
+    };
+    require_column(&row, erp_header, ctx)?;
     require_column(&row, "RFID-Scan", ctx)?;
 
     let id = get(&row, "id");
@@ -83,7 +90,7 @@ pub(crate) fn map_lot_id_row(
         produktname: get(&row, "Produktname"),
         kennzeichen_3: get(&row, "Kennzeichen 3"),
         lot_id: normalize_lot_id(&get(&row, "LotId")),
-        erp: presence_flag(&get(&row, "Eigenbestand nach ERP")),
+        erp: presence_flag(&get(&row, erp_header)),
         rfid_scan: presence_flag(&get(&row, "RFID-Scan")),
         ablaufdatum,
         to_do: get(&row, "To Do"),
