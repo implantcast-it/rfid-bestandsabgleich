@@ -8,7 +8,7 @@
 //! | [`auto_kommentare`] / [`auto_siebe`] | Auto-actions (SIEB/INST + paired To Dos) |
 //! | [`vocabulary`] | Controlled To Do / Anmerkung lists |
 //! | [`types`] | Serde DTOs for patches / snapshot / stats |
-//! | [`draft`] | **Session API**: patches, bulk edit, snapshot, export |
+//! | [`draft`] | **Session API** (`draft/`): constructors + views, patches, auto-actions, export |
 //!
 //! LotId rows are the only editable inventur data. ArtNr is always derived.
 //! Auto-Kommentare / Auto-SIEB run via Tauri commands; React keeps live grid state.

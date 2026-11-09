@@ -1,30 +1,5 @@
-import {
-  SetStateAction,
-  useCallback,
-  useDeferredValue,
-  useMemo,
-  useState,
-} from "react"
-import { toast } from "sonner"
-import { useLocation } from "wouter"
-import {
-  handleSnapshotExcelDownload,
-  handleSnapshotPdfDownload,
-} from "@/domains/export"
-import {
-  applyAutoLotIdRows,
-  artNrAggregateRowsFromLotId,
-  autoFillKommentare,
-  autoSiebe,
-  erpRowsForGrid,
-  lotIdGridToCompareRows,
-  lotIdRowsForGrid,
-  offenePostenRowsForGrid,
-  rfidRowsForGrid,
-  type EditorSnapshot,
-  type LotIdGridRow,
-} from "@/domains/inventur"
-import { updateInventurStatus } from "@/domains/projects"
+import { useCallback, useDeferredValue, useState, type SetStateAction } from "react"
+import type { EditorSnapshot, LotIdGridRow } from "@/domains/inventur"
 import type { LotIdStatusFilter } from "@/domains/inventur/search"
 import { Toaster } from "@/core/ui/sonner"
 import AppTopbar from "@/features/shell/AppTopbar"
@@ -32,13 +7,17 @@ import EditorPage from "@/features/editor/EditorPage"
 import EditorRail, {
   defaultEditorNavSections,
 } from "@/features/editor/EditorRail"
-import LotIdStatusChips from "@/features/editor/LotIdStatusChips"
-import MiniStats from "@/features/editor/MiniStats"
+import LotIdStatsHeader from "@/features/editor/LotIdStatsHeader"
 import { EditorTabContent } from "@/features/editor/EditorTabContent"
 import { editorPageConfig } from "@/features/editor/page-config"
+import { useAutoLotIdActions } from "@/features/editor/hooks/use-auto-lotid-actions"
 import { useEditorAutosave } from "@/features/editor/hooks/use-editor-autosave"
 import { useEditorDraft } from "@/features/editor/hooks/use-editor-draft"
+import { useEditorExport } from "@/features/editor/hooks/use-editor-export"
+import { useEditorLifecycle } from "@/features/editor/hooks/use-editor-lifecycle"
+import { useEditorTableData } from "@/features/editor/hooks/use-editor-table-data"
 import { useLotIdStats } from "@/features/editor/hooks/use-lot-id-stats"
+import { useStichprobenGate } from "@/features/editor/hooks/use-stichproben-gate"
 
 type EditorWorkspaceProps = {
   projectId: string
@@ -58,24 +37,16 @@ export const EditorWorkspace = ({
   const [lotIdStatusFilter, setLotIdStatusFilter] =
     useState<LotIdStatusFilter>("all")
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
-  const [exportPending, setExportPending] = useState<"excel" | "pdf" | null>(
-    null
-  )
-  const [, setLocation] = useLocation()
-
-  const [lotIdData, setLotIdData] = useState(() =>
-    lotIdRowsForGrid(snapshot.lot_id_rows)
-  )
   const deferredSearchQuery = useDeferredValue(searchQuery)
-  const artNrData = useMemo(
-    () => artNrAggregateRowsFromLotId(lotIdData),
-    [lotIdData]
-  )
-  const [erpRows] = useState(() => erpRowsForGrid(snapshot.ax_bestand))
-  const [rfidRows] = useState(() => rfidRowsForGrid(snapshot.rfid_scan))
-  const [offenePostenRows] = useState(() =>
-    offenePostenRowsForGrid(snapshot.offene_posten)
-  )
+
+  const {
+    lotIdData,
+    setLotIdData,
+    artNrData,
+    erpRows,
+    rfidRows,
+    offenePostenRows,
+  } = useEditorTableData(snapshot)
 
   const {
     autosaveStatus,
@@ -105,221 +76,52 @@ export const EditorWorkspace = ({
     stichprobenMet,
   } = useLotIdStats(lotIdData, snapshot.ax_bestand)
 
-  const currentPageConfig = editorPageConfig[activeTab] || {
-    title: "Editor",
-    hasHeaderButtons: false,
-  }
-
-  const completedStichproben =
-    activeTab === "lotId" ? stichprobenDone : undefined
-  const requiredStichproben =
-    activeTab === "lotId" ? stichprobenRequired : undefined
-
-  const assertStichprobenGate = (actionLabel: string) => {
-    if (stichprobenMet) return true
-    const remaining = Math.max(0, stichprobenRequired - stichprobenDone)
-    toast.error("Stichproben unvollständig", {
-      description: `${actionLabel} erst möglich nach ${stichprobenRequired} Stichproben (noch ${remaining} offen). Quote: 1 % der ERP-Menge (aufgerundet).`,
-    })
-    return false
-  }
+  const {
+    completedStichproben,
+    requiredStichproben,
+    assertStichprobenGate,
+  } = useStichprobenGate({
+    activeTab,
+    stichprobenDone,
+    stichprobenRequired,
+    stichprobenMet,
+  })
 
   const handleLotIdChange = useCallback(
     (update: SetStateAction<LotIdGridRow[]>) => {
       markDirty()
       setLotIdData(update)
     },
-    [markDirty]
+    [markDirty, setLotIdData]
   )
 
-  const setToastInfo = (
-    info: {
-      open: boolean
-      type: "success" | "error"
-      title: string
-      description: string
-    } | null
-  ) => {
-    if (!info?.open) return
-    if (info.type === "success") {
-      toast.success(info.title, { description: info.description })
-      return
-    }
-    toast.error(info.title, { description: info.description })
-  }
+  const { handleAutoFillKommentare, handleAutoSiebe } = useAutoLotIdActions({
+    lotIdData,
+    onLotIdChange: handleLotIdChange,
+  })
 
-  const handleAutoFillKommentare = useCallback(async () => {
-    try {
-      const result = await autoFillKommentare(lotIdGridToCompareRows(lotIdData))
-      if (result.changed_count <= 0) {
-        setToastInfo({
-          open: true,
-          type: "error",
-          title: "Keine passenden Paare gefunden",
-          description: "Keine passenden Paare zum Kommentieren gefunden.",
-        })
-        return
-      }
-
-      handleLotIdChange((prev) => applyAutoLotIdRows(prev, result.rows))
-      setToastInfo({
-        open: true,
-        type: "success",
-        title: "Kommentare automatisch ausgefüllt",
-        description: `${[...new Set(result.affected_artikelnummern)].length} Artikelnummer(n) automatisch kommentiert.`,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setToastInfo({
-        open: true,
-        type: "error",
-        title: "Auto-Kommentare fehlgeschlagen",
-        description: message,
-      })
-    }
-  }, [lotIdData, handleLotIdChange])
-
-  const handleAutoSiebe = useCallback(async () => {
-    try {
-      const result = await autoSiebe(lotIdGridToCompareRows(lotIdData))
-      if (result.sieb_inst_row_count <= 0) {
-        setToastInfo({
-          open: true,
-          type: "error",
-          title: "Keine Aktionen ausgeführt",
-          description: "Keine Zeilen für 'SIEB' oder 'INST' gefunden.",
-        })
-        return
-      }
-
-      handleLotIdChange((prev) => applyAutoLotIdRows(prev, result.rows))
-      setToastInfo({
-        open: true,
-        type: "success",
-        title: "Aktionen ausgeführt",
-        description: `${result.sieb_inst_row_count} 'SIEB/INST' Zeile(n) aktualisiert.`,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setToastInfo({
-        open: true,
-        type: "error",
-        title: "Auto SIEB/INST fehlgeschlagen",
-        description: message,
-      })
-    }
-  }, [lotIdData, handleLotIdChange])
-
-  const runExport = async (
-    kind: "excel" | "pdf",
-    exportLabel: string,
-    run: (
-      setExportToast: typeof setToastInfo
-    ) => Promise<"success" | "cancelled" | "error">
-  ) => {
-    if (exportPending) return
-    if (!assertStichprobenGate(`${exportLabel}-Export`)) return
-
-    setExportPending(kind)
-    const toastId = `editor-export-${kind}`
-    toast.loading(`${exportLabel}-Export`, {
-      id: toastId,
-      description: "Speicherort wählen, danach wird die Datei erstellt…",
+  const { exportPending, handleDownloadExcel, handleDownloadPdf } =
+    useEditorExport({
+      projectId,
+      lotIdData,
+      buildLiveSnapshot,
+      flushDraft,
+      setProjectStatus,
+      assertStichprobenGate,
     })
 
-    const setExportToast: typeof setToastInfo = (info) => {
-      if (!info?.open) return
-      if (info.type === "success") {
-        toast.success(info.title, {
-          id: toastId,
-          description: info.description,
-        })
-        return
-      }
-      toast.error(info.title, {
-        id: toastId,
-        description: info.description,
-      })
-    }
+  const { handleMarkDone, handleClose } = useEditorLifecycle({
+    projectId,
+    projectStatus,
+    setProjectStatus,
+    clearAutosaveTimer,
+    flushDraft,
+    assertStichprobenGate,
+  })
 
-    try {
-      const outcome = await run(setExportToast)
-      if (outcome === "cancelled") {
-        toast.dismiss(toastId)
-        return
-      }
-      if (outcome !== "success") return
-
-      await flushDraft({ silent: true })
-      try {
-        await updateInventurStatus(projectId, "exported")
-        setProjectStatus("exported")
-      } catch (error) {
-        console.error("Status Exportiert konnte nicht gesetzt werden:", error)
-      }
-    } finally {
-      setExportPending(null)
-    }
-  }
-
-  const handleDownloadExcel = async () => {
-    await runExport("excel", "Excel", async (setExportToast) => {
-      const live = buildLiveSnapshot()
-      return handleSnapshotExcelDownload(live, setExportToast)
-    })
-  }
-
-  const handleDownloadPdf = async () => {
-    await runExport("pdf", "PDF", async (setExportToast) => {
-      const live = buildLiveSnapshot()
-      return handleSnapshotPdfDownload(live, lotIdData, setExportToast)
-    })
-  }
-
-  const handleMarkDone = async () => {
-    if (projectStatus === "done") return
-    if (!assertStichprobenGate("Fertig melden")) return
-    clearAutosaveTimer()
-    const ok = await flushDraft({ silent: true })
-    if (!ok) {
-      toast.error("Fertig melden abgebrochen", {
-        description:
-          "Der Entwurf konnte nicht gespeichert werden. Bitte erneut speichern.",
-      })
-      return
-    }
-    try {
-      await updateInventurStatus(projectId, "done")
-      setProjectStatus("done")
-      toast.success("Inventur fertig", {
-        description: "Status wurde auf Fertig gesetzt.",
-      })
-      setLocation("/")
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : String(error)
-      toast.error("Fertig melden fehlgeschlagen", { description: message })
-    }
-  }
-
-  const handleClose = async () => {
-    clearAutosaveTimer()
-    const ok = await flushDraft({ silent: true })
-    if (!ok) {
-      toast.error("Schließen abgebrochen", {
-        description:
-          "Der Entwurf konnte nicht gespeichert werden. Bitte erneut speichern.",
-      })
-      return
-    }
-    if (projectStatus !== "exported" && projectStatus !== "done") {
-      try {
-        await updateInventurStatus(projectId, "open")
-      } catch (error) {
-        console.error("Status Offen konnte nicht gesetzt werden:", error)
-      }
-    }
-    setLocation("/")
+  const currentPageConfig = editorPageConfig[activeTab] || {
+    title: "Editor",
+    hasHeaderButtons: false,
   }
 
   const displayTitle =
@@ -370,21 +172,16 @@ export const EditorWorkspace = ({
             }
             miniStats={
               activeTab === "lotId" ? (
-                <div className="flex flex-col gap-2">
-                  <MiniStats
-                    abweichungen={lotIdStats.abweichungen}
-                    stichprobe={`${stichprobenDone}/${stichprobenRequired}`}
-                    offeneTodos={lotIdStats.offeneTodos}
-                    autosaveStatus={autosaveStatus}
-                    autosaveCountdown={autosaveCountdown}
-                    activeStatusFilter={lotIdStatusFilter}
-                    onStatusFilterChange={setLotIdStatusFilter}
-                  />
-                  <LotIdStatusChips
-                    value={lotIdStatusFilter}
-                    onChange={setLotIdStatusFilter}
-                  />
-                </div>
+                <LotIdStatsHeader
+                  abweichungen={lotIdStats.abweichungen}
+                  offeneTodos={lotIdStats.offeneTodos}
+                  stichprobenDone={stichprobenDone}
+                  stichprobenRequired={stichprobenRequired}
+                  autosaveStatus={autosaveStatus}
+                  autosaveCountdown={autosaveCountdown}
+                  lotIdStatusFilter={lotIdStatusFilter}
+                  onStatusFilterChange={setLotIdStatusFilter}
+                />
               ) : undefined
             }
           >

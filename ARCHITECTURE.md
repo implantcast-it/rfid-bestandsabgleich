@@ -132,7 +132,7 @@ src-tauri/src/
 ## Domain module notes
 
 - **projects/** — `types` / `paths` / `io` / `store`; barrel re-exports CRUD + DTOs.
-- **editor/** — session API in `draft.rs`; patch validation in `normalize_patch.rs`; `stats` / `types` split out.
+- **editor/** — session API in `draft/` (constructors + views in `mod.rs`, mutations in `patch.rs`, auto-actions in `auto.rs`, export in `export.rs`); patch validation in `normalize_patch.rs`; `stats` / `types` split out.
 - **parse/abgleich** — orchestration vs row mappers vs cell helpers.
 - **catalog/db/** — directory so inherent `impl CatalogDb` can live next to GTIN/Debitor stores.
 - **pdf/** — Typst engine/dict builders separate from `render_*` entrypoints.

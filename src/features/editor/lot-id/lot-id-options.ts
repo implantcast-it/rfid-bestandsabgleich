@@ -35,3 +35,25 @@ export const toSelectOptions = (values: string[], emptyLabel: string) =>
     value,
     label: value || emptyLabel,
   }))
+
+export const RFID_SELECT_OPTIONS = [
+  { value: "0", label: "0" },
+  { value: "1", label: "1" },
+]
+
+export const TODO_SELECT_OPTIONS = toSelectOptions(TODO_OPTIONS, "—")
+export const ANMERKUNG_SELECT_OPTIONS = toSelectOptions(ANMERKUNG_OPTIONS, "—")
+export const STICHPROBE_SELECT_OPTIONS = toSelectOptions(
+  STICHPROBE_OPTIONS,
+  "—"
+)
+export const BULK_TODO_OPTIONS = toSelectOptions(TODO_OPTIONS, "--- Leeren ---")
+export const BULK_ANMERKUNG_OPTIONS = toSelectOptions(
+  ANMERKUNG_OPTIONS,
+  "--- Leeren ---"
+)
+export const BULK_RFID_OPTIONS = [
+  { value: "", label: "--- Auswählen ---" },
+  { value: "0", label: "0" },
+  { value: "1", label: "1" },
+]
