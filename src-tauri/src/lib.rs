@@ -9,7 +9,7 @@ pub mod domain;
 pub use domain::{
     compare::run_compare,
     editor::{
-        aggregate_art_nr_from_lot_id, auto_fill_kommentare, auto_siebe_and_offene_posten,
+        aggregate_art_nr_from_lot_id, auto_fill_kommentare, auto_siebe,
         AutoKommentareResult, AutoSiebeResult, EditorSnapshot, EditorStats, InventurDraft,
         LotIdEditField, LotIdPatch,
     },

@@ -21,95 +21,19 @@
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
-
 use crate::domain::editor::aggregate::aggregate_art_nr_from_lot_id;
 use crate::domain::editor::auto_kommentare::{auto_fill_kommentare, AutoKommentareResult};
-use crate::domain::editor::auto_siebe::{auto_siebe_and_offene_posten, AutoSiebeResult};
-use crate::domain::editor::helpers::{
-    erp_quantity_as_u32, is_present, is_todo_empty, stichproben_required_from_erp_total,
+use crate::domain::editor::auto_siebe::{auto_siebe, AutoSiebeResult};
+use crate::domain::editor::normalize_patch::{invalid_edit, normalize_patch};
+use crate::domain::editor::stats::compute_stats;
+use crate::domain::editor::types::{
+    EditorSnapshot, EditorStats, LotIdEditField, LotIdPatch,
 };
-use crate::domain::editor::vocabulary::{
-    ANMERKUNG_OPTIONS, STICHPROBE_DONE, TODO_OPTIONS,
-};
-use crate::domain::error::{DomainError, DomainResult};
+use crate::domain::error::DomainResult;
 use crate::domain::export::write_abgleich_xlsx;
 use crate::domain::types::{
     ArtNrCompareRow, CompareResult, ErpRow, LotIdCompareRow, OffenePostenRow, RfidRow,
 };
-
-/// Editable LotId columns only (TanStack cell editors map 1:1).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum LotIdEditField {
-    /// Presence flag `"0"` | `"1"`.
-    RfidScan,
-    /// Controlled vocabulary ([`TODO_OPTIONS`](crate::domain::editor::vocabulary::TODO_OPTIONS)).
-    ToDo,
-    /// Controlled vocabulary ([`ANMERKUNG_OPTIONS`](crate::domain::editor::vocabulary::ANMERKUNG_OPTIONS)).
-    Anmerkung,
-    /// `""` | `"X"`.
-    Stichprobe,
-}
-
-/// Partial update for one LotId row, keyed by stable [`LotIdCompareRow::id`].
-///
-/// ERP presence (`eigenbestand_nach_erp`) is intentionally absent — read-only.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
-pub struct LotIdPatch {
-    pub id: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub rfid_scan: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub to_do: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub anmerkung: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub stichprobe: Option<String>,
-}
-
-impl LotIdPatch {
-    fn has_any_field(&self) -> bool {
-        self.rfid_scan.is_some()
-            || self.to_do.is_some()
-            || self.anmerkung.is_some()
-            || self.stichprobe.is_some()
-    }
-}
-
-/// Mini-stats for editor chrome (badges / toasts).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct EditorStats {
-    /// LotId rows where ERP presence ≠ RFID presence.
-    pub abweichungen: u32,
-    /// LotId rows with empty To Do.
-    pub offene_todos: u32,
-    /// Rows with Stichprobe completed (`X`).
-    pub stichproben_done: u32,
-    /// Mandatory quota: ceil(1% of [`Self::erp_quantity_total`]).
-    #[serde(default)]
-    pub stichproben_required: u32,
-    /// Sum of Ax-Bestand ERP quantities (guideline for the 1% rule).
-    #[serde(default)]
-    pub erp_quantity_total: u32,
-}
-
-/// Full UI payload: one JSON object later returned by a Tauri command.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct EditorSnapshot {
-    pub debitor: String,
-    pub kundenname: String,
-    pub lot_id_rows: Vec<LotIdCompareRow>,
-    pub art_nr_rows: Vec<ArtNrCompareRow>,
-    pub ax_bestand: Vec<ErpRow>,
-    pub rfid_scan: Vec<RfidRow>,
-    /// Offene Posten, shown on their own tab. Missing in drafts saved before this field existed.
-    #[serde(default)]
-    pub offene_posten: Vec<OffenePostenRow>,
-    pub dirty: bool,
-    pub edited_ids: Vec<String>,
-    pub stats: EditorStats,
-}
 
 /// Mutable inventur session after compare (or Abgleich reload).
 ///
@@ -196,7 +120,7 @@ impl InventurDraft {
         }
 
         // Validate all first so we don't partially mutate on error.
-        let mut normalized: Vec<(String, NormalizedPatch)> = Vec::with_capacity(patches.len());
+        let mut normalized = Vec::with_capacity(patches.len());
         for patch in patches {
             if patch.id.trim().is_empty() {
                 return Err(invalid_edit("Zeilen-ID fehlt."));
@@ -305,23 +229,23 @@ impl InventurDraft {
         result
     }
 
-    /// Auto-SIEB/INST + Offene Posten; marks changed ids as edited.
+    /// Auto-SIEB/INST; marks changed ids as edited.
     pub fn run_auto_siebe(&mut self) -> AutoSiebeResult {
-        let before: HashMap<String, (String, String)> = self
+        let before: HashMap<String, String> = self
             .lot_id_rows
             .iter()
-            .map(|r| (r.id.clone(), (r.rfid_scan.clone(), r.anmerkung.clone())))
+            .map(|r| (r.id.clone(), r.rfid_scan.clone()))
             .collect();
 
-        let result = auto_siebe_and_offene_posten(&self.lot_id_rows);
+        let result = auto_siebe(&self.lot_id_rows);
         self.lot_id_rows = result.rows.clone();
 
         let mut any = false;
         for row in &self.lot_id_rows {
-            let Some((prev_rfid, prev_anm)) = before.get(&row.id) else {
+            let Some(prev_rfid) = before.get(&row.id) else {
                 continue;
             };
-            if prev_rfid != &row.rfid_scan || prev_anm != &row.anmerkung {
+            if prev_rfid != &row.rfid_scan {
                 self.edited_ids.insert(row.id.clone());
                 any = true;
             }
@@ -354,131 +278,11 @@ impl InventurDraft {
     }
 }
 
-#[derive(Default)]
-struct NormalizedPatch {
-    rfid_scan: Option<String>,
-    to_do: Option<String>,
-    anmerkung: Option<String>,
-    stichprobe: Option<String>,
-}
-
-fn invalid_edit(message: impl Into<String>) -> DomainError {
-    DomainError::InvalidEdit {
-        message: message.into(),
-    }
-}
-
-fn normalize_patch(patch: &LotIdPatch) -> DomainResult<NormalizedPatch> {
-    let mut out = NormalizedPatch::default();
-    if let Some(ref raw) = patch.rfid_scan {
-        out.rfid_scan = Some(normalize_rfid_scan(raw)?);
-    }
-    if let Some(ref raw) = patch.to_do {
-        out.to_do = Some(normalize_todo(raw)?);
-    }
-    if let Some(ref raw) = patch.anmerkung {
-        out.anmerkung = Some(normalize_anmerkung(raw)?);
-    }
-    if let Some(ref raw) = patch.stichprobe {
-        out.stichprobe = Some(normalize_stichprobe(raw)?);
-    }
-    Ok(out)
-}
-
-fn normalize_rfid_scan(raw: &str) -> DomainResult<String> {
-    let trimmed = raw.trim();
-    match trimmed {
-        "0" | "1" => Ok(trimmed.to_string()),
-        // Accept numeric cell editors that stringify without quotes issues
-        _ => {
-            // Also accept "0.0" / "1.0" from loose JS Number→string
-            if let Ok(n) = trimmed.parse::<f64>() {
-                if n == 0.0 {
-                    return Ok("0".into());
-                }
-                if n == 1.0 {
-                    return Ok("1".into());
-                }
-            }
-            Err(invalid_edit(format!(
-                "RFID-Scan muss 0 oder 1 sein (erhalten: '{raw}')."
-            )))
-        }
-    }
-}
-
-fn normalize_todo(raw: &str) -> DomainResult<String> {
-    let trimmed = raw.trim();
-    // Vocab uses exact strings; empty is allowed.
-    if TODO_OPTIONS.contains(&trimmed) {
-        return Ok(trimmed.to_string());
-    }
-    Err(invalid_edit(format!(
-        "Ungültiger To-Do-Wert: '{raw}'."
-    )))
-}
-
-fn normalize_anmerkung(raw: &str) -> DomainResult<String> {
-    let trimmed = raw.trim();
-    if ANMERKUNG_OPTIONS.contains(&trimmed) {
-        return Ok(trimmed.to_string());
-    }
-    Err(invalid_edit(format!(
-        "Ungültiger Anmerkungs-Wert: '{raw}'."
-    )))
-}
-
-fn normalize_stichprobe(raw: &str) -> DomainResult<String> {
-    let trimmed = raw.trim();
-    if trimmed.is_empty() {
-        return Ok(String::new());
-    }
-    if trimmed.eq_ignore_ascii_case(STICHPROBE_DONE) {
-        return Ok(STICHPROBE_DONE.to_string());
-    }
-    Err(invalid_edit(format!(
-        "Stichprobe muss leer oder 'X' sein (erhalten: '{raw}')."
-    )))
-}
-
-fn compute_stats(rows: &[LotIdCompareRow], ax_bestand: &[ErpRow]) -> EditorStats {
-    let mut abweichungen = 0u32;
-    let mut offene_todos = 0u32;
-    let mut stichproben_done = 0u32;
-
-    for row in rows {
-        let erp = is_present(&row.eigenbestand_nach_erp);
-        let rfid = is_present(&row.rfid_scan);
-        if erp != rfid {
-            abweichungen += 1;
-        }
-        if is_todo_empty(&row.to_do) {
-            offene_todos += 1;
-        }
-        if row.stichprobe.trim().eq_ignore_ascii_case(STICHPROBE_DONE) {
-            stichproben_done += 1;
-        }
-    }
-
-    let erp_quantity_total: u32 = ax_bestand
-        .iter()
-        .map(|row| erp_quantity_as_u32(&row.eigenbestand_nach_erp))
-        .fold(0u32, u32::saturating_add);
-    let stichproben_required = stichproben_required_from_erp_total(erp_quantity_total);
-
-    EditorStats {
-        abweichungen,
-        offene_todos,
-        stichproben_done,
-        stichproben_required,
-        erp_quantity_total,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::domain::editor::vocabulary::{TODO_INTERNE_BERECHNUNG, TODO_INTERNE_GUTSCHRIFT};
+    use crate::domain::error::DomainError;
     use crate::domain::parse::load_abgleich_xlsx;
     use pretty_assertions::assert_eq;
     use tempfile::TempDir;
@@ -525,7 +329,6 @@ mod tests {
             lot("100", "L1", "1", "1", "a", 1),
             lot("100", "L2", "1", "0", "b", 2),
         ];
-        // Stale inventur ArtNr that diverges from LotId-derived (e.g. empty-lot ERP row)
         let stale = vec![ArtNrCompareRow {
             artikelnummer: "100".into(),
             produktname: "P-100".into(),
@@ -605,7 +408,6 @@ mod tests {
             ])
             .unwrap_err();
         assert!(matches!(err, DomainError::InvalidEdit { .. }));
-        // First patch must not have been applied
         assert_eq!(draft.lot_id_rows()[0].rfid_scan, "0");
         assert!(!draft.is_dirty());
     }
@@ -754,7 +556,6 @@ mod tests {
         assert_eq!(row.to_do, "NUR berechnen");
         assert_eq!(row.anmerkung, "AWS");
         assert_eq!(row.stichprobe, "X");
-        // Reloaded draft ArtNr matches aggregate of loaded lots
         let reloaded = InventurDraft::from_compare(loaded);
         assert_eq!(reloaded.art_nr_rows()[0].differenz, 0);
     }
@@ -778,8 +579,6 @@ mod tests {
 
     #[test]
     fn erp_flag_cannot_be_changed_via_patch_api() {
-        // Compile-time / API: LotIdPatch has no eigenbestand field.
-        // Runtime: patching only rfid leaves erp untouched.
         let lots = vec![lot("100", "L1", "1", "0", "a", 1)];
         let mut draft = InventurDraft::from_compare(sample_compare(lots, vec![]));
         draft

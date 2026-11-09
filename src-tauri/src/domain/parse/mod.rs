@@ -1,6 +1,8 @@
 //! File parsers for Master / ERP / Abgleich (Excel via calamine) and RFID TXT (`csv`).
 
 mod abgleich;
+mod abgleich_cells;
+mod abgleich_map;
 mod erp;
 pub(crate) mod excel;
 mod master;

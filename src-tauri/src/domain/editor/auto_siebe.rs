@@ -1,58 +1,47 @@
-//! Auto-SIEB/INST and Offene Posten.
+//! Auto-SIEB/INST: force RFID presence for sieves and missing instruments.
 //!
-//! Parity with `handleAutoSiebeAndOffenePosten` in `EditorScreen.tsx`.
-//! Conditions are evaluated on the **original** row before mutations.
+//! Offene Posten are ERP rows with numeric `Insgesamt bestellt` (ordered, not on site).
+//! They live on their own sheet/tab and are never inferred from LotId ERP/RFID flags.
 
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
 use crate::domain::editor::helpers::is_absent;
-use crate::domain::editor::vocabulary::ANMERKUNG_OFFENER_POSTEN;
 use crate::domain::types::LotIdCompareRow;
 
-/// Result of Auto-SIEB/INST + Offene Posten.
+/// Result of Auto-SIEB/INST.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AutoSiebeResult {
     pub rows: Vec<LotIdCompareRow>,
     /// Rows matching SIEB (always) or INST with RFID=0 (React counter semantics).
     pub sieb_inst_row_count: usize,
-    /// Rows with ERP=0 and RFID=0 on the original row (may overlap with SIEB).
-    pub offene_posten_row_count: usize,
 }
 
 #[derive(Default)]
 struct Patch {
     rfid_scan: Option<String>,
-    anmerkung: Option<String>,
 }
 
-/// Apply SIEB/INST RFID force and Offene-Posten Anmerkung.
-pub fn auto_siebe_and_offene_posten(rows: &[LotIdCompareRow]) -> AutoSiebeResult {
+/// Apply SIEB/INST RFID force on LotId rows.
+pub fn auto_siebe(rows: &[LotIdCompareRow]) -> AutoSiebeResult {
     let mut patches: HashMap<String, Patch> = HashMap::new();
     let mut sieb_inst_row_count = 0usize;
-    let mut offene_posten_row_count = 0usize;
 
     for row in rows {
-        let mut patch = Patch::default();
-
-        // Auto-Siebe / INST — count every matching row (even if RFID already 1).
         let is_sieb = row.kennzeichen_3 == "SIEB";
         let is_inst_missing = row.kennzeichen_3 == "INST" && is_absent(&row.rfid_scan);
-        if is_sieb || is_inst_missing {
-            patch.rfid_scan = Some("1".into());
-            sieb_inst_row_count += 1;
+        if !is_sieb && !is_inst_missing {
+            continue;
         }
 
-        // Offene Posten — evaluated on original ERP/RFID flags.
-        if is_absent(&row.eigenbestand_nach_erp) && is_absent(&row.rfid_scan) {
-            patch.anmerkung = Some(ANMERKUNG_OFFENER_POSTEN.to_string());
-            offene_posten_row_count += 1;
-        }
-
-        if patch.rfid_scan.is_some() || patch.anmerkung.is_some() {
-            patches.insert(row.id.clone(), patch);
-        }
+        patches.insert(
+            row.id.clone(),
+            Patch {
+                rfid_scan: Some("1".into()),
+            },
+        );
+        sieb_inst_row_count += 1;
     }
 
     let updated: Vec<LotIdCompareRow> = rows
@@ -65,9 +54,6 @@ pub fn auto_siebe_and_offene_posten(rows: &[LotIdCompareRow]) -> AutoSiebeResult
             if let Some(rfid) = &patch.rfid_scan {
                 next.rfid_scan = rfid.clone();
             }
-            if let Some(anmerkung) = &patch.anmerkung {
-                next.anmerkung = anmerkung.clone();
-            }
             next
         })
         .collect();
@@ -75,7 +61,6 @@ pub fn auto_siebe_and_offene_posten(rows: &[LotIdCompareRow]) -> AutoSiebeResult
     AutoSiebeResult {
         rows: updated,
         sieb_inst_row_count,
-        offene_posten_row_count,
     }
 }
 
@@ -111,7 +96,7 @@ mod tests {
     #[test]
     fn sieb_forces_rfid_one() {
         let rows = [lot("100", "SIEB", "1", "0", "", "s1")];
-        let result = auto_siebe_and_offene_posten(&rows);
+        let result = auto_siebe(&rows);
         assert_eq!(result.rows[0].rfid_scan, "1");
         assert_eq!(result.sieb_inst_row_count, 1);
     }
@@ -119,10 +104,9 @@ mod tests {
     #[test]
     fn sieb_already_one_still_counted() {
         let rows = [lot("100", "SIEB", "1", "1", "", "s1")];
-        let result = auto_siebe_and_offene_posten(&rows);
+        let result = auto_siebe(&rows);
         assert_eq!(result.rows[0].rfid_scan, "1");
         assert_eq!(result.sieb_inst_row_count, 1);
-        assert_eq!(result.offene_posten_row_count, 0);
     }
 
     #[test]
@@ -131,7 +115,7 @@ mod tests {
             lot("100", "INST", "1", "0", "", "i0"),
             lot("100", "INST", "1", "1", "", "i1"),
         ];
-        let result = auto_siebe_and_offene_posten(&rows);
+        let result = auto_siebe(&rows);
         let by_id: HashMap<_, _> = result.rows.iter().map(|r| (r.id.as_str(), r)).collect();
         assert_eq!(by_id["i0"].rfid_scan, "1");
         assert_eq!(by_id["i1"].rfid_scan, "1");
@@ -139,32 +123,28 @@ mod tests {
     }
 
     #[test]
-    fn offene_posten_sets_anmerkung() {
+    fn erp_zero_rfid_zero_does_not_set_anmerkung() {
         let rows = [lot("100", "IMP", "0", "0", "", "o1")];
-        let result = auto_siebe_and_offene_posten(&rows);
-        assert_eq!(result.rows[0].anmerkung, ANMERKUNG_OFFENER_POSTEN);
-        assert_eq!(result.offene_posten_row_count, 1);
-        assert_eq!(result.sieb_inst_row_count, 0);
-        // RFID unchanged for plain IMP offener Posten
+        let result = auto_siebe(&rows);
+        assert_eq!(result.rows[0].anmerkung, "");
         assert_eq!(result.rows[0].rfid_scan, "0");
+        assert_eq!(result.sieb_inst_row_count, 0);
     }
 
     #[test]
-    fn combined_sieb_and_offener_posten_on_same_row() {
-        let rows = [lot("100", "SIEB", "0", "0", "", "both")];
-        let result = auto_siebe_and_offene_posten(&rows);
+    fn sieb_with_erp_zero_only_forces_rfid() {
+        let rows = [lot("100", "SIEB", "0", "0", "keep", "both")];
+        let result = auto_siebe(&rows);
         assert_eq!(result.rows[0].rfid_scan, "1");
-        assert_eq!(result.rows[0].anmerkung, ANMERKUNG_OFFENER_POSTEN);
+        assert_eq!(result.rows[0].anmerkung, "keep");
         assert_eq!(result.sieb_inst_row_count, 1);
-        assert_eq!(result.offene_posten_row_count, 1);
     }
 
     #[test]
     fn no_matches_leaves_rows_unchanged() {
         let rows = [lot("100", "IMP", "1", "1", "", "a")];
-        let result = auto_siebe_and_offene_posten(&rows);
+        let result = auto_siebe(&rows);
         assert_eq!(result.sieb_inst_row_count, 0);
-        assert_eq!(result.offene_posten_row_count, 0);
         assert_eq!(result.rows, rows);
     }
 }

@@ -1,188 +1,9 @@
 //! Typst → PDF bytes for Bestandsabgleich LotId exports and blank Bestätigung forms.
 
-use std::sync::OnceLock;
-
-use chrono::{DateTime, Local};
-use serde::{Deserialize, Serialize};
-use typst::foundations::{Dict, IntoValue, Value};
-use typst_as_lib::{TypstEngine, TypstTemplateCollection};
-
 use crate::domain::error::{DomainError, DomainResult};
-use crate::domain::types::{LotIdCompareRow, OffenePostenRow};
-
-const ABGLEICH_TEMPLATE: &str = include_str!("../../../assets/pdf/abgleich.typ");
-const BESTAETIGUNG_TEMPLATE: &str = include_str!("../../../assets/pdf/bestaetigung.typ");
-const FONT_REGULAR: &[u8] = include_bytes!("../../../assets/fonts/DejaVuSans.ttf");
-const FONT_BOLD: &[u8] = include_bytes!("../../../assets/fonts/DejaVuSans-Bold.ttf");
-const LOGO_PNG: &[u8] = include_bytes!("../../../assets/images/ic-logo.png");
-
-/// Input for [`render_abgleich_pdf`].
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PdfExportInput {
-    pub debitor: String,
-    #[serde(default)]
-    pub kundenname: String,
-    pub lots: Vec<LotIdCompareRow>,
-    /// Offene Posten: printed as a separate table and never counted in the totals.
-    #[serde(default)]
-    pub offene_posten: Vec<OffenePostenRow>,
-    /// Optional ISO-8601 / RFC3339 timestamp; defaults to `Local::now()`.
-    #[serde(default)]
-    pub generated_at: Option<String>,
-}
-
-/// Aggregated SOLL / IST / Abweichung for tests and callers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct PdfTotals {
-    pub anzahl: usize,
-    pub soll: i64,
-    pub ist: i64,
-    pub abweichung: i64,
-}
-
-impl PdfTotals {
-    pub fn from_lots(lots: &[LotIdCompareRow]) -> Self {
-        let soll = sum_presence(lots.iter().map(|r| r.eigenbestand_nach_erp.as_str()));
-        let ist = sum_presence(lots.iter().map(|r| r.rfid_scan.as_str()));
-        Self {
-            anzahl: lots.len(),
-            soll,
-            ist,
-            abweichung: ist - soll,
-        }
-    }
-}
-
-/// Sum presence-flag cells (`"1"` / `"0"` / numeric strings) the same way jsPDF did.
-pub fn sum_presence(values: impl Iterator<Item = impl AsRef<str>>) -> i64 {
-    values.fold(0_i64, |acc, v| {
-        let n = v.as_ref().trim().parse::<f64>().unwrap_or(0.0);
-        if n.is_finite() {
-            acc + n as i64
-        } else {
-            acc
-        }
-    })
-}
-
-fn resolve_generated_at(input: &PdfExportInput) -> DateTime<Local> {
-    if let Some(raw) = input.generated_at.as_deref() {
-        if let Ok(dt) = DateTime::parse_from_rfc3339(raw) {
-            return dt.with_timezone(&Local);
-        }
-    }
-    Local::now()
-}
-
-fn has_kundenname(kundenname: &str) -> bool {
-    let name = kundenname.trim();
-    !name.is_empty() && !name.eq_ignore_ascii_case("Unbekannt")
-}
-
-fn is_mismatch(erp: &str, rfid: &str) -> bool {
-    erp.trim() != rfid.trim()
-}
-
-fn lot_to_value(lot: &LotIdCompareRow) -> Value {
-    let mut dict = Dict::new();
-    dict.insert("index".into(), (lot.index as i64).into_value());
-    dict.insert("kennz".into(), lot.kennzeichen_3.clone().into_value());
-    dict.insert("artikel".into(), lot.artikelnummer.clone().into_value());
-    dict.insert("produkt".into(), lot.produktname.clone().into_value());
-    dict.insert("lot_id".into(), lot.lot_id.clone().into_value());
-    dict.insert("verfall".into(), lot.ablaufdatum.clone().into_value());
-    dict.insert("erp".into(), lot.eigenbestand_nach_erp.clone().into_value());
-    dict.insert("rfid".into(), lot.rfid_scan.clone().into_value());
-    dict.insert("todo".into(), lot.to_do.clone().into_value());
-    dict.insert("anmerkung".into(), lot.anmerkung.clone().into_value());
-    dict.insert("stich".into(), lot.stichprobe.clone().into_value());
-    dict.insert(
-        "mismatch".into(),
-        is_mismatch(&lot.eigenbestand_nach_erp, &lot.rfid_scan).into_value(),
-    );
-    Value::Dict(dict)
-}
-
-fn offene_posten_to_value(row: &OffenePostenRow) -> Value {
-    let mut dict = Dict::new();
-    dict.insert("artikel".into(), row.artikelnummer.clone().into_value());
-    dict.insert("produkt".into(), row.produktname.clone().into_value());
-    dict.insert("lot_id".into(), row.lot_id.clone().into_value());
-    dict.insert("verfall".into(), row.ablaufdatum.clone().into_value());
-    dict.insert("offen".into(), row.offen.clone().into_value());
-    Value::Dict(dict)
-}
-
-fn input_to_dict(input: &PdfExportInput, totals: PdfTotals, datum: &str, uhrzeit: &str) -> Dict {
-    let mut dict = Dict::new();
-    dict.insert("debitor".into(), input.debitor.clone().into_value());
-    dict.insert("kundenname".into(), input.kundenname.clone().into_value());
-    dict.insert(
-        "has_kundenname".into(),
-        has_kundenname(&input.kundenname).into_value(),
-    );
-    dict.insert("datum".into(), datum.into_value());
-    dict.insert("uhrzeit".into(), uhrzeit.into_value());
-    dict.insert("anzahl".into(), (totals.anzahl as i64).into_value());
-    dict.insert("soll".into(), totals.soll.into_value());
-    dict.insert("ist".into(), totals.ist.into_value());
-    dict.insert("abweichung".into(), totals.abweichung.into_value());
-
-    let lots: Vec<Value> = input.lots.iter().map(lot_to_value).collect();
-    dict.insert("lots".into(), lots.into_value());
-
-    let offene_posten: Vec<Value> = input
-        .offene_posten
-        .iter()
-        .map(offene_posten_to_value)
-        .collect();
-    dict.insert("offene_posten".into(), offene_posten.into_value());
-    dict
-}
-
-fn engine() -> &'static TypstEngine<TypstTemplateCollection> {
-    static ENGINE: OnceLock<TypstEngine<TypstTemplateCollection>> = OnceLock::new();
-    ENGINE.get_or_init(|| {
-        TypstEngine::builder()
-            .fonts([FONT_REGULAR, FONT_BOLD])
-            .with_static_source_file_resolver([
-                ("abgleich.typ", ABGLEICH_TEMPLATE),
-                ("bestaetigung.typ", BESTAETIGUNG_TEMPLATE),
-            ])
-            .with_static_file_resolver([("ic-logo.png", LOGO_PNG)])
-            .build()
-    })
-}
-
-fn format_typst_error(err: typst_as_lib::TypstAsLibError) -> String {
-    match err {
-        typst_as_lib::TypstAsLibError::TypstSource(diags) => {
-            let messages: Vec<String> = diags
-                .iter()
-                .map(|d| d.message.as_str().to_string())
-                .collect();
-            if messages.is_empty() {
-                "Typst-Quellfehler".into()
-            } else {
-                messages.join("; ")
-            }
-        }
-        other => other.to_string(),
-    }
-}
-
-fn pdf_bytes_from_doc(doc: &typst_layout::PagedDocument) -> DomainResult<Vec<u8>> {
-    let pdf = typst_pdf::pdf(doc, &typst_pdf::PdfOptions::default())
-        .map_err(|e| DomainError::Pdf(format!("PDF-Export fehlgeschlagen: {e:?}")))?;
-
-    if pdf.len() < 5 || &pdf[0..5] != b"%PDF-" {
-        return Err(DomainError::Pdf(
-            "ungültige PDF-Ausgabe (Magic-Bytes fehlen)".into(),
-        ));
-    }
-
-    Ok(pdf)
-}
+use crate::domain::pdf::dict::{input_to_dict, resolve_generated_at};
+use crate::domain::pdf::engine::{engine, format_typst_error, pdf_bytes_from_doc};
+use crate::domain::pdf::types::{PdfExportInput, PdfTotals};
 
 /// Render inventur LotId table pages to PDF bytes (`%PDF`…).
 ///
@@ -219,6 +40,10 @@ pub fn render_bestaetigung_pdf() -> DomainResult<Vec<u8>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::domain::pdf::dict::{input_to_dict, lot_to_value};
+    use crate::domain::pdf::engine::engine;
+    use crate::domain::types::{LotIdCompareRow, OffenePostenRow};
+    use typst::foundations::Value;
 
     fn sample_lot(index: u32, erp: &str, rfid: &str) -> LotIdCompareRow {
         LotIdCompareRow {
@@ -240,7 +65,7 @@ mod tests {
     #[test]
     fn sum_presence_matches_js_number_coercion() {
         let vals = ["1", "0", "1", "2", "x", ""];
-        assert_eq!(sum_presence(vals.iter().copied()), 4);
+        assert_eq!(crate::domain::pdf::types::sum_presence(vals.iter().copied()), 4);
     }
 
     #[test]
@@ -359,7 +184,6 @@ mod tests {
         assert_eq!(open.len(), 1);
     }
 
-    /// All text drawn on the compiled pages, so section content can be checked without rasterizing.
     fn compiled_text(input: &PdfExportInput) -> String {
         let totals = PdfTotals::from_lots(&input.lots);
         let dict = input_to_dict(input, totals, "06.11.2026", "10:00:00");
@@ -428,7 +252,6 @@ mod tests {
         assert_eq!(dict.get("mismatch").ok(), Some(&Value::Bool(true)));
     }
 
-    /// Writes sample PDFs under `target/` for manual visual inspection.
     #[test]
     fn write_visual_fixture_pdf() {
         let lots: Vec<_> = (1..=45)

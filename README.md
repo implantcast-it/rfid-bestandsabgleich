@@ -43,12 +43,12 @@ rfid-bestandsabgleich/
 ├── src-tauri/                   # Backend (Tauri v2, Rust)
 │   ├── src/
 │   │   ├── main.rs              # App-Start und Registrierung der Tauri-Befehle
-│   │   ├── commands.rs          # Tauri-Befehle (Schnittstelle zum Frontend)
-│   │   ├── lib.rs               # Einstieg der Bibliothek
+│   │   ├── commands/            # Dünne IPC-Adapter (catalog, inventur, pdf, projects)
+│   │   ├── lib.rs               # Einstieg der Bibliothek + stabile Re-Exports
 │   │   └── domain/              # Fachlogik: parse, compare, editor, export, catalog, pdf, projects
 │   ├── assets/                  # PDF-Vorlagen (Typst), Schriften, Logo
 │   └── tests/                   # Integrationstests
-├── ARCHITECTURE.md              # Frontend-Schichten und Dependency-Regeln
+├── ARCHITECTURE.md              # Frontend- und Rust-Schichten, Dependency-Regeln
 ├── documentation/               # Produkt-, Architektur- und Entwicklerdokumentation
 ├── context/                     # Notizen für KI-Agenten, kein Produktcode
 ├── public/                      # Statische Frontend-Assets (Logo, Favicon)
@@ -60,6 +60,7 @@ Konfiguration liegt im Wurzelverzeichnis: `package.json`, `vite.config.ts`, `tsc
 Konventionen im Frontend:
 
 - Abhängigkeiten zeigen nach innen: `screens → features → domains/core` (Details: [ARCHITECTURE.md](./ARCHITECTURE.md)).
+- Rust: `commands/` → `domain/` (IPC-Namen und Serde-DTOs stabil halten; siehe [ARCHITECTURE.md](./ARCHITECTURE.md#rust-backend-architecture)).
 - Feature-Komponenten: Dateiname = Komponentenname in PascalCase (z. B. `LotIdTable.tsx`).
 - Basis-Komponenten in `src/core/ui/` folgen den shadcn-Konventionen (Dateinamen in kebab-case).
 - Imports aus `src/` nutzen den Alias `@/`, z. B. `@/core/utils`, `@/domains/inventur`.

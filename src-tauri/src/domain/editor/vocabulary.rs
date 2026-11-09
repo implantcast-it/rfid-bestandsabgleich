@@ -9,9 +9,6 @@ pub const TODO_INTERNE_BERECHNUNG: &str = "interne Berechnung";
 pub const TODO_INTERNE_GUTSCHRIFT: &str =
     "interne Gutschrift mit Rückbuchung auf Konsi";
 
-/// Anmerkung set by Auto Offene Posten when ERP=0 and RFID=0.
-pub const ANMERKUNG_OFFENER_POSTEN: &str = "offener Posten";
-
 /// Full To Do select list (including empty).
 pub const TODO_OPTIONS: &[&str] = &[
     "",
@@ -26,6 +23,8 @@ pub const TODO_OPTIONS: &[&str] = &[
 ];
 
 /// Full Anmerkung select list (including empty).
+///
+/// Offene Posten are ERP sheet rows (ordered, not on site) — not an Anmerkung.
 pub const ANMERKUNG_OPTIONS: &[&str] = &[
     "",
     "AWS",
@@ -38,7 +37,6 @@ pub const ANMERKUNG_OPTIONS: &[&str] = &[
     "Klinik bestellt",
     "Mitnahme",
     "nicht scanbar / Lot korrekt",
-    ANMERKUNG_OFFENER_POSTEN,
 ];
 
 /// Stichprobe completed marker (case-insensitive check in UI).
