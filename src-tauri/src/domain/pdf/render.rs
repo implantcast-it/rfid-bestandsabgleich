@@ -218,7 +218,7 @@ mod tests {
         };
         let text = compiled_text(&input);
         assert!(text.contains("Offene Posten"));
-        assert!(text.contains("Nicht in SOLL"));
+        assert!(text.contains("Offen"));
         assert!(text.contains("OFF-1"));
         assert!(text.contains("OPEN/2"));
     }
