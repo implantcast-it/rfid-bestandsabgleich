@@ -8,10 +8,15 @@ import {
   type DebitorEntry,
 } from "@/domains/catalog"
 import {
+  applyInventurProgress,
+  INITIAL_PIPELINE_STEPS,
   loadAbgleichFromDialog,
+  markActiveStepFailed,
   runInventur,
   type EditorSnapshot,
+  type InventurProgressEvent,
   type InventurSessionState,
+  type PipelineStepState,
   type ProcessPhase,
 } from "@/domains/inventur"
 import {
@@ -69,10 +74,20 @@ export const useInventurCompare = ({
   const [processStatus, setProcessStatus] = useState("")
   const [processPercent, setProcessPercent] = useState(0)
   const [progressLabel, setProgressLabel] = useState("Vorbereitung")
+  const [pipelineSteps, setPipelineSteps] = useState<PipelineStepState[]>(
+    INITIAL_PIPELINE_STEPS
+  )
   const [snapshot, setSnapshot] = useState<EditorSnapshot | null>(null)
   const [pendingProjectId, setPendingProjectId] = useState<string | null>(null)
   const [debitorEntry, setDebitorEntry] = useState<DebitorEntry | null>(null)
   const [loadingAbgleich, setLoadingAbgleich] = useState(false)
+
+  const handleProgressEvent = useCallback((event: InventurProgressEvent) => {
+    setPipelineSteps((previous) => applyInventurProgress(previous, event))
+    setProcessPercent(event.percent)
+    setProgressLabel(event.label)
+    setProcessStatus(event.message)
+  }, [])
 
   const resolveDebitorEntry = useCallback(async (debitorId: string) => {
     const id = debitorId.trim()
@@ -123,20 +138,28 @@ export const useInventurCompare = ({
     setSnapshot(null)
     setPendingProjectId(null)
     setDebitorEntry(null)
+    setPipelineSteps(INITIAL_PIPELINE_STEPS)
     setProcessPhase("processing")
     setProcessTitle("Abgleich läuft")
-    setProcessStatus("Dateien werden gelesen und mit dem Katalog abgeglichen…")
-    setProgressLabel("Vergleich")
-    setProcessPercent(35)
+    setProcessStatus("Pipeline wird gestartet…")
+    setProgressLabel("Vorbereitung")
+    setProcessPercent(0)
 
     try {
-      setProcessPercent(70)
-      const result = await runInventur(erpPath, rfidPath)
+      const result = await runInventur(erpPath, rfidPath, handleProgressEvent)
+
+      setProgressLabel("Ergebnis bereit")
+      setProcessStatus("Inventur-Projekt wird gespeichert…")
+      setProcessPercent(95)
+      setPipelineSteps(["done", "done", "done", "active"])
+
       const entry = await resolveDebitorEntry(result.debitor)
       const meta = await createProjectFromSnapshot(result, entry)
       setSnapshot(result)
       setPendingProjectId(meta.id)
       await refreshProjects()
+
+      setPipelineSteps(["done", "done", "done", "done"])
       setProcessPercent(100)
       setProgressLabel("Fertig")
       setProcessTitle("Abgleich abgeschlossen")
@@ -147,10 +170,10 @@ export const useInventurCompare = ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : String(error)
+      setPipelineSteps((previous) => markActiveStepFailed(previous))
       setProcessTitle("Abgleich fehlgeschlagen")
       setProcessStatus(message)
       setProgressLabel("Fehler")
-      setProcessPercent(100)
       setProcessPhase("error")
       toast.error("Abgleich fehlgeschlagen", { description: message })
     }
@@ -160,6 +183,8 @@ export const useInventurCompare = ({
     setProcessPhase(null)
     setProcessPercent(0)
     setProcessStatus("")
+    setProgressLabel("Vorbereitung")
+    setPipelineSteps(INITIAL_PIPELINE_STEPS)
     setSnapshot(null)
     setPendingProjectId(null)
     setDebitorEntry(null)
@@ -226,6 +251,7 @@ export const useInventurCompare = ({
     processStatus,
     processPercent,
     progressLabel,
+    pipelineSteps,
     loadingAbgleich,
     debitorLabel: formatDebitorLabel(snapshot, debitorEntry),
     handleStartCompare,

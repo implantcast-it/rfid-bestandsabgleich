@@ -86,6 +86,7 @@ const StartScreen = () => {
             processStatus={compare.processStatus}
             processPercent={compare.processPercent}
             progressLabel={compare.progressLabel}
+            pipelineSteps={compare.pipelineSteps}
             debitorLabel={compare.debitorLabel}
             loadingAbgleich={compare.loadingAbgleich}
             onStartCompare={() => void compare.handleStartCompare()}

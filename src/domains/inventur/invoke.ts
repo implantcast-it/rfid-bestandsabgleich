@@ -1,12 +1,24 @@
-import { invoke } from "@tauri-apps/api/core"
+import { Channel, invoke } from "@tauri-apps/api/core"
 import { open } from "@tauri-apps/plugin-dialog"
+import type { InventurProgressEvent } from "@/domains/inventur/progress"
 import type { EditorSnapshot } from "@/domains/inventur/types"
 
-export const runInventur = (erpPath: string, rfidPath: string) =>
-  invoke<EditorSnapshot>("run_inventur", {
+export const runInventur = (
+  erpPath: string,
+  rfidPath: string,
+  onProgress?: (event: InventurProgressEvent) => void
+) => {
+  const onProgressChannel = new Channel<InventurProgressEvent>()
+  onProgressChannel.onmessage = (event) => {
+    onProgress?.(event)
+  }
+
+  return invoke<EditorSnapshot>("run_inventur", {
     erpPath,
     rfidPath,
+    onProgress: onProgressChannel,
   })
+}
 
 const loadAbgleich = (path: string) =>
   invoke<EditorSnapshot>("load_abgleich", { path })

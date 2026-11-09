@@ -9,6 +9,10 @@ import { Button } from "@/core/ui/button"
 import { cn } from "@/core/utils"
 
 import type { ProcessPhase } from "@/domains/inventur"
+import {
+  INVENTUR_STEP_LABELS,
+  type PipelineStepState,
+} from "@/domains/inventur"
 
 export type { ProcessPhase }
 
@@ -18,6 +22,7 @@ type ProcessPanelProps = {
   status: string
   percent: number
   progressLabel: string
+  pipelineSteps: PipelineStepState[]
   erpName: string
   rfidName: string
   debitor: string
@@ -26,36 +31,13 @@ type ProcessPanelProps = {
   onOpenEditor: () => void
 }
 
-type StepState = "done" | "active" | "pending" | "failed"
-
-const STEP_LABELS = [
-  "ERP lesen",
-  "RFID zuordnen",
-  "LotId vergleichen",
-  "Ergebnis bereit",
-] as const
-
-const resolveSteps = (phase: ProcessPhase, percent: number): StepState[] => {
-  if (phase === "success") return ["done", "done", "done", "done"]
-  if (phase === "error") {
-    if (percent < 25) return ["failed", "pending", "pending", "pending"]
-    if (percent < 50) return ["done", "failed", "pending", "pending"]
-    if (percent < 75) return ["done", "done", "failed", "pending"]
-    return ["done", "done", "done", "failed"]
-  }
-  if (percent < 25) return ["active", "pending", "pending", "pending"]
-  if (percent < 50) return ["done", "active", "pending", "pending"]
-  if (percent < 75) return ["done", "done", "active", "pending"]
-  if (percent < 100) return ["done", "done", "done", "active"]
-  return ["done", "done", "done", "done"]
-}
-
 const ProcessPanel = ({
   phase,
   title,
   status,
   percent,
   progressLabel,
+  pipelineSteps,
   erpName,
   rfidName,
   debitor,
@@ -63,7 +45,6 @@ const ProcessPanel = ({
   onRetry,
   onOpenEditor,
 }: ProcessPanelProps) => {
-  const steps = resolveSteps(phase, percent)
   const icon =
     phase === "success"
       ? CheckmarkCircle02Icon
@@ -146,8 +127,8 @@ const ProcessPanel = ({
         className="grid grid-cols-2 gap-1.5 md:grid-cols-4"
         aria-label="Pipeline"
       >
-        {STEP_LABELS.map((label, index) => {
-          const state = steps[index]
+        {INVENTUR_STEP_LABELS.map((label, index) => {
+          const state = pipelineSteps[index] ?? "pending"
           return (
             <li
               key={label}

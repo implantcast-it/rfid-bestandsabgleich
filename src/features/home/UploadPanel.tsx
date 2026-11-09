@@ -1,4 +1,4 @@
-﻿import { HugeiconsIcon } from "@hugeicons/react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Alert02Icon,
   FileUploadIcon,
@@ -8,7 +8,7 @@ import FilePickSlot from "@/features/home/FilePickSlot"
 import ProcessPanel from "@/features/home/ProcessPanel"
 import type { CatalogReady } from "@/domains/catalog"
 import { catalogGateMessage } from "@/domains/catalog"
-import type { ProcessPhase } from "@/domains/inventur"
+import type { PipelineStepState, ProcessPhase } from "@/domains/inventur"
 
 
 type UploadPanelProps = {
@@ -23,6 +23,7 @@ type UploadPanelProps = {
   processStatus: string
   processPercent: number
   progressLabel: string
+  pipelineSteps: PipelineStepState[]
   debitorLabel: string
   loadingAbgleich: boolean
   onStartCompare: () => void
@@ -48,6 +49,7 @@ const UploadPanel = ({
   processStatus,
   processPercent,
   progressLabel,
+  pipelineSteps,
   debitorLabel,
   loadingAbgleich,
   onStartCompare,
@@ -68,6 +70,7 @@ const UploadPanel = ({
         status={processStatus}
         percent={processPercent}
         progressLabel={progressLabel}
+        pipelineSteps={pipelineSteps}
         erpName={fileName(erpPath)}
         rfidName={fileName(rfidPath)}
         debitor={debitorLabel}
@@ -95,8 +98,7 @@ const UploadPanel = ({
             ERP-Bestand und RFID-Scan für{" "}
             <strong className="text-foreground font-semibold dark:text-[#ddd]">
               {inventurjahr}
-            </strong>{" "}
-            auswählen. GTIN-Zuordnung liegt in der App.
+            </strong>
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
