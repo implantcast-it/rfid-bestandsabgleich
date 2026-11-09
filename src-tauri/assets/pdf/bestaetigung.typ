@@ -62,7 +62,7 @@
   columns: (1fr, 1fr),
   column-gutter: 10mm,
   field(height: 22mm)[Unterschrift Außendienstmitarbeiter],
-  field(height: 22mm)[Unterschrift Kunde],
+  field(height: 22mm)[Unterschrift Kunde & Stempel],
 )
 
 #v(1fr)
