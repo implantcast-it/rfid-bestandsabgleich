@@ -189,15 +189,15 @@ fn write_lot_id(wb: &mut Workbook, rows: &[LotIdCompareRow]) -> Result<(), XlsxE
     sheet.add_table(0, 0, rows.len() as u32, columns.len() as u16 - 1, &table)?;
 
     // Formula-based rules recalculate in Excel as TODAY() changes.
-    let format_red = Format::new().set_background_color(Color::Red);
-    let format_yellow = Format::new().set_background_color(Color::Yellow);
+    let format_red = Format::new().set_background_color(Color::Theme(5, 3)); // Red
+    let format_orange = Format::new().set_background_color(Color::Theme(9, 3)); // Orange
 
     let condition_expired = ConditionalFormatFormula::new()
         .set_rule("=AND(ISNUMBER($J2),$J2<TODAY())")
         .set_format(&format_red);
     let condition_expiring_soon = ConditionalFormatFormula::new()
         .set_rule("=AND(ISNUMBER($J2),$J2>=TODAY(),$J2<=TODAY()+30)")
-        .set_format(&format_yellow);
+        .set_format(&format_orange);
 
     if !rows.is_empty() {
         sheet.add_conditional_format(1, 9, rows.len() as u32, 9, &condition_expired)?;
