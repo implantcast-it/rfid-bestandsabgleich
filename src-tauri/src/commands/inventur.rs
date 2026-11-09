@@ -1,4 +1,4 @@
-//! Inventur IPC: run compare and reload Abgleich workbooks.
+//! Inventur IPC: run compare, reload Abgleich workbooks, and editor auto-actions.
 
 use std::path::PathBuf;
 
@@ -6,8 +6,12 @@ use tauri::AppHandle;
 use tauri::ipc::Channel;
 
 use crate::commands::{domain_err, open_db};
-use crate::domain::editor::EditorSnapshot;
+use crate::domain::editor::{
+    auto_fill_kommentare as fill_kommentare, auto_siebe as apply_auto_siebe, AutoKommentareResult,
+    AutoSiebeResult, EditorSnapshot,
+};
 use crate::domain::inventur::{self, InventurProgressEvent};
+use crate::domain::types::LotIdCompareRow;
 
 /// Parse ERP + RFID against the on-device GTIN catalog and return an editor snapshot.
 ///
@@ -36,4 +40,16 @@ pub fn run_inventur(
 pub fn load_abgleich(app: AppHandle, path: String) -> Result<EditorSnapshot, String> {
     let db = open_db(&app)?;
     inventur::load_abgleich(&db, PathBuf::from(path).as_path()).map_err(domain_err)
+}
+
+/// Pair missing ↔ extra lots with To Dos (Auto-Kommentare).
+#[tauri::command]
+pub fn auto_fill_kommentare(rows: Vec<LotIdCompareRow>) -> AutoKommentareResult {
+    fill_kommentare(&rows)
+}
+
+/// Force RFID presence for SIEB / missing INST lots.
+#[tauri::command]
+pub fn auto_siebe(rows: Vec<LotIdCompareRow>) -> AutoSiebeResult {
+    apply_auto_siebe(&rows)
 }

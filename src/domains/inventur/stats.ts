@@ -1,9 +1,9 @@
+import { lotIdGridToCompareRows } from "@/domains/inventur/mappers"
 import type {
   ArtNrGridRow,
   EditorSnapshot,
   EditorStats,
   ErpRow,
-  LotIdCompareRow,
   ArtNrCompareRow,
   LotIdGridRow,
 } from "@/domains/inventur/types"
@@ -39,23 +39,6 @@ export const isStichprobenComplete = (
   done: number,
   required: number
 ): boolean => done >= required
-
-/** Map LotId grid rows back to serde DTOs for draft persistence. */
-const lotIdGridToCompareRows = (rows: LotIdGridRow[]): LotIdCompareRow[] =>
-  rows.map((row, index) => ({
-    artikelnummer: asString(row["Artikelnummer"]),
-    produktname: asString(row["Produktname"]),
-    kennzeichen_3: asString(row["Kennzeichen 3"]),
-    lot_id: asString(row["LotId"]),
-    eigenbestand_nach_erp: asString(row["Eigenbestand nach ERP"]),
-    rfid_scan: asString(row["RFID-Scan"]),
-    ablaufdatum: asString(row["Ablaufdatum"]),
-    to_do: asString(row["To Do"]),
-    anmerkung: asString(row["Anmerkung"]),
-    stichprobe: asString(row["Stichprobe"]),
-    id: asString(row.id) || `row-${index}`,
-    index: asNumber(row.Index) || index,
-  }))
 
 /** Map ArtNr grid rows back to serde DTOs. */
 const artNrGridToCompareRows = (rows: ArtNrGridRow[]): ArtNrCompareRow[] =>

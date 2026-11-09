@@ -24,7 +24,9 @@ pub use export::{
     export_abgleich_xlsx, __cmd__export_abgleich_xlsx, __tauri_command_name_export_abgleich_xlsx,
 };
 pub use inventur::{
-    load_abgleich, run_inventur, __cmd__load_abgleich, __cmd__run_inventur,
+    auto_fill_kommentare, auto_siebe, load_abgleich, run_inventur, __cmd__auto_fill_kommentare,
+    __cmd__auto_siebe, __cmd__load_abgleich, __cmd__run_inventur,
+    __tauri_command_name_auto_fill_kommentare, __tauri_command_name_auto_siebe,
     __tauri_command_name_load_abgleich, __tauri_command_name_run_inventur,
 };
 pub use pdf::{

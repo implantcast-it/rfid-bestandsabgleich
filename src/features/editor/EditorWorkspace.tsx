@@ -12,11 +12,12 @@ import {
   handleSnapshotPdfDownload,
 } from "@/domains/export"
 import {
-  applyLotIdPatches,
+  applyAutoLotIdRows,
   artNrAggregateRowsFromLotId,
-  computeAutofillKommentare,
-  computeAutoSiebeAndOffenePosten,
+  autoFillKommentare,
+  autoSiebe,
   erpRowsForGrid,
+  lotIdGridToCompareRows,
   lotIdRowsForGrid,
   offenePostenRowsForGrid,
   rfidRowsForGrid,
@@ -144,58 +145,66 @@ export const EditorWorkspace = ({
     toast.error(info.title, { description: info.description })
   }
 
-  const handleAutoFillKommentare = useCallback(() => {
-    const { changes, affectedArtikelnummern } =
-      computeAutofillKommentare(lotIdData)
+  const handleAutoFillKommentare = useCallback(async () => {
+    try {
+      const result = await autoFillKommentare(lotIdGridToCompareRows(lotIdData))
+      if (result.changed_count <= 0) {
+        setToastInfo({
+          open: true,
+          type: "error",
+          title: "Keine passenden Paare gefunden",
+          description: "Keine passenden Paare zum Kommentieren gefunden.",
+        })
+        return
+      }
 
-    if (affectedArtikelnummern.length > 0) {
+      handleLotIdChange((prev) => applyAutoLotIdRows(prev, result.rows))
       setToastInfo({
         open: true,
         type: "success",
         title: "Kommentare automatisch ausgefüllt",
-        description: `${[...new Set(affectedArtikelnummern)].length} Artikelnummer(n) automatisch kommentiert.`,
+        description: `${[...new Set(result.affected_artikelnummern)].length} Artikelnummer(n) automatisch kommentiert.`,
       })
-      handleLotIdChange((prev) => applyLotIdPatches(prev, changes))
-      return
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setToastInfo({
+        open: true,
+        type: "error",
+        title: "Auto-Kommentare fehlgeschlagen",
+        description: message,
+      })
     }
-
-    setToastInfo({
-      open: true,
-      type: "error",
-      title: "Keine passenden Paare gefunden",
-      description: "Keine passenden Paare zum Kommentieren gefunden.",
-    })
   }, [lotIdData, handleLotIdChange])
 
-  const handleAutoSiebeAndOffenePosten = useCallback(() => {
-    const { changes, siebRowCount, offenePostenRowCount } =
-      computeAutoSiebeAndOffenePosten(lotIdData)
+  const handleAutoSiebe = useCallback(async () => {
+    try {
+      const result = await autoSiebe(lotIdGridToCompareRows(lotIdData))
+      if (result.sieb_inst_row_count <= 0) {
+        setToastInfo({
+          open: true,
+          type: "error",
+          title: "Keine Aktionen ausgeführt",
+          description: "Keine Zeilen für 'SIEB' oder 'INST' gefunden.",
+        })
+        return
+      }
 
-    if (siebRowCount > 0 || offenePostenRowCount > 0) {
-      handleLotIdChange((prev) => applyLotIdPatches(prev, changes))
-      const descriptions = []
-      if (siebRowCount > 0) {
-        descriptions.push(`${siebRowCount} 'SIEB/INST' Zeile(n)`)
-      }
-      if (offenePostenRowCount > 0) {
-        descriptions.push(`${offenePostenRowCount} 'Offene Posten'`)
-      }
+      handleLotIdChange((prev) => applyAutoLotIdRows(prev, result.rows))
       setToastInfo({
         open: true,
         type: "success",
         title: "Aktionen ausgeführt",
-        description: `${descriptions.join(" und ")} aktualisiert.`,
+        description: `${result.sieb_inst_row_count} 'SIEB/INST' Zeile(n) aktualisiert.`,
       })
-      return
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      setToastInfo({
+        open: true,
+        type: "error",
+        title: "Auto SIEB/INST fehlgeschlagen",
+        description: message,
+      })
     }
-
-    setToastInfo({
-      open: true,
-      type: "error",
-      title: "Keine Aktionen ausgeführt",
-      description:
-        "Keine Zeilen für 'SIEB', 'INST' oder 'Offene Posten' gefunden.",
-    })
   }, [lotIdData, handleLotIdChange])
 
   const handleDownloadExcel = async () => {
@@ -305,8 +314,8 @@ export const EditorWorkspace = ({
             hasHeaderButtons={currentPageConfig.hasHeaderButtons}
             completedStichproben={completedStichproben}
             requiredStichproben={requiredStichproben}
-            onAutoCheck={handleAutoSiebeAndOffenePosten}
-            onAutoFill={handleAutoFillKommentare}
+            onAutoCheck={() => void handleAutoSiebe()}
+            onAutoFill={() => void handleAutoFillKommentare()}
             isBulkEditOpen={
               activeTab === "lotId" ? isBulkEditOpen : undefined
             }

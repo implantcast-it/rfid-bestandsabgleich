@@ -12,22 +12,20 @@ export type {
   OffenePostenRow,
   RfidRow,
 } from "@/domains/inventur/types"
-export { OFFENE_POSTEN_EXCEL_HEADERS } from "@/domains/inventur/types"
 
 export {
   artNrAggregateRowsFromLotId,
 } from "@/domains/inventur/art-nr-aggregate"
 export {
-  applyLotIdPatches,
-  computeAutofillKommentare,
-  computeAutoSiebeAndOffenePosten,
-} from "@/domains/inventur/autofill"
+  autoFillKommentare,
+  autoSiebe,
+  loadAbgleichFromDialog,
+  runInventur,
+} from "@/domains/inventur/invoke"
 export type {
+  AutoKommentareResult,
   AutoSiebeResult,
-  AutofillKommentareResult,
-  LotIdRowPatch,
-} from "@/domains/inventur/autofill"
-export { loadAbgleichFromDialog, runInventur } from "@/domains/inventur/invoke"
+} from "@/domains/inventur/invoke"
 export {
   applyInventurProgress,
   INITIAL_PIPELINE_STEPS,
@@ -41,8 +39,9 @@ export type {
   PipelineStepState,
 } from "@/domains/inventur/progress"
 export {
+  applyAutoLotIdRows,
   erpRowsForGrid,
-  lotIdGridRowsForExport,
+  lotIdGridToCompareRows,
   lotIdRowsForGrid,
   offenePostenRowsForGrid,
   rfidRowsForGrid,

@@ -1,7 +1,23 @@
 import { Channel, invoke } from "@tauri-apps/api/core"
 import { open } from "@tauri-apps/plugin-dialog"
 import type { InventurProgressEvent } from "@/domains/inventur/progress"
-import type { EditorSnapshot } from "@/domains/inventur/types"
+import type {
+  EditorSnapshot,
+  LotIdCompareRow,
+} from "@/domains/inventur/types"
+
+/** Mirrors Rust `AutoKommentareResult`. */
+export type AutoKommentareResult = {
+  rows: LotIdCompareRow[]
+  affected_artikelnummern: string[]
+  changed_count: number
+}
+
+/** Mirrors Rust `AutoSiebeResult`. */
+export type AutoSiebeResult = {
+  rows: LotIdCompareRow[]
+  sieb_inst_row_count: number
+}
 
 export const runInventur = (
   erpPath: string,
@@ -35,3 +51,11 @@ export const loadAbgleichFromDialog = async (): Promise<EditorSnapshot | null> =
   }
   return loadAbgleich(selected)
 }
+
+/** Pair missing ↔ extra lots with To Dos (Auto-Kommentare). */
+export const autoFillKommentare = (rows: LotIdCompareRow[]) =>
+  invoke<AutoKommentareResult>("auto_fill_kommentare", { rows })
+
+/** Force RFID presence for SIEB / missing INST lots. */
+export const autoSiebe = (rows: LotIdCompareRow[]) =>
+  invoke<AutoSiebeResult>("auto_siebe", { rows })

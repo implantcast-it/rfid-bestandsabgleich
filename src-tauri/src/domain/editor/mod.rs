@@ -11,7 +11,7 @@
 //! | [`draft`] | **Session API**: patches, bulk edit, snapshot, export |
 //!
 //! LotId rows are the only editable inventur data. ArtNr is always derived.
-//! UI wiring (Tauri / TanStack) is deferred; React still owns live handlers today.
+//! Auto-Kommentare / Auto-SIEB run via Tauri commands; React keeps live grid state.
 
 mod aggregate;
 mod auto_kommentare;
