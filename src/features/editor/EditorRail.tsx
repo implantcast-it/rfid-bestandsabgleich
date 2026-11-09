@@ -26,6 +26,8 @@ export type EditorNavSection = {
   items: EditorNavItem[]
 }
 
+type ExportPendingKind = "excel" | "pdf" | null
+
 type EditorRailProps = {
   navSections: EditorNavSection[]
   activeTab: string
@@ -36,6 +38,7 @@ type EditorRailProps = {
   onMarkDone: () => void
   onClose: () => void
   savePending?: boolean
+  exportPending?: ExportPendingKind
   stichprobenComplete?: boolean
   projectDone?: boolean
 }
@@ -88,12 +91,17 @@ const EditorRail = ({
   onMarkDone,
   onClose,
   savePending = false,
+  exportPending = null,
   stichprobenComplete = false,
   projectDone = false,
 }: EditorRailProps) => {
+  const exportBusy = exportPending !== null
   const exportBlockedHint = stichprobenComplete
     ? undefined
     : "Stichproben-Quote noch nicht erfüllt"
+  const exportBusyHint = exportBusy
+    ? "Export läuft – bitte warten"
+    : exportBlockedHint
 
   return (
     <aside
@@ -149,34 +157,44 @@ const EditorRail = ({
           variant="secondary"
           className="w-full rounded-none"
           onClick={onDownloadExcel}
-          aria-label="Excel herunterladen"
-          title={exportBlockedHint}
+          disabled={exportBusy}
+          aria-busy={exportPending === "excel"}
+          aria-label={
+            exportPending === "excel"
+              ? "Excel wird erstellt"
+              : "Excel herunterladen"
+          }
+          title={exportBusyHint}
         >
           <HugeiconsIcon icon={GridTableIcon} size={16} strokeWidth={2} />
-          Excel
+          {exportPending === "excel" ? "Excel wird erstellt…" : "Excel"}
         </Button>
         <Button
           type="button"
           variant="secondary"
           className="w-full rounded-none"
           onClick={onDownloadPdf}
-          aria-label="PDF herunterladen"
-          title={exportBlockedHint}
+          disabled={exportBusy}
+          aria-busy={exportPending === "pdf"}
+          aria-label={
+            exportPending === "pdf" ? "PDF wird erstellt" : "PDF herunterladen"
+          }
+          title={exportBusyHint}
         >
           <HugeiconsIcon icon={FileExportIcon} size={16} strokeWidth={2} />
-          PDF
+          {exportPending === "pdf" ? "PDF wird erstellt…" : "PDF"}
         </Button>
         <Button
           type="button"
           variant="secondary"
           className="w-full rounded-none"
           onClick={onMarkDone}
-          disabled={projectDone}
+          disabled={projectDone || exportBusy}
           aria-label="Inventur als fertig markieren"
           title={
             projectDone
               ? "Inventur bereits fertig"
-              : exportBlockedHint
+              : exportBusyHint
           }
         >
           <HugeiconsIcon

@@ -64,18 +64,10 @@ const mapSheetRowsToPdfLots = (rows: SheetLotRow[]): LotIdPdfRow[] =>
     index: asIndex(row.Index),
   }))
 
-const savePdfBytes = async (
-  input: PdfExportInput,
-  debitor: string
-): Promise<PdfExportResult> => {
-  const pdfBytes = await invoke<number[]>("export_abgleich_pdf", { input })
-  const binary = new Uint8Array(pdfBytes)
-
-  const suggestedFilename = `[${debitor}] Bestandsabgleich - ${new Date().toLocaleDateString("de-DE")}.pdf`
-
-  const filePath = await save({
-    title: "Bestandsabgleich speichern",
-    defaultPath: suggestedFilename,
+const pickPdfSavePath = async (defaultPath: string, title: string) =>
+  save({
+    title,
+    defaultPath,
     filters: [
       {
         name: "PDF-Dokument",
@@ -84,11 +76,24 @@ const savePdfBytes = async (
     ],
   })
 
+const savePdfBytes = async (
+  input: PdfExportInput,
+  debitor: string
+): Promise<PdfExportResult> => {
+  const suggestedFilename = `[${debitor}] Bestandsabgleich - ${new Date().toLocaleDateString("de-DE")}.pdf`
+
+  // Ask for the path first so the dialog opens immediately; generation can take a while.
+  const filePath = await pickPdfSavePath(
+    suggestedFilename,
+    "Bestandsabgleich speichern"
+  )
+
   if (!filePath) {
     return { success: false, cancelled: true }
   }
 
-  await writeFile(filePath, binary)
+  const pdfBytes = await invoke<number[]>("export_abgleich_pdf", { input })
+  await writeFile(filePath, new Uint8Array(pdfBytes))
   return { success: true, filePath }
 }
 
@@ -121,25 +126,17 @@ export const exportAbgleichPdfFromRows = async (data: {
  */
 export const exportBestaetigungPdf = async (): Promise<PdfExportResult> => {
   try {
-    const pdfBytes = await invoke<number[]>("export_bestaetigung_pdf")
-    const binary = new Uint8Array(pdfBytes)
-
-    const filePath = await save({
-      title: "Bestätigungsformular speichern",
-      defaultPath: "Bestätigungsformular Inventur.pdf",
-      filters: [
-        {
-          name: "PDF-Dokument",
-          extensions: ["pdf"],
-        },
-      ],
-    })
+    const filePath = await pickPdfSavePath(
+      "Bestätigungsformular Inventur.pdf",
+      "Bestätigungsformular speichern"
+    )
 
     if (!filePath) {
       return { success: false, cancelled: true }
     }
 
-    await writeFile(filePath, binary)
+    const pdfBytes = await invoke<number[]>("export_bestaetigung_pdf")
+    await writeFile(filePath, new Uint8Array(pdfBytes))
     return { success: true, filePath }
   } catch (err) {
     console.error("Error saving Bestätigungsformular:", err)

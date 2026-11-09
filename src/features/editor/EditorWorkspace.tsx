@@ -58,6 +58,9 @@ export const EditorWorkspace = ({
   const [lotIdStatusFilter, setLotIdStatusFilter] =
     useState<LotIdStatusFilter>("all")
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
+  const [exportPending, setExportPending] = useState<"excel" | "pdf" | null>(
+    null
+  )
   const [, setLocation] = useLocation()
 
   const [lotIdData, setLotIdData] = useState(() =>
@@ -207,30 +210,70 @@ export const EditorWorkspace = ({
     }
   }, [lotIdData, handleLotIdChange])
 
-  const handleDownloadExcel = async () => {
-    if (!assertStichprobenGate("Excel-Export")) return
-    const live = buildLiveSnapshot()
-    await flushDraft({ silent: true })
-    await handleSnapshotExcelDownload(live, setToastInfo)
+  const runExport = async (
+    kind: "excel" | "pdf",
+    exportLabel: string,
+    run: (
+      setExportToast: typeof setToastInfo
+    ) => Promise<"success" | "cancelled" | "error">
+  ) => {
+    if (exportPending) return
+    if (!assertStichprobenGate(`${exportLabel}-Export`)) return
+
+    setExportPending(kind)
+    const toastId = `editor-export-${kind}`
+    toast.loading(`${exportLabel}-Export`, {
+      id: toastId,
+      description: "Speicherort wählen, danach wird die Datei erstellt…",
+    })
+
+    const setExportToast: typeof setToastInfo = (info) => {
+      if (!info?.open) return
+      if (info.type === "success") {
+        toast.success(info.title, {
+          id: toastId,
+          description: info.description,
+        })
+        return
+      }
+      toast.error(info.title, {
+        id: toastId,
+        description: info.description,
+      })
+    }
+
     try {
-      await updateInventurStatus(projectId, "exported")
-      setProjectStatus("exported")
-    } catch (error) {
-      console.error("Status Exportiert konnte nicht gesetzt werden:", error)
+      const outcome = await run(setExportToast)
+      if (outcome === "cancelled") {
+        toast.dismiss(toastId)
+        return
+      }
+      if (outcome !== "success") return
+
+      await flushDraft({ silent: true })
+      try {
+        await updateInventurStatus(projectId, "exported")
+        setProjectStatus("exported")
+      } catch (error) {
+        console.error("Status Exportiert konnte nicht gesetzt werden:", error)
+      }
+    } finally {
+      setExportPending(null)
     }
   }
 
+  const handleDownloadExcel = async () => {
+    await runExport("excel", "Excel", async (setExportToast) => {
+      const live = buildLiveSnapshot()
+      return handleSnapshotExcelDownload(live, setExportToast)
+    })
+  }
+
   const handleDownloadPdf = async () => {
-    if (!assertStichprobenGate("PDF-Export")) return
-    const live = buildLiveSnapshot()
-    await flushDraft({ silent: true })
-    await handleSnapshotPdfDownload(live, lotIdData, setToastInfo)
-    try {
-      await updateInventurStatus(projectId, "exported")
-      setProjectStatus("exported")
-    } catch (error) {
-      console.error("Status Exportiert konnte nicht gesetzt werden:", error)
-    }
+    await runExport("pdf", "PDF", async (setExportToast) => {
+      const live = buildLiveSnapshot()
+      return handleSnapshotPdfDownload(live, lotIdData, setExportToast)
+    })
   }
 
   const handleMarkDone = async () => {
@@ -305,6 +348,7 @@ export const EditorWorkspace = ({
           onMarkDone={() => void handleMarkDone()}
           onClose={() => void handleClose()}
           savePending={savePending}
+          exportPending={exportPending}
           stichprobenComplete={stichprobenMet}
           projectDone={projectStatus === "done"}
         />

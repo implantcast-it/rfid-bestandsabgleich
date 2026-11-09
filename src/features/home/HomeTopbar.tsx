@@ -20,12 +20,22 @@ const HomeTopbar = ({
   const [downloadingForm, setDownloadingForm] = useState(false)
 
   const handleDownloadBestaetigung = async () => {
+    if (downloadingForm) return
     setDownloadingForm(true)
+    const toastId = "bestaetigung-pdf-export"
+    toast.loading("Bestätigungsformular", {
+      id: toastId,
+      description: "Speicherort wählen, danach wird die Datei erstellt…",
+    })
     try {
       const result = await exportBestaetigungPdf()
-      if (result.cancelled) return
+      if (result.cancelled) {
+        toast.dismiss(toastId)
+        return
+      }
       if (!result.success) {
         toast.error("Download fehlgeschlagen", {
+          id: toastId,
           description:
             result.error?.message ??
             "Das Bestätigungsformular konnte nicht erstellt werden.",
@@ -33,11 +43,15 @@ const HomeTopbar = ({
         return
       }
       toast.success("Bestätigungsformular gespeichert", {
+        id: toastId,
         description: result.filePath,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      toast.error("Download fehlgeschlagen", { description: message })
+      toast.error("Download fehlgeschlagen", {
+        id: toastId,
+        description: message,
+      })
     } finally {
       setDownloadingForm(false)
     }
