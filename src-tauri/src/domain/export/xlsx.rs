@@ -5,12 +5,15 @@
 
 use std::path::{Path, PathBuf};
 
-use rust_xlsxwriter::{Workbook, XlsxError};
+use chrono::Datelike;
+use rust_xlsxwriter::conditional_format::ConditionalFormatFormula;
+use rust_xlsxwriter::{
+    Color, ExcelDateTime, Format, Table, TableColumn, TableStyle, Workbook, XlsxError,
+};
 
 use crate::domain::error::{DomainError, DomainResult};
 use crate::domain::types::{
-    sheet_names, ArtNrCompareRow, CompareResult, ErpRow, LotIdCompareRow, OffenePostenRow,
-    RfidRow,
+    sheet_names, ArtNrCompareRow, CompareResult, ErpRow, LotIdCompareRow, OffenePostenRow, RfidRow,
 };
 
 /// Write a scratch Abgleich workbook to `path`.
@@ -73,7 +76,7 @@ fn write_ax_bestand(wb: &mut Workbook, rows: &[ErpRow]) -> Result<(), XlsxError>
         sheet.write_string(r, 3, &row.kennzeichen_3)?;
         sheet.write_string(r, 4, &row.ablaufdatum)?;
         sheet.write_string(r, 5, &row.debitorenkonto)?;
-        sheet.write_string(r, 6, &row.eigenbestand_nach_erp)?;
+        sheet.write_string(r, 6, &row.erp)?;
     }
     Ok(())
 }
@@ -126,7 +129,7 @@ fn write_art_nr(wb: &mut Workbook, rows: &[ArtNrCompareRow]) -> Result<(), XlsxE
         let r = (r + 1) as u32;
         sheet.write_string(r, 0, &row.artikelnummer)?;
         sheet.write_string(r, 1, &row.produktname)?;
-        sheet.write_number(r, 2, row.eigenbestand_nach_erp as f64)?;
+        sheet.write_number(r, 2, row.erp as f64)?;
         sheet.write_number(r, 3, row.rfid_scan as f64)?;
         sheet.write_number(r, 4, row.differenz as f64)?;
         sheet.write_string(r, 5, &row.id)?;
@@ -137,39 +140,79 @@ fn write_art_nr(wb: &mut Workbook, rows: &[ArtNrCompareRow]) -> Result<(), XlsxE
 fn write_lot_id(wb: &mut Workbook, rows: &[LotIdCompareRow]) -> Result<(), XlsxError> {
     let sheet = wb.add_worksheet();
     sheet.set_name(sheet_names::BESTANDSABGLEICH_LOT_ID)?;
+    let ablaufdatum_format = Format::new().set_num_format("dd.mm.yyyy");
     let headers = [
+        "Kennzeichen 3",
         "Artikelnummer",
         "Produktname",
-        "Kennzeichen 3",
         "LotId",
-        "Eigenbestand nach ERP",
+        "ERP",
         "RFID-Scan",
-        "Ablaufdatum",
         "To Do",
         "Anmerkung",
         "Stichprobe",
+        "Ablaufdatum",
         "id",
         "Index",
     ];
+    let mut columns = Vec::with_capacity(headers.len());
+
     for (c, h) in headers.iter().enumerate() {
         sheet.write_string(0, c as u16, *h)?;
+        columns.push(TableColumn::new().set_header(*h));
     }
     for (r, row) in rows.iter().enumerate() {
         let r = (r + 1) as u32;
-        sheet.write_string(r, 0, &row.artikelnummer)?;
-        sheet.write_string(r, 1, &row.produktname)?;
-        sheet.write_string(r, 2, &row.kennzeichen_3)?;
+        sheet.write_string(r, 0, &row.kennzeichen_3)?;
+        sheet.write_string(r, 1, &row.artikelnummer)?;
+        sheet.write_string(r, 2, &row.produktname)?;
         sheet.write_string(r, 3, &row.lot_id)?;
-        sheet.write_string(r, 4, &row.eigenbestand_nach_erp)?;
+        sheet.write_string(r, 4, &row.erp)?;
         sheet.write_string(r, 5, &row.rfid_scan)?;
-        sheet.write_string(r, 6, &row.ablaufdatum)?;
-        sheet.write_string(r, 7, &row.to_do)?;
-        sheet.write_string(r, 8, &row.anmerkung)?;
-        sheet.write_string(r, 9, &row.stichprobe)?;
+        sheet.write_string(r, 6, &row.to_do)?;
+        sheet.write_string(r, 7, &row.anmerkung)?;
+        sheet.write_string(r, 8, &row.stichprobe)?;
+        if let Some(date) = parse_ablaufdatum(&row.ablaufdatum) {
+            let date =
+                ExcelDateTime::from_ymd(date.year() as u16, date.month() as u8, date.day() as u8)?;
+            sheet.write_datetime_with_format(r, 9, &date, &ablaufdatum_format)?;
+        } else {
+            sheet.write_string(r, 9, &row.ablaufdatum)?;
+        }
         sheet.write_string(r, 10, &row.id)?;
         sheet.write_number(r, 11, row.index as f64)?;
     }
+    let table = Table::new()
+        .set_columns(&columns)
+        .set_name("Bestandsabgleich_LotId")
+        .set_style(TableStyle::Light15);
+    sheet.add_table(0, 0, rows.len() as u32, columns.len() as u16 - 1, &table)?;
+
+    // Formula-based rules recalculate in Excel as TODAY() changes.
+    let format_red = Format::new().set_background_color(Color::Red);
+    let format_yellow = Format::new().set_background_color(Color::Yellow);
+
+    let condition_expired = ConditionalFormatFormula::new()
+        .set_rule("=AND(ISNUMBER($J2),$J2<TODAY())")
+        .set_format(&format_red);
+    let condition_expiring_soon = ConditionalFormatFormula::new()
+        .set_rule("=AND(ISNUMBER($J2),$J2>=TODAY(),$J2<=TODAY()+30)")
+        .set_format(&format_yellow);
+
+    if !rows.is_empty() {
+        sheet.add_conditional_format(1, 9, rows.len() as u32, 9, &condition_expired)?;
+        sheet.add_conditional_format(1, 9, rows.len() as u32, 9, &condition_expiring_soon)?;
+    }
+
+    sheet.autofit();
     Ok(())
+}
+
+fn parse_ablaufdatum(value: &str) -> Option<chrono::NaiveDate> {
+    let value = value.trim();
+    ["%d.%m.%Y", "%Y-%m-%d", "%m/%d/%Y", "%-m/%-d/%Y"]
+        .iter()
+        .find_map(|format| chrono::NaiveDate::parse_from_str(value, format).ok())
 }
 
 /// Always writes the header row, so the sheet exists even when no positions are open.
