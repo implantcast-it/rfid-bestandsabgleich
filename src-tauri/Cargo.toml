@@ -1,6 +1,6 @@
 [package]
 name = "rfid-bestandsabgleich"
-version = "4.1.3"
+version = "5.0.0"
 description = "Bestandabgleich-Software der Firma implantcast GmbH für die Inventur bei Bestandskunden."
 authors = ["implantcast GmbH"]
 edition = "2021"
@@ -8,14 +8,30 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tauri-plugin-dialog = "2"
-tauri-plugin-fs = "2"
+tauri = { version = "2.12.5", features = [] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tauri-plugin-dialog = "2.8.4"
+tauri-plugin-fs = "2.7.1"
+calamine = "0.38.0"
+csv = "1.4.0"
+rust_xlsxwriter = "0.102.0"
+uuid = { version = "1.29.0", features = ["v4", "serde"] }
+thiserror = "2.0.21"
+regex = "1.13.1"
+rusqlite = { version = "0.41.1", features = ["bundled"] }
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+typst-as-lib = "0.17.0"
+typst-pdf = "0.15.1"
+typst = "0.15.1"
+typst-layout = "0.15.1"
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+tempfile = "3.27.0"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
@@ -25,11 +41,12 @@ custom-protocol = ["tauri/custom-protocol"]
 incremental = true # Compile your binary in smaller steps.
 
 [profile.release]
-codegen-units = 1 # Allows LLVM to perform better optimization.
-lto = true # Enables link-time-optimizations.
+codegen-units = 16 # Allows LLVM to perform better optimization.
+lto = "thin" # Enables link-time-optimizations.
 opt-level = 3 # Prioritizes small binary size. Use `3` if you prefer speed.
 panic = "abort" # Higher performance by disabling panic handlers.
 strip = true # Ensures debug symbols are removed.
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-updater = "2"
+tauri-plugin-updater = "2.14.1"
+tauri-plugin-process = "2.4.0"
