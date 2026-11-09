@@ -51,7 +51,7 @@ mod tests {
             produktname: format!("Produkt ÄÖÜ {index}"),
             kennzeichen_3: "K".into(),
             lot_id: format!("LOT/{index}"),
-            eigenbestand_nach_erp: erp.into(),
+            erp: erp.into(),
             rfid_scan: rfid.into(),
             ablaufdatum: "12.2027".into(),
             to_do: "Prüfen".into(),

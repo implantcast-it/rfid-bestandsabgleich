@@ -22,7 +22,7 @@ pub enum LotIdEditField {
 
 /// Partial update for one LotId row, keyed by stable [`LotIdCompareRow::id`].
 ///
-/// ERP presence (`eigenbestand_nach_erp`) is intentionally absent — read-only.
+/// ERP presence (`erp`) is intentionally absent — read-only.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub struct LotIdPatch {
     pub id: String,

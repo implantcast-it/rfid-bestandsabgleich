@@ -82,7 +82,7 @@ mod tests {
             produktname: format!("P-{art}"),
             kennzeichen_3: kz.into(),
             lot_id: id.into(),
-            eigenbestand_nach_erp: erp.into(),
+            erp: erp.into(),
             rfid_scan: rfid.into(),
             ablaufdatum: "-".into(),
             to_do: String::new(),

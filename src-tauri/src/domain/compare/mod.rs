@@ -47,7 +47,7 @@ mod tests {
                 kennzeichen_3: "IMP".into(),
                 ablaufdatum: "1/1/2030".into(),
                 debitorenkonto: "10521".into(),
-                eigenbestand_nach_erp: "1".into(),
+                erp: "1".into(),
                 extra: vec![],
             }],
             rfid: vec![RfidRow {

@@ -127,7 +127,7 @@ fn map_erp_row(mut row: HashMap<String, String>) -> ErpRow {
         kennzeichen_3,
         ablaufdatum,
         debitorenkonto,
-        eigenbestand_nach_erp: cell_to_string(&eigenbestand),
+        erp: cell_to_string(&eigenbestand),
         extra,
     }
 }
@@ -163,7 +163,7 @@ mod tests {
         row.insert("Kennzeichen".into(), "IMP".into());
 
         let mapped = map_erp_row(row);
-        assert_eq!(mapped.eigenbestand_nach_erp, "2");
+        assert_eq!(mapped.erp, "2");
         assert_eq!(mapped.lot_id, "L1");
         assert_eq!(mapped.kennzeichen_3, "IMP");
     }

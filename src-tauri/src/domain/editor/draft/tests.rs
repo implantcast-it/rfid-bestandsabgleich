@@ -13,7 +13,7 @@ fn from_compare_ignores_stale_art_nr() {
     let stale = vec![ArtNrCompareRow {
         artikelnummer: "100".into(),
         produktname: "P-100".into(),
-        eigenbestand_nach_erp: 99,
+        erp: 99,
         rfid_scan: 99,
         differenz: 0,
         id: "stale".into(),
@@ -21,7 +21,7 @@ fn from_compare_ignores_stale_art_nr() {
     let draft = InventurDraft::from_compare(sample_compare(lots, stale));
     let art = draft.art_nr_rows();
     assert_eq!(art.len(), 1);
-    assert_eq!(art[0].eigenbestand_nach_erp, 2);
+    assert_eq!(art[0].erp, 2);
     assert_eq!(art[0].rfid_scan, 1);
     assert_eq!(art[0].differenz, 1);
     assert_eq!(art[0].id, "100");
@@ -43,7 +43,7 @@ fn stats_stichproben_required_from_ax_quantity() {
             kennzeichen_3: "IMP".into(),
             ablaufdatum: "-".into(),
             debitorenkonto: "10521".into(),
-            eigenbestand_nach_erp: "80".into(),
+            erp: "80".into(),
             extra: vec![],
         },
         ErpRow {
@@ -53,7 +53,7 @@ fn stats_stichproben_required_from_ax_quantity() {
             kennzeichen_3: "IMP".into(),
             ablaufdatum: "-".into(),
             debitorenkonto: "10521".into(),
-            eigenbestand_nach_erp: "21".into(),
+            erp: "21".into(),
             extra: vec![],
         },
     ];
@@ -103,7 +103,7 @@ fn erp_flag_cannot_be_changed_via_patch_api() {
             ..Default::default()
         }])
         .unwrap();
-    assert_eq!(draft.lot_id_rows()[0].eigenbestand_nach_erp, "1");
+    assert_eq!(draft.lot_id_rows()[0].erp, "1");
 }
 
 #[test]

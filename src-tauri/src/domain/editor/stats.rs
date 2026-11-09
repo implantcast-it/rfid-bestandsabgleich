@@ -13,7 +13,7 @@ pub(crate) fn compute_stats(rows: &[LotIdCompareRow], ax_bestand: &[ErpRow]) -> 
     let mut stichproben_done = 0u32;
 
     for row in rows {
-        let erp = is_present(&row.eigenbestand_nach_erp);
+        let erp = is_present(&row.erp);
         let rfid = is_present(&row.rfid_scan);
         if erp != rfid {
             abweichungen += 1;
@@ -28,7 +28,7 @@ pub(crate) fn compute_stats(rows: &[LotIdCompareRow], ax_bestand: &[ErpRow]) -> 
 
     let erp_quantity_total: u32 = ax_bestand
         .iter()
-        .map(|row| erp_quantity_as_u32(&row.eigenbestand_nach_erp))
+        .map(|row| erp_quantity_as_u32(&row.erp))
         .fold(0u32, u32::saturating_add);
     let stichproben_required = stichproben_required_from_erp_total(erp_quantity_total);
 

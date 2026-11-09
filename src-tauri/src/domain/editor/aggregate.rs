@@ -5,7 +5,7 @@
 //! | | `compare_art_nr` | `aggregate_art_nr_from_lot_id` |
 //! |-|------------------|-------------------------------|
 //! | Input | ERP + RFID raw rows | LotId compare rows |
-//! | ERP count | Number of ERP **rows** (incl. empty LotId) | Sum of LotId `eigenbestand_nach_erp` flags |
+//! | ERP count | Number of ERP **rows** (incl. empty LotId) | Sum of LotId `erp` flags |
 //! | RFID count | Number of RFID rows | Sum of LotId `rfid_scan` flags |
 //! | `id` | new UUID | `artikelnummer` |
 //!
@@ -29,20 +29,20 @@ pub fn aggregate_art_nr_from_lot_id(rows: &[LotIdCompareRow]) -> Vec<ArtNrCompar
         let entry = groups.entry(art.to_string()).or_insert_with(|| ArtNrCompareRow {
             artikelnummer: art.to_string(),
             produktname: row.produktname.clone(),
-            eigenbestand_nach_erp: 0,
+            erp: 0,
             rfid_scan: 0,
             differenz: 0,
             id: art.to_string(),
         });
 
-        entry.eigenbestand_nach_erp += presence_as_i64(&row.eigenbestand_nach_erp);
+        entry.erp += presence_as_i64(&row.erp);
         entry.rfid_scan += presence_as_i64(&row.rfid_scan);
     }
 
     groups
         .into_values()
         .map(|mut row| {
-            row.differenz = row.eigenbestand_nach_erp - row.rfid_scan;
+            row.differenz = row.erp - row.rfid_scan;
             row
         })
         .collect()
@@ -65,7 +65,7 @@ mod tests {
             produktname: format!("P-{art}"),
             kennzeichen_3: "IMP".into(),
             lot_id: lot.into(),
-            eigenbestand_nach_erp: erp.into(),
+            erp: erp.into(),
             rfid_scan: rfid.into(),
             ablaufdatum: "-".into(),
             to_do: String::new(),
@@ -84,7 +84,7 @@ mod tests {
         ];
         let art = aggregate_art_nr_from_lot_id(&rows);
         assert_eq!(art.len(), 1);
-        assert_eq!(art[0].eigenbestand_nach_erp, 2);
+        assert_eq!(art[0].erp, 2);
         assert_eq!(art[0].rfid_scan, 1);
         assert_eq!(art[0].differenz, 1);
         assert_eq!(art[0].id, "100");

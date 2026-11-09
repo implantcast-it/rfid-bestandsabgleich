@@ -38,7 +38,7 @@ pub(crate) fn map_art_nr_row(
                 p
             }
         },
-        eigenbestand_nach_erp: parse_i64(&get(&row, "Eigenbestand nach ERP")),
+        erp: parse_i64(&get(&row, "Eigenbestand nach ERP")),
         rfid_scan: parse_i64(&get(&row, "RFID-Scan")),
         differenz: parse_i64(&get(&row, "Differenz")),
         id,
@@ -83,7 +83,7 @@ pub(crate) fn map_lot_id_row(
         produktname: get(&row, "Produktname"),
         kennzeichen_3: get(&row, "Kennzeichen 3"),
         lot_id: normalize_lot_id(&get(&row, "LotId")),
-        eigenbestand_nach_erp: presence_flag(&get(&row, "Eigenbestand nach ERP")),
+        erp: presence_flag(&get(&row, "Eigenbestand nach ERP")),
         rfid_scan: presence_flag(&get(&row, "RFID-Scan")),
         ablaufdatum,
         to_do: get(&row, "To Do"),
@@ -135,7 +135,7 @@ pub(crate) fn map_erp_row(row: HashMap<String, String>) -> ErpRow {
             ablauf
         },
         debitorenkonto: get(&row, "Debitorenkonto"),
-        eigenbestand_nach_erp: get(&row, "Eigenbestand nach ERP"),
+        erp: get(&row, "Eigenbestand nach ERP"),
         extra: vec![],
     }
 }

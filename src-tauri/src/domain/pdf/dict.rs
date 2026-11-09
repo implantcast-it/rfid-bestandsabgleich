@@ -32,14 +32,14 @@ pub(crate) fn lot_to_value(lot: &LotIdCompareRow) -> Value {
     dict.insert("produkt".into(), lot.produktname.clone().into_value());
     dict.insert("lot_id".into(), lot.lot_id.clone().into_value());
     dict.insert("verfall".into(), lot.ablaufdatum.clone().into_value());
-    dict.insert("erp".into(), lot.eigenbestand_nach_erp.clone().into_value());
+    dict.insert("erp".into(), lot.erp.clone().into_value());
     dict.insert("rfid".into(), lot.rfid_scan.clone().into_value());
     dict.insert("todo".into(), lot.to_do.clone().into_value());
     dict.insert("anmerkung".into(), lot.anmerkung.clone().into_value());
     dict.insert("stich".into(), lot.stichprobe.clone().into_value());
     dict.insert(
         "mismatch".into(),
-        is_mismatch(&lot.eigenbestand_nach_erp, &lot.rfid_scan).into_value(),
+        is_mismatch(&lot.erp, &lot.rfid_scan).into_value(),
     );
     Value::Dict(dict)
 }

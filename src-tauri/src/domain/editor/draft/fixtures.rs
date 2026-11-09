@@ -13,7 +13,7 @@ pub(super) fn lot(
         produktname: format!("P-{art}"),
         kennzeichen_3: "IMP".into(),
         lot_id: lot.into(),
-        eigenbestand_nach_erp: erp.into(),
+        erp: erp.into(),
         rfid_scan: rfid.into(),
         ablaufdatum: "-".into(),
         to_do: String::new(),

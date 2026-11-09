@@ -1,26 +1,26 @@
-import { useCallback, useEffect, useState } from "react"
-import { useLocation } from "wouter"
-import { getVersion } from "@tauri-apps/api/app"
-import { UpdaterDialog } from "@/features/feedback/UpdaterDialog"
-import { Toaster } from "@/core/ui/sonner"
-import HomeTopbar from "@/features/home/HomeTopbar"
-import UploadPanel from "@/features/home/UploadPanel"
-import InsightCards from "@/features/home/InsightCards"
-import InventurenFileGrid from "@/features/home/InventurenFileGrid"
-import { getCatalogReady, type CatalogReady } from "@/domains/catalog"
-import { useHomeProjects } from "@/features/home/hooks/use-home-projects"
-import { useInventurCompare } from "@/features/home/hooks/use-inventur-compare"
+import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "wouter";
+import { getVersion } from "@tauri-apps/api/app";
+import { UpdaterDialog } from "@/features/feedback/UpdaterDialog";
+import { Toaster } from "@/core/ui/sonner";
+import HomeTopbar from "@/features/home/HomeTopbar";
+import UploadPanel from "@/features/home/UploadPanel";
+import InsightCards from "@/features/home/InsightCards";
+import InventurenFileGrid from "@/features/home/InventurenFileGrid";
+import { getCatalogReady, type CatalogReady } from "@/domains/catalog";
+import { useHomeProjects } from "@/features/home/hooks/use-home-projects";
+import { useInventurCompare } from "@/features/home/hooks/use-inventur-compare";
 
-const inventurjahrDefault = () => String(new Date().getFullYear())
+const inventurjahrDefault = () => String(new Date().getFullYear());
 
 const StartScreen = () => {
-  const [appVersion, setAppVersion] = useState("")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [, setLocation] = useLocation()
-  const [catalogReady, setCatalogReady] = useState<CatalogReady | null>(null)
-  const [erpPath, setErpPath] = useState<string | null>(null)
-  const [rfidPath, setRfidPath] = useState<string | null>(null)
-  const [inventurjahr, setInventurjahr] = useState(inventurjahrDefault)
+  const [appVersion, setAppVersion] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [, setLocation] = useLocation();
+  const [catalogReady, setCatalogReady] = useState<CatalogReady | null>(null);
+  const [erpPath, setErpPath] = useState<string | null>(null);
+  const [rfidPath, setRfidPath] = useState<string | null>(null);
+  const [inventurjahr, setInventurjahr] = useState(inventurjahrDefault);
 
   const {
     inventurFiles,
@@ -29,17 +29,17 @@ const StartScreen = () => {
     refreshProjects,
     handleRenameInventur,
     handleDeleteInventur,
-  } = useHomeProjects(inventurjahr)
+  } = useHomeProjects(inventurjahr);
 
   const refreshCatalogReady = useCallback(async () => {
     try {
-      const ready = await getCatalogReady()
-      setCatalogReady(ready)
+      const ready = await getCatalogReady();
+      setCatalogReady(ready);
     } catch (error) {
-      console.error("Katalog-Status konnte nicht geladen werden:", error)
-      setCatalogReady(null)
+      console.error("Katalog-Status konnte nicht geladen werden:", error);
+      setCatalogReady(null);
     }
-  }, [])
+  }, []);
 
   const compare = useInventurCompare({
     inventurjahr,
@@ -48,39 +48,39 @@ const StartScreen = () => {
     rfidPath,
     setLocation,
     refreshProjects,
-  })
+  });
 
   useEffect(() => {
     const fetchVersion = async () => {
       try {
-        const version = await getVersion()
-        setAppVersion(version)
+        const version = await getVersion();
+        setAppVersion(version);
       } catch (error) {
-        console.error("Failed to get app version:", error)
+        console.error("Failed to get app version:", error);
       }
-    }
+    };
 
-    void fetchVersion()
-    void refreshCatalogReady()
-    void refreshProjects()
-  }, [refreshCatalogReady, refreshProjects])
+    void fetchVersion();
+    void refreshCatalogReady();
+    void refreshProjects();
+  }, [refreshCatalogReady, refreshProjects]);
 
   useEffect(() => {
-    if (availableYears.length === 0) return
-    if (availableYears.includes(inventurjahr)) return
-    setInventurjahr(availableYears[0])
-  }, [availableYears, inventurjahr])
+    if (availableYears.length === 0) return;
+    if (availableYears.includes(inventurjahr)) return;
+    setInventurjahr(availableYears[0]);
+  }, [availableYears, inventurjahr]);
 
   return (
-    <div className="text-foreground relative flex h-svh min-w-0 flex-col overflow-hidden">
+    <div className='relative flex flex-col min-w-0 h-svh overflow-hidden text-foreground'>
       <HomeTopbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onCatalogChanged={() => void refreshCatalogReady()}
       />
 
-      <div className="scrollbar-none relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
-        <main className="mx-auto grid w-full min-w-0 max-w-[1075px] gap-3 px-5 pt-3.5 pb-4">
+      <div className='relative flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto scrollbar-none'>
+        <main className='gap-3 grid mx-auto px-5 pt-3.5 pb-4 w-full min-w-0 max-w-[1075px]'>
           <UploadPanel
             inventurjahr={inventurjahr}
             catalogReady={catalogReady}
@@ -130,9 +130,9 @@ const StartScreen = () => {
       </div>
 
       <UpdaterDialog />
-      <Toaster position="bottom-right" />
+      <Toaster position='bottom-right' />
     </div>
-  )
-}
+  );
+};
 
-export default StartScreen
+export default StartScreen;

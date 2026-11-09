@@ -66,7 +66,7 @@ pub fn compare_lot_id(erp: &[ErpRow], rfid: &[RfidRow]) -> Vec<LotIdCompareRow> 
             produktname,
             kennzeichen_3,
             lot_id: lot_id.clone(),
-            eigenbestand_nach_erp: if item_erp.is_some() { "1" } else { "0" }.into(),
+            erp: if item_erp.is_some() { "1" } else { "0" }.into(),
             rfid_scan: if item_rfid.is_some() { "1" } else { "0" }.into(),
             ablaufdatum: item_erp
                 .map(|e| e.ablaufdatum.clone())
@@ -116,7 +116,7 @@ mod tests {
             kennzeichen_3: kz.into(),
             ablaufdatum: "1/1/2030".into(),
             debitorenkonto: "1".into(),
-            eigenbestand_nach_erp: "1".into(),
+            erp: "1".into(),
             extra: vec![],
         }
     }
@@ -141,11 +141,11 @@ mod tests {
             &[rfid("100", "L1", "IMP"), rfid("100", "L3", "IMP")],
         );
         let by_lot: HashMap<_, _> = rows.iter().map(|r| (r.lot_id.as_str(), r)).collect();
-        assert_eq!(by_lot["L1"].eigenbestand_nach_erp, "1");
+        assert_eq!(by_lot["L1"].erp, "1");
         assert_eq!(by_lot["L1"].rfid_scan, "1");
-        assert_eq!(by_lot["L2"].eigenbestand_nach_erp, "1");
+        assert_eq!(by_lot["L2"].erp, "1");
         assert_eq!(by_lot["L2"].rfid_scan, "0");
-        assert_eq!(by_lot["L3"].eigenbestand_nach_erp, "0");
+        assert_eq!(by_lot["L3"].erp, "0");
         assert_eq!(by_lot["L3"].rfid_scan, "1");
     }
 

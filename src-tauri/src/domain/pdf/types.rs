@@ -30,7 +30,7 @@ pub struct PdfTotals {
 
 impl PdfTotals {
     pub fn from_lots(lots: &[LotIdCompareRow]) -> Self {
-        let soll = sum_presence(lots.iter().map(|r| r.eigenbestand_nach_erp.as_str()));
+        let soll = sum_presence(lots.iter().map(|r| r.erp.as_str()));
         let ist = sum_presence(lots.iter().map(|r| r.rfid_scan.as_str()));
         Self {
             anzahl: lots.len(),

@@ -43,14 +43,14 @@ pub fn auto_fill_kommentare(rows: &[LotIdCompareRow]) -> AutoKommentareResult {
             .iter()
             .copied()
             .filter(|&i| {
-                is_present(&rows[i].eigenbestand_nach_erp) && is_absent(&rows[i].rfid_scan)
+                is_present(&rows[i].erp) && is_absent(&rows[i].rfid_scan)
             })
             .collect();
         let extras: Vec<usize> = indices
             .iter()
             .copied()
             .filter(|&i| {
-                is_absent(&rows[i].eigenbestand_nach_erp) && is_present(&rows[i].rfid_scan)
+                is_absent(&rows[i].erp) && is_present(&rows[i].rfid_scan)
             })
             .collect();
 
@@ -117,7 +117,7 @@ mod tests {
             produktname: format!("P-{art}"),
             kennzeichen_3: "IMP".into(),
             lot_id: lot.into(),
-            eigenbestand_nach_erp: erp.into(),
+            erp: erp.into(),
             rfid_scan: rfid.into(),
             ablaufdatum: "-".into(),
             to_do: todo.into(),

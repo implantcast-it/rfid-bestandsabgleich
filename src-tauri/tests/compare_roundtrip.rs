@@ -187,7 +187,7 @@ fn end_to_end_compare_semantics() {
     } = parse_erp(&erp).unwrap();
     assert_eq!(debitor, "10521");
     assert_eq!(erp_rows.len(), 4);
-    assert_eq!(erp_rows[0].eigenbestand_nach_erp, "1");
+    assert_eq!(erp_rows[0].erp, "1");
     assert!(offene_posten.is_empty());
 
     let rfid_rows = parse_rfid(&rfid, &catalog).unwrap();
@@ -210,7 +210,7 @@ fn end_to_end_compare_semantics() {
         .iter()
         .find(|r| r.artikelnummer == "100")
         .unwrap();
-    assert_eq!(art100.eigenbestand_nach_erp, 3);
+    assert_eq!(art100.erp, 3);
     assert_eq!(art100.rfid_scan, 2);
     assert_eq!(art100.differenz, 1);
 
@@ -219,10 +219,10 @@ fn end_to_end_compare_semantics() {
         .iter()
         .map(|r| (r.lot_id.as_str(), r))
         .collect();
-    assert_eq!(by_lot["L1"].eigenbestand_nach_erp, "1");
+    assert_eq!(by_lot["L1"].erp, "1");
     assert_eq!(by_lot["L1"].rfid_scan, "1");
     assert_eq!(by_lot["L2"].rfid_scan, "0");
-    assert_eq!(by_lot["LEXTRA"].eigenbestand_nach_erp, "0");
+    assert_eq!(by_lot["LEXTRA"].erp, "0");
     assert_eq!(by_lot["LEXTRA"].rfid_scan, "1");
 
     let first_kz = &result.bestandsabgleich_lot_id[0].kennzeichen_3;
@@ -309,7 +309,7 @@ fn erp_accepts_legacy_kennzeichen_column() {
     let erp = parse_erp(&path).unwrap();
     assert_eq!(erp.debitor, "999");
     assert_eq!(erp.rows[0].kennzeichen_3, "SIEB");
-    assert_eq!(erp.rows[0].eigenbestand_nach_erp, "1");
+    assert_eq!(erp.rows[0].erp, "1");
     assert!(erp.offene_posten.is_empty());
 }
 
@@ -381,7 +381,7 @@ fn load_abgleich_roundtrip_preserves_compare_result() {
         .iter()
         .find(|r| r.artikelnummer == "100")
         .unwrap();
-    assert_eq!(art100.eigenbestand_nach_erp, 3);
+    assert_eq!(art100.erp, 3);
     assert_eq!(art100.rfid_scan, 2);
     assert_eq!(art100.differenz, 1);
 
@@ -397,7 +397,7 @@ fn load_abgleich_roundtrip_preserves_compare_result() {
         .iter()
         .find(|r| r.lot_id == "L2")
         .unwrap();
-    assert_eq!(lot2.eigenbestand_nach_erp, "1");
+    assert_eq!(lot2.erp, "1");
     assert_eq!(lot2.rfid_scan, "0");
     assert_eq!(lot2.to_do, "interne Berechnung");
     assert_eq!(lot2.anmerkung, "in Klärung");
@@ -623,7 +623,7 @@ fn open_positions_stay_out_of_the_abgleich_and_roundtrip_through_excel() {
         .iter()
         .find(|r| r.artikelnummer == "100")
         .unwrap();
-    assert_eq!(art100.eigenbestand_nach_erp, 1);
+    assert_eq!(art100.erp, 1);
     assert_eq!(art100.rfid_scan, 2);
     assert!(result
         .bestandsabgleich_artikelnummer

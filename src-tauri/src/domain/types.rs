@@ -25,7 +25,7 @@ pub struct ErpRow {
     pub ablaufdatum: String,
     pub debitorenkonto: String,
     /// Renamed from `Physischer Bestand`; not used for ArtNr math (row counts only).
-    pub eigenbestand_nach_erp: String,
+    pub erp: String,
     /// Extra ERP columns preserved for the `Ax-Bestand` sheet (header → value).
     #[serde(default)]
     pub extra: Vec<(String, String)>,
@@ -49,9 +49,9 @@ pub struct RfidRow {
 pub struct ArtNrCompareRow {
     pub artikelnummer: String,
     pub produktname: String,
-    pub eigenbestand_nach_erp: i64,
+    pub erp: i64,
     pub rfid_scan: i64,
-    /// `eigenbestand_nach_erp - rfid_scan`
+    /// `erp - rfid_scan`
     pub differenz: i64,
     pub id: String,
 }
@@ -59,16 +59,16 @@ pub struct ArtNrCompareRow {
 /// Lot-level reconciliation. Presence flags are the strings `"1"` / `"0"`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LotIdCompareRow {
+    pub kennzeichen_3: String,
     pub artikelnummer: String,
     pub produktname: String,
-    pub kennzeichen_3: String,
     pub lot_id: String,
-    pub eigenbestand_nach_erp: String,
+    pub erp: String,
     pub rfid_scan: String,
-    pub ablaufdatum: String,
     pub to_do: String,
     pub anmerkung: String,
     pub stichprobe: String,
+    pub ablaufdatum: String,
     pub id: String,
     pub index: u32,
 }

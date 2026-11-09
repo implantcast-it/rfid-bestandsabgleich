@@ -20,12 +20,12 @@ pub fn compare_art_nr(erp: &[ErpRow], rfid: &[RfidRow]) -> Vec<ArtNrCompareRow> 
             .or_insert_with(|| ArtNrCompareRow {
                 artikelnummer: item.artikelnummer.clone(),
                 produktname: item.produktname.clone(),
-                eigenbestand_nach_erp: 0,
+                erp: 0,
                 rfid_scan: 0,
                 differenz: 0,
                 id: Uuid::new_v4().to_string(),
             });
-        entry.eigenbestand_nach_erp += 1;
+        entry.erp += 1;
     }
 
     for item in rfid {
@@ -34,7 +34,7 @@ pub fn compare_art_nr(erp: &[ErpRow], rfid: &[RfidRow]) -> Vec<ArtNrCompareRow> 
             .or_insert_with(|| ArtNrCompareRow {
                 artikelnummer: item.artikelnummer.clone(),
                 produktname: item.produktname.clone(),
-                eigenbestand_nach_erp: 0,
+                erp: 0,
                 rfid_scan: 0,
                 differenz: 0,
                 id: Uuid::new_v4().to_string(),
@@ -45,7 +45,7 @@ pub fn compare_art_nr(erp: &[ErpRow], rfid: &[RfidRow]) -> Vec<ArtNrCompareRow> 
     counts
         .into_values()
         .map(|mut row| {
-            row.differenz = row.eigenbestand_nach_erp - row.rfid_scan;
+            row.differenz = row.erp - row.rfid_scan;
             row
         })
         .collect()
@@ -64,7 +64,7 @@ mod tests {
             kennzeichen_3: "IMP".into(),
             ablaufdatum: "-".into(),
             debitorenkonto: "1".into(),
-            eigenbestand_nach_erp: "1".into(),
+            erp: "1".into(),
             extra: vec![],
         }
     }
@@ -90,7 +90,7 @@ mod tests {
         );
         let a = rows.iter().find(|r| r.artikelnummer == "A").unwrap();
         // Two ERP rows for A (including empty LotId) vs one RFID → Differenz 1
-        assert_eq!(a.eigenbestand_nach_erp, 2);
+        assert_eq!(a.erp, 2);
         assert_eq!(a.rfid_scan, 1);
         assert_eq!(a.differenz, 1);
     }
@@ -99,7 +99,7 @@ mod tests {
     fn rfid_only_article_appears() {
         let rows = compare_art_nr(&[], &[rfid("X", "L9")]);
         assert_eq!(rows.len(), 1);
-        assert_eq!(rows[0].eigenbestand_nach_erp, 0);
+        assert_eq!(rows[0].erp, 0);
         assert_eq!(rows[0].rfid_scan, 1);
         assert_eq!(rows[0].differenz, -1);
     }
