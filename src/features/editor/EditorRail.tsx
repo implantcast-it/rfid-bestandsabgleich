@@ -2,6 +2,8 @@ import { ReactNode } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   AntennaIcon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
   Cancel01Icon,
   CheckmarkCircle02Icon,
   DatabaseIcon,
@@ -37,6 +39,8 @@ type EditorRailProps = {
   onDownloadPdf: () => void
   onMarkDone: () => void
   onClose: () => void
+  collapsed: boolean
+  onToggleCollapsed: () => void
   savePending?: boolean
   exportPending?: ExportPendingKind
   stichprobenComplete?: boolean
@@ -90,6 +94,8 @@ const EditorRail = ({
   onDownloadPdf,
   onMarkDone,
   onClose,
+  collapsed,
+  onToggleCollapsed,
   savePending = false,
   exportPending = null,
   stichprobenComplete = false,
@@ -105,15 +111,41 @@ const EditorRail = ({
 
   return (
     <aside
-      className="bg-card border-border flex h-full w-56 shrink-0 flex-col justify-between border-r"
+      className={cn(
+        "bg-card border-border flex h-full shrink-0 flex-col justify-between border-r transition-[width] duration-200",
+        collapsed ? "w-16" : "w-56"
+      )}
       aria-label="Editor-Navigation"
     >
-      <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4">
+      <nav
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-4 overflow-auto",
+          collapsed ? "p-2" : "p-4"
+        )}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn("self-end rounded-none", collapsed && "self-center")}
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? "Navigation ausklappen" : "Navigation einklappen"}
+          aria-expanded={!collapsed}
+          title={collapsed ? "Navigation ausklappen" : "Navigation einklappen"}
+        >
+          <HugeiconsIcon
+            icon={collapsed ? ArrowRight01Icon : ArrowLeft01Icon}
+            size={16}
+            strokeWidth={2}
+          />
+        </Button>
         {navSections.map((section) => (
           <div key={section.title} className="flex flex-col gap-1">
-            <h2 className="text-muted-foreground mb-1 px-3 text-xs font-semibold tracking-wider uppercase">
-              {section.title}
-            </h2>
+            {!collapsed && (
+              <h2 className="text-muted-foreground mb-1 px-3 text-xs font-semibold tracking-wider uppercase">
+                {section.title}
+              </h2>
+            )}
             {section.items.map((item) => {
               const isActive = activeTab === item.id
               return (
@@ -121,9 +153,12 @@ const EditorRail = ({
                   key={item.id}
                   type="button"
                   onClick={() => onTabChange(item.id)}
+                  aria-label={item.name}
                   aria-current={isActive ? "page" : undefined}
+                  title={item.name}
                   className={cn(
-                    "flex w-full items-center gap-3 px-3 py-2 text-left text-sm font-medium transition-colors",
+                    "flex w-full items-center py-2 text-left text-sm font-medium transition-colors",
+                    collapsed ? "justify-center px-0" : "gap-3 px-3",
                     "focus-visible:ring-ring outline-none focus-visible:ring-2",
                     isActive
                       ? "bg-primary text-primary-foreground"
@@ -133,7 +168,7 @@ const EditorRail = ({
                   <span className="shrink-0" aria-hidden="true">
                     {item.icon}
                   </span>
-                  <span className="truncate">{item.name}</span>
+                  {!collapsed && <span className="truncate">{item.name}</span>}
                 </button>
               )
             })}
@@ -141,21 +176,27 @@ const EditorRail = ({
         ))}
       </nav>
 
-      <div className="border-border flex flex-col gap-2 border-t p-4">
+      <div
+        className={cn(
+          "border-border flex flex-col gap-2 border-t",
+          collapsed ? "p-2" : "p-4"
+        )}
+      >
         <Button
           type="button"
-          className="w-full rounded-none"
+          className={cn("w-full rounded-none", collapsed && "px-0")}
           onClick={onSave}
           disabled={savePending}
-          aria-label="Inventur speichern"
+          aria-label={savePending ? "Inventur wird gespeichert" : "Inventur speichern"}
+          title={collapsed ? "Inventur speichern" : undefined}
         >
           <HugeiconsIcon icon={FloppyDiskIcon} size={16} strokeWidth={2} />
-          {savePending ? "Speichert…" : "Speichern"}
+          {!collapsed && (savePending ? "Speichert…" : "Speichern")}
         </Button>
         <Button
           type="button"
           variant="secondary"
-          className="w-full rounded-none"
+          className={cn("w-full rounded-none", collapsed && "px-0")}
           onClick={onDownloadExcel}
           disabled={exportBusy}
           aria-busy={exportPending === "excel"}
@@ -164,37 +205,49 @@ const EditorRail = ({
               ? "Excel wird erstellt"
               : "Excel herunterladen"
           }
-          title={exportBusyHint}
+          title={
+            collapsed
+              ? `Excel herunterladen${exportBusyHint ? ` – ${exportBusyHint}` : ""}`
+              : exportBusyHint
+          }
         >
           <HugeiconsIcon icon={GridTableIcon} size={16} strokeWidth={2} />
-          {exportPending === "excel" ? "Excel wird erstellt…" : "Excel"}
+          {!collapsed && (exportPending === "excel" ? "Excel wird erstellt…" : "Excel")}
         </Button>
         <Button
           type="button"
           variant="secondary"
-          className="w-full rounded-none"
+          className={cn("w-full rounded-none", collapsed && "px-0")}
           onClick={onDownloadPdf}
           disabled={exportBusy}
           aria-busy={exportPending === "pdf"}
           aria-label={
             exportPending === "pdf" ? "PDF wird erstellt" : "PDF herunterladen"
           }
-          title={exportBusyHint}
+          title={
+            collapsed
+              ? `PDF herunterladen${exportBusyHint ? ` – ${exportBusyHint}` : ""}`
+              : exportBusyHint
+          }
         >
           <HugeiconsIcon icon={FileExportIcon} size={16} strokeWidth={2} />
-          {exportPending === "pdf" ? "PDF wird erstellt…" : "PDF"}
+          {!collapsed && (exportPending === "pdf" ? "PDF wird erstellt…" : "PDF")}
         </Button>
         <Button
           type="button"
           variant="secondary"
-          className="w-full rounded-none"
+          className={cn("w-full rounded-none", collapsed && "px-0")}
           onClick={onMarkDone}
           disabled={projectDone || exportBusy}
           aria-label="Inventur als fertig markieren"
           title={
-            projectDone
-              ? "Inventur bereits fertig"
-              : exportBusyHint
+            collapsed
+              ? projectDone
+                ? "Inventur bereits fertig"
+                : `Fertig melden${exportBusyHint ? ` – ${exportBusyHint}` : ""}`
+              : projectDone
+                ? "Inventur bereits fertig"
+                : exportBusyHint
           }
         >
           <HugeiconsIcon
@@ -202,17 +255,18 @@ const EditorRail = ({
             size={16}
             strokeWidth={2}
           />
-          {projectDone ? "Fertig" : "Fertig melden"}
+          {!collapsed && (projectDone ? "Fertig" : "Fertig melden")}
         </Button>
         <Button
           type="button"
           variant="secondary"
-          className="w-full rounded-none"
+          className={cn("w-full rounded-none", collapsed && "px-0")}
           onClick={onClose}
           aria-label="Editor schließen"
+          title={collapsed ? "Editor schließen" : undefined}
         >
           <HugeiconsIcon icon={Cancel01Icon} size={16} strokeWidth={2} />
-          Schließen
+          {!collapsed && "Schließen"}
         </Button>
       </div>
     </aside>

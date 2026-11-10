@@ -19,7 +19,7 @@
   },
   "productName": "Bestandsabgleich",
   "mainBinaryName": "Bestandsabgleich",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "identifier": "de.implantcast.rfid-bestandsabgleich",
   "plugins": {
     "updater": {
@@ -43,12 +43,7 @@
         "center": true,
         "theme": "Dark",
         "transparent": false,
-        "backgroundColor": [
-          18,
-          18,
-          18,
-          255
-        ],
+        "backgroundColor": [18, 18, 18, 255],
         "useHttpsScheme": true,
         "dragDropEnabled": false
       }

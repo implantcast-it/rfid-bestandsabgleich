@@ -1,6 +1,7 @@
 import {
   columnFilteringFeature,
   columnPinningFeature,
+  columnResizingFeature,
   columnSizingFeature,
   createFilteredRowModel,
   createPaginatedRowModel,
@@ -25,7 +26,7 @@ import {
   type FilterFn,
   type Row,
   type RowData,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 
 /**
  * Feature set shared by every DataTable. Registry keys are the only valid
@@ -36,6 +37,7 @@ export const dataTableFeatures = tableFeatures({
   columnFilteringFeature,
   globalFilteringFeature,
   columnSizingFeature,
+  columnResizingFeature,
   columnPinningFeature,
   rowSelectionFeature,
   rowSortingFeature,
@@ -57,21 +59,21 @@ export const dataTableFeatures = tableFeatures({
     datetime: sortFn_datetime,
     text: sortFn_text,
   },
-})
+});
 
-export type DataTableFeatures = typeof dataTableFeatures
-export type DataTableRow<TData extends RowData> = Row<DataTableFeatures, TData>
+export type DataTableFeatures = typeof dataTableFeatures;
+export type DataTableRow<TData extends RowData> = Row<DataTableFeatures, TData>;
 export type DataTableColumn<TData extends RowData> = Column<
   DataTableFeatures,
   TData,
   unknown
->
+>;
 export type DataTableColumnDef<TData extends RowData> = ColumnDef<
   DataTableFeatures,
   TData,
   unknown
->
+>;
 export type DataTableFilterFn<TData extends RowData> = FilterFn<
   DataTableFeatures,
   TData
->
+>;
