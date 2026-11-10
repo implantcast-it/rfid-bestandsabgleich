@@ -92,6 +92,7 @@ const DataTable = <TData extends RowData>({
     defaultColumn: {
       size: 0,
       minSize: 0,
+      enableResizing: false,
     },
     state: {
       sorting,
@@ -114,6 +115,7 @@ const DataTable = <TData extends RowData>({
     enableRowSelection,
     enableMultiRowSelection: true,
     enableColumnPinning: true,
+    enableColumnResizing: true,
     globalFilterFn,
     getColumnCanGlobalFilter: (column) =>
       !globalFilterColumnIds || globalFilterColumnIds.includes(column.id),

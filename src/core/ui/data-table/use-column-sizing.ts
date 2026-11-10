@@ -18,7 +18,7 @@ type UseColumnSizingArgs = {
   getFlatHeaders: () => Array<{
     column: {
       id: string
-      columnDef: { minSize?: number }
+      columnDef: { minSize?: number; maxSize?: number }
       getCanFilter: () => boolean
       getCanSort: () => boolean
       getIsSorted: () => false | "asc" | "desc"
@@ -85,7 +85,11 @@ export const useColumnSizing = ({
           })
 
           const minSize = header.column.columnDef.minSize ?? 0
-          next[header.column.id] = Math.ceil(Math.max(width, minSize))
+          const maxSize =
+            header.column.columnDef.maxSize ?? Number.POSITIVE_INFINITY
+          next[header.column.id] = Math.ceil(
+            Math.min(Math.max(width, minSize), maxSize)
+          )
         }
 
         if (!sizingChanged(prev, next)) return prev

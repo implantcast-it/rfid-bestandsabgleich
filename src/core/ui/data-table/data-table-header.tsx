@@ -26,13 +26,26 @@ export const DataTableHeader = <TData extends RowData>({
   <thead>
     {headerGroups.map((headerGroup) => (
       <tr key={headerGroup.id}>
-        {headerGroup.headers.map((header) => {
+        {headerGroup.headers.map((header, headerIndex) => {
           const isPinned = header.column.getIsPinned()
           const offset = getPinnedOffset(header.column, pinnedStartOffsets)
           const canSort = header.column.getCanSort()
           const sorted = header.column.getIsSorted()
           const canFilter = header.column.getCanFilter()
+          const canResize = header.column.getCanResize()
+          const previousHeader = headerGroup.headers[headerIndex - 1]
+          const nextHeader = headerGroup.headers[headerIndex + 1]
+          const resizeOnNextPinnedBoundary =
+            canResize && nextHeader?.column.getIsPinned()
+          const resizePreviousPinnedColumn =
+            !canResize &&
+            isPinned &&
+            previousHeader?.column.getIsPinned() &&
+            previousHeader.column.getCanResize()
           const meta = getColumnMeta(header.column)
+          const resizeHandler = (
+            resizePreviousPinnedColumn ? previousHeader : header
+          ).getResizeHandler()
           const widthStyle = getColumnWidthStyle(header.column, columnSizing)
           const pinnedWidthStyle = getPinnedWidthStyle(
             header.column,
@@ -116,6 +129,46 @@ export const DataTableHeader = <TData extends RowData>({
                   ) : null}
                 </div>
               )}
+              {canResize && !resizeOnNextPinnedBoundary ? (
+                <button
+                  type="button"
+                  aria-label={`Resize ${String(header.column.columnDef.header)} column`}
+                  title="Drag to resize column"
+                  onMouseDown={(event) => {
+                    event.stopPropagation()
+                    resizeHandler(event.nativeEvent)
+                  }}
+                  onTouchStart={(event) => {
+                    event.stopPropagation()
+                    resizeHandler(event.nativeEvent)
+                  }}
+                  onClick={(event) => event.stopPropagation()}
+                  className={cn(
+                    "absolute inset-y-0 right-0 z-[2] w-1 cursor-col-resize touch-none bg-border transition-colors hover:bg-primary focus-visible:bg-primary focus-visible:outline-none",
+                    header.column.getIsResizing() && "bg-primary"
+                  )}
+                />
+              ) : null}
+              {resizePreviousPinnedColumn ? (
+                <button
+                  type="button"
+                  aria-label={`Resize ${String(previousHeader.column.columnDef.header)} column`}
+                  title="Drag to resize column"
+                  onMouseDown={(event) => {
+                    event.stopPropagation()
+                    resizeHandler(event.nativeEvent)
+                  }}
+                  onTouchStart={(event) => {
+                    event.stopPropagation()
+                    resizeHandler(event.nativeEvent)
+                  }}
+                  onClick={(event) => event.stopPropagation()}
+                  className={cn(
+                    "absolute inset-y-0 left-0 z-[2] w-1 cursor-col-resize touch-none bg-border transition-colors hover:bg-primary focus-visible:bg-primary focus-visible:outline-none",
+                    previousHeader.column.getIsResizing() && "bg-primary"
+                  )}
+                />
+              ) : null}
             </th>
           )
         })}
