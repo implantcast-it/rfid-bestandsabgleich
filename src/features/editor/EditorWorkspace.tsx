@@ -33,6 +33,7 @@ export const EditorWorkspace = ({
   inventurjahr,
 }: EditorWorkspaceProps) => {
   const [activeTab, setActiveTab] = useState<string>("lotId")
+  const [isRailCollapsed, setIsRailCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [lotIdStatusFilter, setLotIdStatusFilter] =
     useState<LotIdStatusFilter>("all")
@@ -149,6 +150,8 @@ export const EditorWorkspace = ({
           onDownloadPdf={() => void handleDownloadPdf()}
           onMarkDone={() => void handleMarkDone()}
           onClose={() => void handleClose()}
+          collapsed={isRailCollapsed}
+          onToggleCollapsed={() => setIsRailCollapsed((collapsed) => !collapsed)}
           savePending={savePending}
           exportPending={exportPending}
           stichprobenComplete={stichprobenMet}
