@@ -3814,7 +3814,7 @@ dependencies = [
 
 [[package]]
 name = "rfid-bestandsabgleich"
-version = "5.0.2"
+version = "5.0.3"
 dependencies = [
  "calamine",
  "chrono",
