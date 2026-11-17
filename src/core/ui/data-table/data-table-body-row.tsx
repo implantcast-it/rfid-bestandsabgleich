@@ -62,7 +62,7 @@ const DataTableBodyRowView = <TData extends RowData>({
     tabIndex={enableRowSelection ? -1 : undefined}
     aria-selected={enableRowSelection ? isSelected : undefined}
   >
-    {row.getAllCells().map((cell) => {
+    {row.getVisibleCells().map((cell) => {
       const isPinned = cell.column.getIsPinned()
       const offset = getPinnedOffset(cell.column, pinnedStartOffsets)
       const meta = getColumnMeta(cell.column)

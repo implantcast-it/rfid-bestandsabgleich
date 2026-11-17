@@ -1,8 +1,10 @@
 import {
   columnFilteringFeature,
+  columnOrderingFeature,
   columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
+  columnVisibilityFeature,
   createFilteredRowModel,
   createPaginatedRowModel,
   createSortedRowModel,
@@ -36,9 +38,11 @@ import {
 export const dataTableFeatures = tableFeatures({
   columnFilteringFeature,
   globalFilteringFeature,
+  columnOrderingFeature,
   columnSizingFeature,
   columnResizingFeature,
   columnPinningFeature,
+  columnVisibilityFeature,
   rowSelectionFeature,
   rowSortingFeature,
   rowPaginationFeature,
