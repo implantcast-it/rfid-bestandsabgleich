@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { RefObject, ReactNode } from "react"
 import ArtNrTable from "@/features/editor/tables/ArtNrTable"
 import ErpTable from "@/features/editor/tables/ErpTable"
 import LotIdTable from "@/features/editor/tables/LotIdTable"
@@ -18,6 +18,9 @@ type EditorTabContentProps = {
   lotIdStatusFilter: LotIdStatusFilter
   isBulkEditOpen: boolean
   onBulkEditOpenChange: (open: boolean) => void
+  isDisplaySettingsOpen: boolean
+  onDisplaySettingsOpenChange: (open: boolean) => void
+  displaySettingsTriggerRef: RefObject<HTMLButtonElement | null>
   onLotIdChange: (
     data: LotIdGridRow[] | ((prev: LotIdGridRow[]) => LotIdGridRow[])
   ) => void
@@ -34,6 +37,9 @@ export const EditorTabContent = ({
   lotIdStatusFilter,
   isBulkEditOpen,
   onBulkEditOpenChange,
+  isDisplaySettingsOpen,
+  onDisplaySettingsOpenChange,
+  displaySettingsTriggerRef,
   onLotIdChange,
 }: EditorTabContentProps): ReactNode => {
   switch (activeTab) {
@@ -58,6 +64,9 @@ export const EditorTabContent = ({
           statusFilter={lotIdStatusFilter}
           isBulkEditOpen={isBulkEditOpen}
           onBulkEditOpenChange={onBulkEditOpenChange}
+          isDisplaySettingsOpen={isDisplaySettingsOpen}
+          onDisplaySettingsOpenChange={onDisplaySettingsOpenChange}
+          displaySettingsTriggerRef={displaySettingsTriggerRef}
           onChange={onLotIdChange}
         />
       )

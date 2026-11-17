@@ -16,6 +16,7 @@ import {
   STICHPROBE_SELECT_OPTIONS,
   TODO_SELECT_OPTIONS,
 } from "@/features/editor/lot-id/lot-id-options";
+import { PRODUCT_NAME_SIZE_OPTIONS } from "@/features/editor/lot-id/product-name-size-options"
 import {
   renderLotIdSelectCell,
   type LotIdEditableField,
@@ -29,7 +30,10 @@ type CellEditHandler = (
   value: string,
 ) => void;
 
-export const useLotIdColumns = (handleCellEdit: CellEditHandler) =>
+export const useLotIdColumns = (
+  handleCellEdit: CellEditHandler,
+  productNameSize: number,
+) =>
   useMemo(
     () =>
       columnHelper.columns([
@@ -85,6 +89,10 @@ export const useLotIdColumns = (handleCellEdit: CellEditHandler) =>
           header: "Produktname",
           filterFn: "includesString",
           enableResizing: true,
+          size: productNameSize,
+          minSize: 180,
+          maxSize: 600,
+          meta: { sizeOptions: PRODUCT_NAME_SIZE_OPTIONS },
         }),
         columnHelper.accessor((row) => row["Kennzeichen 3"], {
           id: "Kennzeichen 3",
@@ -96,7 +104,7 @@ export const useLotIdColumns = (handleCellEdit: CellEditHandler) =>
         }),
         columnHelper.accessor((row) => row["Ablaufdatum"], {
           id: "Ablaufdatum",
-          header: "Ablaufdatum",
+          header: "MHD",
           size: 90,
           minSize: 90,
           maxSize: 90,
@@ -155,8 +163,8 @@ export const useLotIdColumns = (handleCellEdit: CellEditHandler) =>
           id: "To Do",
           header: "To Do",
           filterFn: "includesString",
-          minSize: 80,
-          maxSize: 220,
+          size: 160,
+          minSize: 160,
           cell: renderLotIdSelectCell(
             handleCellEdit,
             "To Do",
@@ -164,6 +172,7 @@ export const useLotIdColumns = (handleCellEdit: CellEditHandler) =>
             TODO_SELECT_OPTIONS,
           ),
           meta: {
+            flex: true,
             cellClassName: (row: LotIdGridRow) =>
               emptyTodoDiffClass(
                 row["To Do"],
@@ -176,20 +185,23 @@ export const useLotIdColumns = (handleCellEdit: CellEditHandler) =>
           id: "Anmerkung",
           header: "Anmerkung",
           filterFn: "includesString",
-          minSize: 80,
-          maxSize: 220,
+          size: 160,
+          minSize: 160,
           cell: renderLotIdSelectCell(
             handleCellEdit,
             "Anmerkung",
             "Anmerkung bearbeiten",
             ANMERKUNG_SELECT_OPTIONS,
           ),
+          meta: { flex: true },
         }),
         columnHelper.accessor((row) => row["Stichprobe"], {
           id: "Stichprobe",
           header: "Stichprobe",
           filterFn: "includesString",
-          size: 60,
+          size: 120,
+          minSize: 120,
+          maxSize: 120,
           cell: renderLotIdSelectCell(
             handleCellEdit,
             "Stichprobe",
@@ -198,5 +210,5 @@ export const useLotIdColumns = (handleCellEdit: CellEditHandler) =>
           ),
         }),
       ]),
-    [handleCellEdit],
+    [handleCellEdit, productNameSize],
   );

@@ -1,4 +1,10 @@
-import { useCallback, useDeferredValue, useState, type SetStateAction } from "react"
+import {
+  useCallback,
+  useDeferredValue,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react"
 import type { EditorSnapshot, LotIdGridRow } from "@/domains/inventur"
 import type { LotIdStatusFilter } from "@/domains/inventur/search"
 import { Toaster } from "@/core/ui/sonner"
@@ -38,6 +44,8 @@ export const EditorWorkspace = ({
   const [lotIdStatusFilter, setLotIdStatusFilter] =
     useState<LotIdStatusFilter>("all")
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false)
+  const [isDisplaySettingsOpen, setIsDisplaySettingsOpen] = useState(false)
+  const displaySettingsTriggerRef = useRef<HTMLButtonElement>(null)
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
   const {
@@ -173,6 +181,12 @@ export const EditorWorkspace = ({
                 ? () => setIsBulkEditOpen((open) => !open)
                 : undefined
             }
+            onDisplaySettingsClick={
+              activeTab === "lotId"
+                ? () => setIsDisplaySettingsOpen(true)
+                : undefined
+            }
+            displaySettingsTriggerRef={displaySettingsTriggerRef}
             miniStats={
               activeTab === "lotId" ? (
                 <LotIdStatsHeader
@@ -199,6 +213,9 @@ export const EditorWorkspace = ({
               lotIdStatusFilter={lotIdStatusFilter}
               isBulkEditOpen={isBulkEditOpen}
               onBulkEditOpenChange={setIsBulkEditOpen}
+              isDisplaySettingsOpen={isDisplaySettingsOpen}
+              onDisplaySettingsOpenChange={setIsDisplaySettingsOpen}
+              displaySettingsTriggerRef={displaySettingsTriggerRef}
               onLotIdChange={handleLotIdChange}
             />
           </EditorPage>
