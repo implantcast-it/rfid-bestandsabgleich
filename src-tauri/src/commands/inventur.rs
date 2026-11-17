@@ -10,8 +10,14 @@ use crate::domain::editor::{
     auto_fill_kommentare as fill_kommentare, auto_siebe as apply_auto_siebe, AutoKommentareResult,
     AutoSiebeResult, EditorSnapshot,
 };
-use crate::domain::inventur::{self, InventurProgressEvent};
+use crate::domain::inventur::{self, ErpCategoryCounts, InventurProgressEvent};
 use crate::domain::types::LotIdCompareRow;
+
+/// Preview ERP category targets without requiring an RFID export.
+#[tauri::command]
+pub fn preview_erp_category_counts(erp_path: String) -> Result<ErpCategoryCounts, String> {
+    inventur::preview_erp_category_counts(PathBuf::from(erp_path).as_path()).map_err(domain_err)
+}
 
 /// Parse ERP + RFID against the on-device GTIN catalog and return an editor snapshot.
 ///

@@ -9,6 +9,24 @@ export type EditorStats = {
   erp_quantity_total: number;
 };
 
+export type ProductCategoryCounts = {
+  implantate: number;
+  siebe: number;
+  instrumente: number;
+  weitere: number;
+};
+
+/** Counts one eligible ERP stock row per LotId; open positions are excluded. */
+export type ErpCategoryCounts = ProductCategoryCounts & {
+  offene_posten_ausgeschlossen: number;
+};
+
+export type ProductCategoryComparison = {
+  erwartet: ProductCategoryCounts;
+  gefunden: ProductCategoryCounts;
+  offene_posten_ausgeschlossen: number;
+};
+
 export type ErpRow = {
   artikelnummer: string;
   produktname: string;

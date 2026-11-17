@@ -9,6 +9,7 @@ import {
 } from "@/domains/catalog"
 import {
   applyInventurProgress,
+  countProductCategories,
   INITIAL_PIPELINE_STEPS,
   loadAbgleichFromDialog,
   markActiveStepFailed,
@@ -18,6 +19,7 @@ import {
   type InventurSessionState,
   type PipelineStepState,
   type ProcessPhase,
+  type ProductCategoryComparison,
 } from "@/domains/inventur"
 import {
   createInventurProject,
@@ -100,6 +102,8 @@ export const useInventurCompare = ({
   )
   const [snapshot, setSnapshot] = useState<EditorSnapshot | null>(null)
   const [pendingProjectId, setPendingProjectId] = useState<string | null>(null)
+  const [categoryComparison, setCategoryComparison] =
+    useState<ProductCategoryComparison | null>(null)
   const [debitorEntry, setDebitorEntry] = useState<DebitorEntry | null>(null)
   const [loadingAbgleich, setLoadingAbgleich] = useState(false)
 
@@ -158,6 +162,7 @@ export const useInventurCompare = ({
 
     setSnapshot(null)
     setPendingProjectId(null)
+    setCategoryComparison(null)
     setDebitorEntry(null)
     setPipelineSteps(INITIAL_PIPELINE_STEPS)
     setProcessPhase("processing")
@@ -168,6 +173,11 @@ export const useInventurCompare = ({
 
     try {
       const result = await runInventur(erpPath, rfidPath, handleProgressEvent)
+      setCategoryComparison({
+        erwartet: countProductCategories(result.ax_bestand),
+        gefunden: countProductCategories(result.rfid_scan),
+        offene_posten_ausgeschlossen: result.offene_posten.length,
+      })
 
       setProgressLabel("Ergebnis bereit")
       setProcessStatus("Inventur-Projekt wird gespeichert…")
@@ -208,6 +218,7 @@ export const useInventurCompare = ({
     setPipelineSteps(INITIAL_PIPELINE_STEPS)
     setSnapshot(null)
     setPendingProjectId(null)
+    setCategoryComparison(null)
     setDebitorEntry(null)
   }
 
@@ -273,6 +284,7 @@ export const useInventurCompare = ({
     processPercent,
     progressLabel,
     pipelineSteps,
+    categoryComparison,
     loadingAbgleich,
     debitorLabel: formatDebitorLabel(snapshot, debitorEntry),
     handleStartCompare,

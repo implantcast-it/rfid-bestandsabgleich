@@ -1,5 +1,10 @@
 import { Alert02Icon, FileUploadIcon } from "@hugeicons/core-free-icons";
-import type { PipelineStepState, ProcessPhase } from "@/domains/inventur";
+import type {
+  ErpCategoryCounts,
+  PipelineStepState,
+  ProcessPhase,
+  ProductCategoryComparison,
+} from "@/domains/inventur";
 
 import { Button } from "@/core/ui/button";
 import type { CatalogReady } from "@/domains/catalog";
@@ -7,12 +12,19 @@ import FilePickSlot from "@/features/home/FilePickSlot";
 import { HugeiconsIcon } from "@hugeicons/react";
 import ProcessPanel from "@/features/home/ProcessPanel";
 import { catalogGateMessage } from "@/domains/catalog";
+import ProductCategorySummary from "@/features/home/ProductCategorySummary";
+
+export type ErpPreviewState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; counts: ErpCategoryCounts };
 
 type UploadPanelProps = {
   inventurjahr: string;
   catalogReady: CatalogReady | null;
   erpPath: string | null;
   rfidPath: string | null;
+  erpPreview: ErpPreviewState | null;
   onErpSelect: (path: string | null) => void;
   onRfidSelect: (path: string | null) => void;
   processPhase: ProcessPhase | null;
@@ -22,6 +34,7 @@ type UploadPanelProps = {
   progressLabel: string;
   pipelineSteps: PipelineStepState[];
   debitorLabel: string;
+  categoryComparison: ProductCategoryComparison | null;
   loadingAbgleich: boolean;
   onStartCompare: () => void;
   onOpenExisting: () => void;
@@ -39,6 +52,7 @@ const UploadPanel = ({
   catalogReady,
   erpPath,
   rfidPath,
+  erpPreview,
   onErpSelect,
   onRfidSelect,
   processPhase,
@@ -48,6 +62,7 @@ const UploadPanel = ({
   progressLabel,
   pipelineSteps,
   debitorLabel,
+  categoryComparison,
   loadingAbgleich,
   onStartCompare,
   onOpenExisting,
@@ -56,7 +71,9 @@ const UploadPanel = ({
 }: UploadPanelProps) => {
   const gateMessage = catalogGateMessage(catalogReady);
   const catalogOk = Boolean(catalogReady?.ready);
-  const filesReady = Boolean(erpPath && rfidPath);
+  const filesReady = Boolean(
+    erpPath && rfidPath && erpPreview?.status === "ready"
+  );
   const canStart = catalogOk && filesReady && !processPhase;
 
   if (processPhase) {
@@ -72,6 +89,7 @@ const UploadPanel = ({
         rfidName={fileName(rfidPath)}
         debitor={debitorLabel}
         inventurjahr={inventurjahr}
+        categoryComparison={categoryComparison}
         onRetry={onRetry}
         onOpenEditor={onOpenEditor}
       />
@@ -96,6 +114,10 @@ const UploadPanel = ({
             <strong className='font-semibold text-foreground dark:text-[#ddd]'>
               {inventurjahr}
             </strong>
+          </p>
+          <p className='mt-1 max-w-[72ch] text-[11.5px] text-muted-foreground leading-snug'>
+            Lade zuerst den ERP-Abzug hoch, um die Sollzahlen zu sehen. Den
+            RFID-Export wählst du nach der Zählung aus.
           </p>
         </div>
         <div className='flex flex-wrap justify-end items-center gap-2 shrink-0'>
@@ -127,7 +149,7 @@ const UploadPanel = ({
       </div>
 
       <p id='startHint' className='sr-only'>
-        Beide Dateien müssen ausgewählt sein. Katalog muss bereit sein.
+        ERP-Datei auswerten lassen, RFID-Datei auswählen und Katalog bereithalten.
       </p>
 
       {gateMessage && (
@@ -173,6 +195,31 @@ const UploadPanel = ({
           onSelect={onRfidSelect}
         />
       </div>
+      {erpPreview?.status === "loading" && (
+        <p className="text-muted-foreground text-xs" role="status">
+          ERP-Datei wird ausgewertet…
+        </p>
+      )}
+      {erpPreview?.status === "error" && (
+        <p
+          className="border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+          role="alert"
+        >
+          ERP-Datei konnte nicht ausgewertet werden: {erpPreview.message} Bitte
+          wähle den aktuellen ERP-Excel-Abzug erneut aus.
+        </p>
+      )}
+      {erpPreview?.status === "ready" && (
+        <ProductCategorySummary
+          expected={{
+            implantate: erpPreview.counts.implantate,
+            siebe: erpPreview.counts.siebe,
+            instrumente: erpPreview.counts.instrumente,
+            weitere: erpPreview.counts.weitere,
+          }}
+          excludedOpenItems={erpPreview.counts.offene_posten_ausgeschlossen}
+        />
+      )}
     </section>
   );
 };
