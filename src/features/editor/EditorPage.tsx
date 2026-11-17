@@ -1,4 +1,4 @@
-import { ReactNode } from "react"
+import type { RefObject, ReactNode } from "react"
 import EditorSheetHead from "./EditorSheetHead"
 
 interface EditorPageProps {
@@ -10,6 +10,8 @@ interface EditorPageProps {
   onAutoFill?: () => void
   isBulkEditOpen?: boolean
   onBulkEditToggle?: () => void
+  onDisplaySettingsClick?: () => void
+  displaySettingsTriggerRef?: RefObject<HTMLButtonElement | null>
   children: ReactNode
   miniStats?: ReactNode
 }
@@ -23,6 +25,8 @@ const EditorPage = ({
   onAutoFill,
   isBulkEditOpen,
   onBulkEditToggle,
+  onDisplaySettingsClick,
+  displaySettingsTriggerRef,
   children,
   miniStats,
 }: EditorPageProps) => {
@@ -42,6 +46,8 @@ const EditorPage = ({
           onAutoFill={onAutoFill}
           isBulkEditOpen={isBulkEditOpen}
           onBulkEditToggle={onBulkEditToggle}
+          onDisplaySettingsClick={onDisplaySettingsClick}
+          displaySettingsTriggerRef={displaySettingsTriggerRef}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {children}

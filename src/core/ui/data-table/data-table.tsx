@@ -16,7 +16,10 @@ import {
   type DataTableColumnDef,
   type DataTableFilterFn,
 } from "@/core/ui/data-table/features"
-import { hasExplicitSize } from "@/core/ui/data-table/column-styles"
+import {
+  getColumnMeta,
+  hasExplicitSize,
+} from "@/core/ui/data-table/column-styles"
 import { DataTableBodyRow } from "@/core/ui/data-table/data-table-body-row"
 import { DataTableHeader } from "@/core/ui/data-table/data-table-header"
 import { DataTablePagination } from "@/core/ui/data-table/data-table-pagination"
@@ -40,6 +43,10 @@ type DataTableProps<TData extends RowData> = {
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
   getRowId?: (row: TData, index: number) => string
   initialColumnPinning?: Partial<ColumnPinningState>
+  columnPinning?: ColumnPinningState
+  onColumnPinningChange?: OnChangeFn<ColumnPinningState>
+  columnSizing?: ColumnSizingState
+  onColumnSizingChange?: OnChangeFn<ColumnSizingState>
   className?: string
 }
 
@@ -55,6 +62,10 @@ const DataTable = <TData extends RowData>({
   onRowSelectionChange,
   getRowId,
   initialColumnPinning,
+  columnPinning: controlledColumnPinning,
+  onColumnPinningChange,
+  columnSizing: controlledColumnSizing,
+  onColumnSizingChange,
   className,
 }: DataTableProps<TData>) => {
   const [sorting, setSorting] = useState<SortingState>([])
@@ -63,13 +74,13 @@ const DataTable = <TData extends RowData>({
     pageIndex: 0,
     pageSize: DEFAULT_PAGE_SIZE,
   })
-  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(
-    () => ({
+  const [internalColumnPinning, setInternalColumnPinning] =
+    useState<ColumnPinningState>(() => ({
       start: initialColumnPinning?.start ?? [],
       end: initialColumnPinning?.end ?? [],
-    })
-  )
-  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({})
+    }))
+  const [internalColumnSizing, setInternalColumnSizing] =
+    useState<ColumnSizingState>({})
   const [internalSelection, setInternalSelection] = useState<RowSelectionState>(
     {}
   )
@@ -81,6 +92,22 @@ const DataTable = <TData extends RowData>({
 
   const selectionState = rowSelection ?? internalSelection
   const handleSelectionChange = onRowSelectionChange ?? setInternalSelection
+  const columnPinning = controlledColumnPinning ?? internalColumnPinning
+  const handleColumnPinningChange: OnChangeFn<ColumnPinningState> = (
+    updater
+  ) => {
+    if (controlledColumnPinning === undefined) {
+      setInternalColumnPinning(updater)
+    }
+    onColumnPinningChange?.(updater)
+  }
+  const columnSizing = controlledColumnSizing ?? internalColumnSizing
+  const handleColumnSizingChange: OnChangeFn<ColumnSizingState> = (updater) => {
+    if (controlledColumnSizing === undefined) {
+      setInternalColumnSizing(updater)
+    }
+    onColumnSizingChange?.(updater)
+  }
 
   const memoData = useMemo(() => data, [data])
   const memoColumns = useMemo(() => columns, [columns])
@@ -106,8 +133,8 @@ const DataTable = <TData extends RowData>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
-    onColumnPinningChange: setColumnPinning,
-    onColumnSizingChange: setColumnSizing,
+    onColumnPinningChange: handleColumnPinningChange,
+    onColumnSizingChange: handleColumnSizingChange,
     onGlobalFilterChange,
     onRowSelectionChange: enableRowSelection
       ? handleSelectionChange
@@ -129,7 +156,7 @@ const DataTable = <TData extends RowData>({
   useColumnSizing({
     scrollContainerRef,
     getFlatHeaders: () => table.getFlatHeaders(),
-    setColumnSizing,
+    setColumnSizing: handleColumnSizingChange,
     memoColumns,
     memoData,
     sorting,
@@ -157,6 +184,10 @@ const DataTable = <TData extends RowData>({
     .getAllLeafColumns()
     .filter((column) => !hasExplicitSize(column))
     .every((column) => columnSizing[column.id] != null)
+  const visibleHeaderColumns =
+    table.getHeaderGroups()[0]?.headers
+      .flatMap((header) => header.column.getLeafColumns())
+      .filter((column) => column.getIsVisible()) ?? table.getVisibleLeafColumns()
 
   return (
     <div
@@ -173,12 +204,26 @@ const DataTable = <TData extends RowData>({
           ref={tableRef}
           className="w-max min-w-full border-separate border-spacing-0 text-[12.5px]"
           style={{
+            width: autoColumnsReady ? table.getTotalSize() : undefined,
             tableLayout: autoColumnsReady ? "fixed" : "auto",
           }}
         >
+          <colgroup>
+            {visibleHeaderColumns.map((column) => (
+              <col
+                key={column.id}
+                style={
+                  getColumnMeta(column).flex
+                    ? undefined
+                    : { width: column.getSize() }
+                }
+              />
+            ))}
+          </colgroup>
           <DataTableHeader
             headerGroups={table.getHeaderGroups()}
             columnSizing={columnSizing}
+            onColumnSizingChange={handleColumnSizingChange}
             pinnedStartOffsets={pinnedStartOffsets}
           />
           <tbody>

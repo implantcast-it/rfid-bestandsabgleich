@@ -14,6 +14,7 @@ export type ColumnMeta = {
   tooltip?: string
   /** Absorb leftover viewport width under min-w-full (no maxWidth). */
   flex?: boolean
+  sizeOptions?: readonly { label: string; size: number }[]
 }
 
 export const getColumnMeta = <TData extends RowData>(
@@ -87,18 +88,18 @@ export const getColumnWidthStyle = <TData extends RowData>(
   const size = Math.max(raw ?? 0, def.minSize ?? 0)
   if (size <= 0) return {}
 
-  const style: CSSProperties = {
+  if (meta.flex) {
+    return {
+      minWidth: def.minSize ?? size,
+      ...(def.maxSize != null ? { maxWidth: def.maxSize } : {}),
+    }
+  }
+
+  return {
     width: size,
     minWidth: def.minSize ?? size,
+    maxWidth: def.maxSize ?? size,
   }
-
-  if (meta.flex) {
-    if (def.maxSize != null) style.maxWidth = def.maxSize
-    return style
-  }
-
-  style.maxWidth = def.maxSize ?? size
-  return style
 }
 
 export const sizingChanged = (

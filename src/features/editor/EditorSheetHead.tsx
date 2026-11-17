@@ -1,4 +1,5 @@
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { RefObject } from "react"
 import {
   MagicWand01Icon,
   PlusSignIcon,
@@ -16,6 +17,8 @@ type EditorSheetHeadProps = {
   onAutoFill?: () => void
   isBulkEditOpen?: boolean
   onBulkEditToggle?: () => void
+  onDisplaySettingsClick?: () => void
+  displaySettingsTriggerRef?: RefObject<HTMLButtonElement | null>
 }
 
 const EditorSheetHead = ({
@@ -27,6 +30,8 @@ const EditorSheetHead = ({
   onAutoFill,
   isBulkEditOpen = false,
   onBulkEditToggle,
+  onDisplaySettingsClick,
+  displaySettingsTriggerRef,
 }: EditorSheetHeadProps) => {
   const sampleTone =
     typeof completedStichproben === "number"
@@ -55,28 +60,49 @@ const EditorSheetHead = ({
         )}
       </div>
 
-      {showTools && (
+      {(showTools || onDisplaySettingsClick) && (
         <div className="flex shrink-0 items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="h-7 rounded-none px-2.5 text-sm"
-            onClick={onAutoCheck}
-            aria-label="Auto SIEB/INST"
-          >
-            <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />
-            <span className="max-w-[160px] truncate">Auto SIEB/INST</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="h-7 rounded-none px-2.5 text-sm"
-            onClick={onAutoFill}
-            aria-label="Auto-Kommentare"
-          >
-            <HugeiconsIcon icon={MagicWand01Icon} size={16} strokeWidth={2} />
-            Auto-Kommentare
-          </Button>
+          {onDisplaySettingsClick && (
+            <Button
+              ref={displaySettingsTriggerRef}
+              type="button"
+              variant="secondary"
+              className="h-7 rounded-none px-2.5 text-sm"
+              aria-haspopup="dialog"
+              aria-label="Tabelleneinstellungen"
+              onClick={onDisplaySettingsClick}
+            >
+              Tabelleneinstellungen
+            </Button>
+          )}
+          {showTools && (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-7 rounded-none px-2.5 text-sm"
+                onClick={onAutoCheck}
+                aria-label="Auto SIEB/INST"
+              >
+                <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={2} />
+                <span className="max-w-[160px] truncate">Auto SIEB/INST</span>
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-7 rounded-none px-2.5 text-sm"
+                onClick={onAutoFill}
+                aria-label="Auto-Kommentare"
+              >
+                <HugeiconsIcon
+                  icon={MagicWand01Icon}
+                  size={16}
+                  strokeWidth={2}
+                />
+                Auto-Kommentare
+              </Button>
+            </>
+          )}
           {onBulkEditToggle && (
             <Button
               type="button"
