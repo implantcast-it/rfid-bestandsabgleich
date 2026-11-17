@@ -176,6 +176,8 @@ const LotIdTable = ({
         columns={columns}
         data={statusRows}
         globalFilter={globalFilter}
+        autoResetPageIndex={false}
+        paginationResetKey={statusFilter}
         globalFilterFn={lotIdSearchFilterFn}
         globalFilterColumnIds={LOT_ID_GLOBAL_SEARCH_COLUMN_IDS}
         enableRowSelection

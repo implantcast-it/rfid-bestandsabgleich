@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   useTable,
   type ColumnFiltersState,
@@ -34,6 +34,8 @@ type DataTableProps<TData extends RowData> = {
   data: TData[]
   globalFilter?: string
   onGlobalFilterChange?: (value: string) => void
+  autoResetPageIndex?: boolean
+  paginationResetKey?: unknown
   /** Limits topbar search to identity fields (LotId / ArtNr / …). */
   globalFilterFn?: DataTableFilterFn<TData>
   /** Restricts the global search to these column ids; omit to search every column. */
@@ -55,6 +57,8 @@ const DataTable = <TData extends RowData>({
   data,
   globalFilter,
   onGlobalFilterChange,
+  autoResetPageIndex = true,
+  paginationResetKey,
   globalFilterFn,
   globalFilterColumnIds,
   enableRowSelection = false,
@@ -108,9 +112,28 @@ const DataTable = <TData extends RowData>({
     }
     onColumnSizingChange?.(updater)
   }
+  const resetPageIndex = () => {
+    setPagination((previous) =>
+      previous.pageIndex === 0 ? previous : { ...previous, pageIndex: 0 }
+    )
+  }
+  const handleSortingChange: OnChangeFn<SortingState> = (updater) => {
+    setSorting(updater)
+    if (!autoResetPageIndex) resetPageIndex()
+  }
+  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (
+    updater
+  ) => {
+    setColumnFilters(updater)
+    if (!autoResetPageIndex) resetPageIndex()
+  }
 
   const memoData = useMemo(() => data, [data])
   const memoColumns = useMemo(() => columns, [columns])
+
+  useEffect(() => {
+    if (!autoResetPageIndex) resetPageIndex()
+  }, [autoResetPageIndex, globalFilter, paginationResetKey])
 
   const table = useTable({
     features: dataTableFeatures,
@@ -130,8 +153,8 @@ const DataTable = <TData extends RowData>({
       globalFilter: globalFilter ?? "",
       rowSelection: selectionState,
     },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onSortingChange: handleSortingChange,
+    onColumnFiltersChange: handleColumnFiltersChange,
     onPaginationChange: setPagination,
     onColumnPinningChange: handleColumnPinningChange,
     onColumnSizingChange: handleColumnSizingChange,
@@ -147,6 +170,7 @@ const DataTable = <TData extends RowData>({
     getColumnCanGlobalFilter: (column) =>
       !globalFilterColumnIds || globalFilterColumnIds.includes(column.id),
     getRowId,
+    autoResetPageIndex,
   })
 
   const selectedCount = table.getSelectedRowModel().rows.length
