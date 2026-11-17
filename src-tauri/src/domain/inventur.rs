@@ -13,8 +13,45 @@ use crate::domain::catalog::{
 use crate::domain::compare::run_compare;
 use crate::domain::editor::{EditorSnapshot, InventurDraft};
 use crate::domain::error::{DomainError, DomainResult};
-use crate::domain::parse::{load_abgleich_xlsx, parse_erp, parse_rfid};
+use crate::domain::parse::{load_abgleich_xlsx, parse_erp, parse_rfid, ErpImport};
 use crate::domain::types::CompareInput;
+
+/// Expected product counts from ERP stock rows, excluding open positions.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ErpCategoryCounts {
+    pub implantate: usize,
+    pub siebe: usize,
+    pub instrumente: usize,
+    pub weitere: usize,
+    pub offene_posten_ausgeschlossen: usize,
+}
+
+fn category_counts_from_import(import: &ErpImport) -> ErpCategoryCounts {
+    let mut counts = ErpCategoryCounts {
+        implantate: 0,
+        siebe: 0,
+        instrumente: 0,
+        weitere: 0,
+        offene_posten_ausgeschlossen: import.offene_posten.len(),
+    };
+
+    for row in &import.rows {
+        match row.kennzeichen_3.trim().to_ascii_uppercase().as_str() {
+            "IMP" => counts.implantate += 1,
+            "SIEB" => counts.siebe += 1,
+            "INST" => counts.instrumente += 1,
+            _ => counts.weitere += 1,
+        }
+    }
+
+    counts
+}
+
+/// Parse an ERP workbook and count each eligible stock row once by product category.
+pub fn preview_erp_category_counts(path: &Path) -> DomainResult<ErpCategoryCounts> {
+    let import = parse_erp(path)?;
+    Ok(category_counts_from_import(&import))
+}
 
 /// Pipeline stages shown on the home process panel.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -271,6 +308,53 @@ pub fn load_abgleich(db: &CatalogDb, path: &Path) -> DomainResult<EditorSnapshot
 mod tests {
     use super::*;
     use crate::domain::catalog::CatalogStats;
+    use crate::domain::types::{ErpRow, OffenePostenRow};
+
+    fn erp_row(category: &str) -> ErpRow {
+        ErpRow {
+            artikelnummer: "A1".into(),
+            produktname: "Product".into(),
+            lot_id: "LOT-1".into(),
+            kennzeichen_3: category.into(),
+            ablaufdatum: "-".into(),
+            debitorenkonto: "1".into(),
+            erp: "99".into(),
+            extra: vec![],
+        }
+    }
+
+    #[test]
+    fn category_preview_counts_stock_rows_and_excludes_open_positions() {
+        let import = ErpImport {
+            rows: vec![
+                erp_row("IMP"),
+                erp_row("imp"),
+                erp_row("SIEB"),
+                erp_row("INST"),
+                erp_row("OTHER"),
+            ],
+            offene_posten: vec![OffenePostenRow {
+                artikelnummer: "A2".into(),
+                produktname: "Open product".into(),
+                lot_id: "LOT-2".into(),
+                ablaufdatum: "-".into(),
+                offen: "1".into(),
+                id: "open".into(),
+            }],
+            debitor: "1".into(),
+        };
+
+        assert_eq!(
+            category_counts_from_import(&import),
+            ErpCategoryCounts {
+                implantate: 2,
+                siebe: 1,
+                instrumente: 1,
+                weitere: 1,
+                offene_posten_ausgeschlossen: 1,
+            }
+        );
+    }
 
     #[test]
     fn ready_requires_both_counts() {

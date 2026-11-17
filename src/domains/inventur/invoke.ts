@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog"
 import type { InventurProgressEvent } from "@/domains/inventur/progress"
 import type {
   EditorSnapshot,
+  ErpCategoryCounts,
   LotIdCompareRow,
 } from "@/domains/inventur/types"
 
@@ -18,6 +19,9 @@ export type AutoSiebeResult = {
   rows: LotIdCompareRow[]
   sieb_inst_row_count: number
 }
+
+export const previewErpCategoryCounts = (erpPath: string) =>
+  invoke<ErpCategoryCounts>("preview_erp_category_counts", { erpPath })
 
 export const runInventur = (
   erpPath: string,

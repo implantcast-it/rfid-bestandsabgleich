@@ -1,6 +1,6 @@
 [package]
 name = "rfid-bestandsabgleich"
-version = "5.0.2"
+version = "5.0.3"
 description = "Bestandabgleich-Software der Firma implantcast GmbH für die Inventur bei Bestandskunden."
 authors = ["implantcast GmbH"]
 edition = "2021"
@@ -23,7 +23,10 @@ uuid = { version = "1.29.0", features = ["v4", "serde"] }
 thiserror = "2.0.21"
 regex = "1.13.1"
 rusqlite = { version = "0.41.1", features = ["bundled"] }
-chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+chrono = { version = "0.4.45", default-features = false, features = [
+    "clock",
+    "std",
+] }
 typst-as-lib = "0.17.0"
 typst-pdf = "0.15.1"
 typst = "0.15.1"
@@ -42,10 +45,10 @@ incremental = true # Compile your binary in smaller steps.
 
 [profile.release]
 codegen-units = 16 # Allows LLVM to perform better optimization.
-lto = "thin" # Enables link-time-optimizations.
-opt-level = 3 # Prioritizes small binary size. Use `3` if you prefer speed.
-panic = "abort" # Higher performance by disabling panic handlers.
-strip = true # Ensures debug symbols are removed.
+lto = "thin"       # Enables link-time-optimizations.
+opt-level = 3      # Prioritizes small binary size. Use `3` if you prefer speed.
+panic = "abort"    # Higher performance by disabling panic handlers.
+strip = true       # Ensures debug symbols are removed.
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2.14.1"

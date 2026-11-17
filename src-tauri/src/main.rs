@@ -12,6 +12,7 @@ fn main() {
             rfid_bestandsabgleich::commands::get_catalog_stats,
             rfid_bestandsabgleich::commands::catalog_ready,
             rfid_bestandsabgleich::commands::search_debitors,
+            rfid_bestandsabgleich::commands::preview_erp_category_counts,
             rfid_bestandsabgleich::commands::run_inventur,
             rfid_bestandsabgleich::commands::load_abgleich,
             rfid_bestandsabgleich::commands::auto_fill_kommentare,
