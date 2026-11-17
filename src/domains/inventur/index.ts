@@ -4,14 +4,19 @@ export type {
   ArtNrGridRow,
   EditorSnapshot,
   EditorStats,
+  ErpCategoryCounts,
   ErpRow,
   InventurSessionState,
   LotIdCompareRow,
   LotIdGridRow,
   OffenePostenGridRow,
   OffenePostenRow,
+  ProductCategoryComparison,
+  ProductCategoryCounts,
   RfidRow,
 } from "@/domains/inventur/types"
+
+export { countProductCategories } from "@/domains/inventur/category-counts"
 
 export {
   artNrAggregateRowsFromLotId,
@@ -20,6 +25,7 @@ export {
   autoFillKommentare,
   autoSiebe,
   loadAbgleichFromDialog,
+  previewErpCategoryCounts,
   runInventur,
 } from "@/domains/inventur/invoke"
 export type {

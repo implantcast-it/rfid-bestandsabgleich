@@ -4,12 +4,15 @@ import { getVersion } from "@tauri-apps/api/app";
 import { UpdaterDialog } from "@/features/feedback/UpdaterDialog";
 import { Toaster } from "@/core/ui/sonner";
 import HomeTopbar from "@/features/home/HomeTopbar";
-import UploadPanel from "@/features/home/UploadPanel";
 import InsightCards from "@/features/home/InsightCards";
 import InventurenFileGrid from "@/features/home/InventurenFileGrid";
 import { getCatalogReady, type CatalogReady } from "@/domains/catalog";
+import { previewErpCategoryCounts } from "@/domains/inventur";
 import { useHomeProjects } from "@/features/home/hooks/use-home-projects";
 import { useInventurCompare } from "@/features/home/hooks/use-inventur-compare";
+import UploadPanel, {
+  type ErpPreviewState,
+} from "@/features/home/UploadPanel";
 
 const inventurjahrDefault = () => String(new Date().getFullYear());
 
@@ -20,6 +23,10 @@ const StartScreen = () => {
   const [catalogReady, setCatalogReady] = useState<CatalogReady | null>(null);
   const [erpPath, setErpPath] = useState<string | null>(null);
   const [rfidPath, setRfidPath] = useState<string | null>(null);
+  const [erpPreview, setErpPreview] = useState<{
+    path: string;
+    state: ErpPreviewState;
+  } | null>(null);
   const [inventurjahr, setInventurjahr] = useState(inventurjahrDefault);
 
   const {
@@ -49,6 +56,38 @@ const StartScreen = () => {
     setLocation,
     refreshProjects,
   });
+
+  useEffect(() => {
+    if (!erpPath) {
+      setErpPreview(null);
+      return;
+    }
+
+    let cancelled = false;
+    setErpPreview({ path: erpPath, state: { status: "loading" } });
+    void previewErpCategoryCounts(erpPath)
+      .then((counts) => {
+        if (!cancelled) {
+          setErpPreview({
+            path: erpPath,
+            state: { status: "ready", counts },
+          });
+        }
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        console.error("ERP-Kategorieziele konnten nicht geladen werden:", error);
+        const message = error instanceof Error ? error.message : String(error);
+        setErpPreview({
+          path: erpPath,
+          state: { status: "error", message },
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [erpPath]);
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -86,6 +125,9 @@ const StartScreen = () => {
             catalogReady={catalogReady}
             erpPath={erpPath}
             rfidPath={rfidPath}
+            erpPreview={
+              erpPreview?.path === erpPath ? erpPreview.state : null
+            }
             onErpSelect={setErpPath}
             onRfidSelect={setRfidPath}
             processPhase={compare.processPhase}
@@ -95,6 +137,7 @@ const StartScreen = () => {
             progressLabel={compare.progressLabel}
             pipelineSteps={compare.pipelineSteps}
             debitorLabel={compare.debitorLabel}
+            categoryComparison={compare.categoryComparison}
             loadingAbgleich={compare.loadingAbgleich}
             onStartCompare={() => void compare.handleStartCompare()}
             onOpenExisting={() => void compare.handleOpenExisting()}

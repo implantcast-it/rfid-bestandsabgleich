@@ -8,11 +8,15 @@ import {
 import { Button } from "@/core/ui/button"
 import { cn } from "@/core/utils"
 
-import type { ProcessPhase } from "@/domains/inventur"
+import type {
+  ProcessPhase,
+  ProductCategoryComparison,
+} from "@/domains/inventur"
 import {
   INVENTUR_STEP_LABELS,
   type PipelineStepState,
 } from "@/domains/inventur"
+import ProductCategorySummary from "@/features/home/ProductCategorySummary"
 
 export type { ProcessPhase }
 
@@ -27,6 +31,7 @@ type ProcessPanelProps = {
   rfidName: string
   debitor: string
   inventurjahr?: string
+  categoryComparison: ProductCategoryComparison | null
   onRetry: () => void
   onOpenEditor: () => void
 }
@@ -42,6 +47,7 @@ const ProcessPanel = ({
   rfidName,
   debitor,
   inventurjahr = String(new Date().getFullYear()),
+  categoryComparison,
   onRetry,
   onOpenEditor,
 }: ProcessPanelProps) => {
@@ -201,6 +207,14 @@ const ProcessPanel = ({
           </strong>
         </span>
       </div>
+
+      {phase === "success" && categoryComparison && (
+        <ProductCategorySummary
+          expected={categoryComparison.erwartet}
+          found={categoryComparison.gefunden}
+          excludedOpenItems={categoryComparison.offene_posten_ausgeschlossen}
+        />
+      )}
 
       {(phase === "success" || phase === "error") && (
         <div className="flex min-h-[34px] justify-end gap-2.5">
